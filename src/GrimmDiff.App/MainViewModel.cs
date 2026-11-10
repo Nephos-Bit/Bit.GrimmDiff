@@ -21,12 +21,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private string? _codexEmail; private int? _weeklyRemainingPercent;
     private CommitHistoryItem? _selectedCommit; private AnalysisFileViewModel? _selectedFile; private string? _selectedRecent; private bool _loading, _isAnalyzing, _isAnalysisStale;
     private CodexCliStatusKind _codexStatusKind = CodexCliStatusKind.Unavailable;
-    private CancellationTokenSource? _analysisCancellation; private long _analysisGeneration;
+    private CancellationTokenSource? _analysisCancellation; private long _analysisGeneration; private long _diffRenderGeneration;
     public MainViewModel(IGitRepositoryService git, IDiffAnalysisProvider analysis, IDiffAnalysisProvider heuristicAnalysis, ICodexCliClient codex)
     {
         _git = git; _analysis = analysis; _heuristicAnalysis = heuristicAnalysis; _codex = codex; _refreshTimer.Elapsed += OnRefreshTimerElapsed;
         var saved = _settings.Load(); _selectedLanguage = saved.Language; _selectedTheme = saved.Theme; _selectedFont = saved.Font is "Cascadia Code" or "Verdana" ? saved.Font : "Cascadia Code"; ThemeService.Apply(_selectedTheme); ApplyFont(_selectedFont);
-        foreach (var item in saved.RecentRepositories.Where(Directory.Exists)) RecentRepositories.Add(new RecentRepositoryItem(item));
+        foreach (var item in saved.RecentRepositories) RecentRepositories.Add(new RecentRepositoryItem(item));
         OpenRepositoryCommand = new AsyncCommand(OpenRepositoryAsync); CloneCommand = new AsyncCommand(CloneAsync); ShowCurrentCommand = new AsyncCommand(ShowCurrentAsync); SelectFileCommand = new DelegateCommand<AnalysisFileViewModel>(SelectFile); OpenUrlCommand = new DelegateCommand<string>(OpenUrl);
         AnalyzeWithAiCommand = new AsyncCommand(AnalyzeWithAiAsync, () => !string.IsNullOrWhiteSpace(RepositoryPath) && !IsAnalyzing);
         LoginToCodexCommand = new AsyncCommand(LoginToCodexAsync, () => !IsAnalyzing);
@@ -34,7 +34,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _ = CheckCodexAsync();
     }
     public event PropertyChangedEventHandler? PropertyChanged;
-    public ObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = []; public ObservableCollection<CommitHistoryItem> History { get; } = []; public ObservableCollection<AnalysisGroupViewModel> Groups { get; } = []; public ObservableCollection<DiffLineViewModel> DiffLines { get; } = [];
+    public ObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = []; public ObservableCollection<CommitHistoryItem> History { get; } = []; public ObservableCollection<AnalysisGroupViewModel> Groups { get; } = [];
+    private IReadOnlyList<DiffLineViewModel> _diffLines = []; public IReadOnlyList<DiffLineViewModel> DiffLines { get => _diffLines; private set => Set(ref _diffLines, value); }
     public IReadOnlyList<string> Languages { get; } = ["English", "Deutsch"]; public IReadOnlyList<string> Themes { get; } = ["System", "Dark", "Light"]; public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Verdana"]; public LocalizedText Text => new(() => SelectedLanguage);
     public AsyncCommand OpenRepositoryCommand { get; } public AsyncCommand CloneCommand { get; } public AsyncCommand ShowCurrentCommand { get; } public AsyncCommand AnalyzeWithAiCommand { get; } public AsyncCommand LoginToCodexCommand { get; } public AsyncCommand CancelAnalysisCommand { get; } public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; } public DelegateCommand<string> OpenUrlCommand { get; }
     public string RepositoryPath { get => _repositoryPath; private set { if (Set(ref _repositoryPath, value)) { OnPropertyChanged(nameof(RepositoryName)); AnalyzeWithAiCommand.RaiseCanExecuteChanged(); } } } public string RepositoryName => string.IsNullOrWhiteSpace(RepositoryPath) ? string.Empty : Path.GetFileName(Path.TrimEndingDirectorySeparator(RepositoryPath)); public string StatusMessage { get => _statusMessage; private set => Set(ref _statusMessage, value); }
@@ -50,12 +51,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         : SelectedLanguage == "Deutsch" ? "WOCHE · –" : "WEEK · –";
     public bool IsAnalyzing { get => _isAnalyzing; private set { if (Set(ref _isAnalyzing, value)) { AnalyzeWithAiCommand.RaiseCanExecuteChanged(); LoginToCodexCommand.RaiseCanExecuteChanged(); CancelAnalysisCommand.RaiseCanExecuteChanged(); } } }
     public bool IsAnalysisStale { get => _isAnalysisStale; private set => Set(ref _isAnalysisStale, value); }
+    public string AnalysisProgressText => SelectedLanguage == "Deutsch" ? "GPT-6 Luna analysiert die Änderungen..." : "GPT-6 Luna is analysing the changes...";
     public string AnalyzeButtonText => SelectedLanguage == "Deutsch" ? "Mit GPT-6 Luna analysieren" : "Analyse with GPT-6 Luna";
     public string LoginButtonText => SelectedLanguage == "Deutsch" ? "Mit ChatGPT anmelden" : "Sign in with ChatGPT";
     public string CancelButtonText => SelectedLanguage == "Deutsch" ? "Abbrechen" : "Cancel";
     public string AiDisclosureText => SelectedLanguage == "Deutsch" ? "Die CLI läuft lokal; gelesene Repository-Inhalte werden über den angemeldeten ChatGPT-Workspace verarbeitet." : "The CLI runs locally; repository content it reads is processed through the signed-in ChatGPT workspace.";
-    public string SelectedLanguage { get => _selectedLanguage; set { if (Set(ref _selectedLanguage, value)) { OnPropertyChanged(nameof(Text)); OnPropertyChanged(nameof(IsEnglish)); OnPropertyChanged(nameof(IsGerman)); OnPropertyChanged(nameof(AnalyzeButtonText)); OnPropertyChanged(nameof(LoginButtonText)); OnPropertyChanged(nameof(CancelButtonText)); OnPropertyChanged(nameof(AiDisclosureText)); OnPropertyChanged(nameof(CodexStatusText)); OnPropertyChanged(nameof(CodexAccountText)); OnPropertyChanged(nameof(WeeklyQuotaText)); SavePreferences(); _ = LoadAnalysisAsync(true); } } }
-    public string SelectedTheme { get => _selectedTheme; set { if (Set(ref _selectedTheme, value)) { OnPropertyChanged(nameof(IsSystemTheme)); OnPropertyChanged(nameof(IsDarkTheme)); OnPropertyChanged(nameof(IsLightTheme)); ThemeService.Apply(value); OnPropertyChanged(nameof(CodexStatusBrush)); ShowFile(SelectedFile); SavePreferences(); } } }
+    public string SelectedLanguage { get => _selectedLanguage; set { if (Set(ref _selectedLanguage, value)) { OnPropertyChanged(nameof(Text)); OnPropertyChanged(nameof(IsEnglish)); OnPropertyChanged(nameof(IsGerman)); OnPropertyChanged(nameof(AnalyzeButtonText)); OnPropertyChanged(nameof(LoginButtonText)); OnPropertyChanged(nameof(CancelButtonText)); OnPropertyChanged(nameof(AnalysisProgressText)); OnPropertyChanged(nameof(AiDisclosureText)); OnPropertyChanged(nameof(CodexStatusText)); OnPropertyChanged(nameof(CodexAccountText)); OnPropertyChanged(nameof(WeeklyQuotaText)); SavePreferences(); _ = LoadAnalysisAsync(true); } } }
+    public string SelectedTheme { get => _selectedTheme; set { if (Set(ref _selectedTheme, value)) { OnPropertyChanged(nameof(IsSystemTheme)); OnPropertyChanged(nameof(IsDarkTheme)); OnPropertyChanged(nameof(IsLightTheme)); ThemeService.Apply(value); OnPropertyChanged(nameof(CodexStatusBrush)); _ = ShowFileAsync(SelectedFile); SavePreferences(); } } }
     public string SelectedFont { get => _selectedFont; set { if (Set(ref _selectedFont, value)) { OnPropertyChanged(nameof(IsCascadiaCode)); OnPropertyChanged(nameof(IsVerdana)); ApplyFont(value); SavePreferences(); } } }
     public bool IsEnglish { get => SelectedLanguage == "English"; set { if (value) SelectedLanguage = "English"; } }
     public bool IsGerman { get => SelectedLanguage == "Deutsch"; set { if (value) SelectedLanguage = "Deutsch"; } }
@@ -64,21 +66,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public bool IsLightTheme { get => SelectedTheme == "Light"; set { if (value) SelectedTheme = "Light"; } }
     public bool IsCascadiaCode { get => SelectedFont == "Cascadia Code"; set { if (value) SelectedFont = "Cascadia Code"; } }
     public bool IsVerdana { get => SelectedFont == "Verdana"; set { if (value) SelectedFont = "Verdana"; } }
-    public CommitHistoryItem? SelectedCommit { get => _selectedCommit; set { if (Set(ref _selectedCommit, value)) _ = LoadAnalysisAsync(true); } }
-    public AnalysisFileViewModel? SelectedFile { get => _selectedFile; set { if (Set(ref _selectedFile, value)) { ShowFile(value); OnPropertyChanged(nameof(SelectedAnalysisTitle)); OnPropertyChanged(nameof(SelectedAnalysisDescription)); } } }
+    public CommitHistoryItem? SelectedCommit { get => _selectedCommit; set { if (Set(ref _selectedCommit, value)) { OnPropertyChanged(nameof(ViewTitle)); _ = LoadAnalysisAsync(true); } } }
+    public AnalysisFileViewModel? SelectedFile { get => _selectedFile; set { if (Set(ref _selectedFile, value)) { _ = ShowFileAsync(value); OnPropertyChanged(nameof(SelectedAnalysisTitle)); OnPropertyChanged(nameof(SelectedAnalysisDescription)); } } }
     public string SelectedAnalysisTitle => SelectedFile?.GroupTitle ?? Groups.FirstOrDefault()?.Title ?? string.Empty;
     public string SelectedAnalysisDescription => SelectedFile?.GroupDescription ?? Groups.FirstOrDefault()?.Description ?? string.Empty;
     public RecentRepositoryItem? SelectedRecent { get => RecentRepositories.FirstOrDefault(item => item.Path == _selectedRecent); set { if (Set(ref _selectedRecent, value?.Path) && value is not null) _ = OpenRepositoryAsync(value.Path); } }
     public string ViewTitle => SelectedCommit is null ? "Current changes" : $"{SelectedCommit.Commit.Subject} · {SelectedCommit.Commit.Id[..Math.Min(8, SelectedCommit.Commit.Id.Length)]}";
     private async Task OpenRepositoryAsync() { var picker = new OpenFolderDialog { Title = "Open Git repository" }; if (picker.ShowDialog() == true) await OpenRepositoryAsync(picker.FolderName); }
-    private async Task OpenRepositoryAsync(string path) { if (!await _git.IsGitAvailableAsync()) { StatusMessage = "Git is not installed or unavailable on PATH."; return; } RepositoryPath = path; AddRecent(path); StartWatcher(path); await RefreshAsync(true); }
+    private async Task OpenRepositoryAsync(string path) { if (!await Task.Run(() => _git.IsGitAvailableAsync())) { StatusMessage = "Git is not installed or unavailable on PATH."; return; } RepositoryPath = path; AddRecent(path); StartWatcher(path); await RefreshAsync(true); }
     private async Task CloneAsync() { var source = InputDialog.Ask("Clone repository", "Repository URL or local source:"); if (string.IsNullOrWhiteSpace(source)) return; var destination = InputDialog.Ask("Clone repository", "Destination folder:"); if (string.IsNullOrWhiteSpace(destination)) return; var result = await _git.CloneAsync(source, destination); StatusMessage = result.IsSuccess ? "Repository cloned." : result.ErrorMessage; if (result.IsSuccess) await OpenRepositoryAsync(destination); }
     private async Task ShowCurrentAsync() { if (SelectedCommit is null) await LoadAnalysisAsync(true); else SelectedCommit = null; }
     private async Task RefreshAsync(bool analyzeWithAi)
     {
         if (string.IsNullOrWhiteSpace(RepositoryPath) || _loading) return; _loading = true;
         var refreshAnalysis = false;
-        try { var snapshot = await _git.LoadAsync(RepositoryPath); History.Reset(snapshot.History.Select(commit => new CommitHistoryItem(commit))); StatusMessage = snapshot.State == RepositoryState.Ready ? $"{snapshot.Changes.Count} current file changes." : $"Git state: {snapshot.State}. Resolve it before editing."; refreshAnalysis = SelectedCommit is null || analyzeWithAi; }
+        try { var repositoryPath = RepositoryPath; var snapshot = await Task.Run(() => _git.LoadAsync(repositoryPath)); History.Reset(snapshot.History.Select(commit => new CommitHistoryItem(commit))); StatusMessage = snapshot.State == RepositoryState.Ready ? $"{snapshot.Changes.Count} current file changes." : $"Git state: {snapshot.State}. Resolve it before editing."; refreshAnalysis = SelectedCommit is null || analyzeWithAi; }
         catch (Exception ex) { StatusMessage = ex.Message; }
         finally { _loading = false; }
         if (refreshAnalysis) await LoadAnalysisAsync(analyzeWithAi);
@@ -89,18 +91,31 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         var generation = Interlocked.Increment(ref _analysisGeneration);
         _analysisCancellation?.Cancel(); _analysisCancellation?.Dispose(); _analysisCancellation = new CancellationTokenSource();
         var cancellationToken = _analysisCancellation.Token;
+        var repositoryPath = RepositoryPath;
+        var commitId = SelectedCommit?.Commit.Id;
+        var scope = commitId is null ? DiffScope.WorkingTree : DiffScope.Historical;
+        var language = SelectedLanguage == "Deutsch" ? "de" : "en";
+        var provider = analyzeWithAi ? _analysis : _heuristicAnalysis;
         IsAnalyzing = analyzeWithAi;
+        if (analyzeWithAi) StatusMessage = AnalysisProgressText;
         try
         {
-            var scope = SelectedCommit is null ? DiffScope.WorkingTree : DiffScope.Historical;
-            var diff = SelectedCommit is null ? (await _git.GetDiffAsync(RepositoryPath, DiffScope.Staged, cancellationToken: cancellationToken)) + (await _git.GetDiffAsync(RepositoryPath, DiffScope.WorkingTree, cancellationToken: cancellationToken)) : await _git.GetCommitDiffAsync(RepositoryPath, SelectedCommit.Commit.Id, cancellationToken: cancellationToken);
-            if (analyzeWithAi) StatusMessage = SelectedLanguage == "Deutsch" ? "GPT-6 Luna analysiert die Änderungen..." : "GPT-6 Luna is analysing the changes...";
-            var request = new DiffAnalysisRequest(RepositoryPath, scope, diff, SelectedLanguage == "Deutsch" ? "de" : "en");
-            var result = await (analyzeWithAi ? _analysis : _heuristicAnalysis).AnalyzeAsync(request, cancellationToken);
+            var prepared = await Task.Run(async () =>
+            {
+                var diff = commitId is null
+                    ? (await _git.GetDiffAsync(repositoryPath, DiffScope.Staged, cancellationToken: cancellationToken))
+                      + (await _git.GetDiffAsync(repositoryPath, DiffScope.WorkingTree, cancellationToken: cancellationToken))
+                    : await _git.GetCommitDiffAsync(repositoryPath, commitId, cancellationToken: cancellationToken);
+                var request = new DiffAnalysisRequest(repositoryPath, scope, diff, language);
+                var analysis = await provider.AnalyzeAsync(request, cancellationToken);
+                var groupViewModels = analysis.Groups.Select(group => new AnalysisGroupViewModel(group)).ToList();
+                return (Analysis: analysis, Groups: groupViewModels);
+            }, cancellationToken);
             if (generation != Interlocked.Read(ref _analysisGeneration)) return;
-            Groups.Reset(result.Groups.Select(group => new AnalysisGroupViewModel(group)));
+            var result = prepared.Analysis;
+            Groups.Reset(prepared.Groups);
             var firstFile = Groups.SelectMany(group => group.Files).FirstOrDefault();
-            if (!Equals(SelectedFile, firstFile)) SelectedFile = firstFile; else ShowFile(firstFile);
+            if (!Equals(SelectedFile, firstFile)) SelectedFile = firstFile; else _ = ShowFileAsync(firstFile);
             OnPropertyChanged(nameof(SelectedAnalysisTitle)); OnPropertyChanged(nameof(SelectedAnalysisDescription)); OnPropertyChanged(nameof(ViewTitle));
             IsAnalysisStale = !analyzeWithAi;
             AnalysisSourceLabel = result.Source == DiffAnalysisSource.Codex
@@ -122,11 +137,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     }
     private Task AnalyzeWithAiAsync() => LoadAnalysisAsync(true);
     private Task CancelAnalysisAsync() { _analysisCancellation?.Cancel(); return Task.CompletedTask; }
-    private async Task CheckCodexAsync() { try { var status = await _codex.GetStatusAsync(); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
-    private async Task LoginToCodexAsync() { AiStatusMessage = SelectedLanguage == "Deutsch" ? "ChatGPT-Anmeldung wird geöffnet..." : "Opening ChatGPT sign-in..."; try { var status = await _codex.LoginAsync(); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
+    private async Task CheckCodexAsync() { try { var status = await Task.Run(() => _codex.GetStatusAsync()); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
+    private async Task LoginToCodexAsync() { AiStatusMessage = SelectedLanguage == "Deutsch" ? "ChatGPT-Anmeldung wird geöffnet..." : "Opening ChatGPT sign-in..."; try { var status = await Task.Run(() => _codex.LoginAsync()); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
     private async Task RefreshCodexAccountAsync()
     {
-        var usage = await _codex.GetAccountUsageAsync();
+        var usage = await Task.Run(() => _codex.GetAccountUsageAsync());
         _codexEmail = usage.Email;
         _weeklyRemainingPercent = usage.WeeklyRemainingPercent;
         OnPropertyChanged(nameof(CodexAccountText));
@@ -141,11 +156,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         CodexCliStatusKind.ApiKeyAuthentication or CodexCliStatusKind.UnsupportedAuthentication => SelectedLanguage == "Deutsch" ? "Codex verwendet keine ChatGPT-Anmeldung." : "Codex is not using a ChatGPT sign-in.",
         _ => SelectedLanguage == "Deutsch" ? "Codex ist derzeit nicht verfügbar." : "Codex is currently unavailable."
     };
-    private void SelectFile(AnalysisFileViewModel file) { SelectedFile = file; ShowFile(file); }
+    private void SelectFile(AnalysisFileViewModel file) { SelectedFile = file; }
     private static void OpenUrl(string url) => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-    private void ShowFile(AnalysisFileViewModel? file) { DiffLines.Clear(); if (file is null) return; foreach (var line in file.Diff.Split('\n')) DiffLines.Add(DiffLineViewModel.From(line)); }
-    private void StartWatcher(string path) { _watcher?.Dispose(); _watcher = new FileSystemWatcher(path) { IncludeSubdirectories = true, EnableRaisingEvents = true }; _watcher.Changed += (_, _) => ScheduleRefresh(); _watcher.Created += (_, _) => ScheduleRefresh(); _watcher.Deleted += (_, _) => ScheduleRefresh(); _watcher.Renamed += (_, _) => ScheduleRefresh(); }
-    private void ScheduleRefresh() { _analysisCancellation?.Cancel(); _refreshTimer.Stop(); _refreshTimer.Start(); } private async void OnRefreshTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e) => await Application.Current.Dispatcher.InvokeAsync(() => RefreshAsync(false)).Task.Unwrap();
+    private async Task ShowFileAsync(AnalysisFileViewModel? file)
+    {
+        var generation = Interlocked.Increment(ref _diffRenderGeneration);
+        if (file is null) { DiffLines = []; return; }
+        var palette = DiffLineViewModel.CapturePalette();
+        var diff = file.Diff;
+        var lines = await Task.Run(() => diff.Split('\n').Select(line => DiffLineViewModel.From(line, palette)).ToList());
+        if (generation == Interlocked.Read(ref _diffRenderGeneration) && Equals(file, SelectedFile)) DiffLines = lines;
+    }
+    private void StartWatcher(string path) { _watcher?.Dispose(); _watcher = new FileSystemWatcher(path) { IncludeSubdirectories = true, EnableRaisingEvents = true }; _watcher.Changed += (_, e) => ScheduleRefresh(e.FullPath); _watcher.Created += (_, e) => ScheduleRefresh(e.FullPath); _watcher.Deleted += (_, e) => ScheduleRefresh(e.FullPath); _watcher.Renamed += (_, e) => ScheduleRefresh(e.FullPath); }
+    private void ScheduleRefresh(string path) { if (IsGeneratedPath(path)) return; _analysisCancellation?.Cancel(); _refreshTimer.Stop(); _refreshTimer.Start(); }
+    private static bool IsGeneratedPath(string path) => path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(segment => segment.Equals("bin", StringComparison.OrdinalIgnoreCase) || segment.Equals("obj", StringComparison.OrdinalIgnoreCase) || segment.Equals("node_modules", StringComparison.OrdinalIgnoreCase) || segment.Equals(".vs", StringComparison.OrdinalIgnoreCase));
+    private async void OnRefreshTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e) => await Application.Current.Dispatcher.InvokeAsync(() => RefreshAsync(false)).Task.Unwrap();
     private static void ApplyFont(string font) => Application.Current.Resources["AppFontFamily"] = new FontFamily(font);
     private void AddRecent(string path) { var existing = RecentRepositories.FirstOrDefault(item => item.Path == path); if (existing is not null) RecentRepositories.Remove(existing); RecentRepositories.Insert(0, new RecentRepositoryItem(path)); while (RecentRepositories.Count > 10) RecentRepositories.RemoveAt(RecentRepositories.Count - 1); SavePreferences(); } private void SavePreferences() => _settings.Save(RecentRepositories.Select(item => item.Path), SelectedTheme, SelectedLanguage, SelectedFont);
     private bool Set<T>(ref T field, T value, [CallerMemberName] string? property = null) { if (EqualityComparer<T>.Default.Equals(field, value)) return false; field = value; OnPropertyChanged(property); return true; } private void OnPropertyChanged([CallerMemberName] string? property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property)); public void Dispose() { _analysisCancellation?.Cancel(); _analysisCancellation?.Dispose(); _watcher?.Dispose(); _refreshTimer.Dispose(); }
@@ -175,29 +200,39 @@ public sealed class CommitHistoryItem
     public IReadOnlyList<CommitSubjectPart> SubjectParts { get; }
 }
 public sealed record CodeToken(string Text, Brush Foreground);
+public sealed record CodePalette(IReadOnlyDictionary<string, Brush> Brushes)
+{
+    public Brush this[string key] => Brushes[key];
+}
 public sealed record DiffLineViewModel(IReadOnlyList<CodeToken> Tokens, Brush? Background)
 {
     private static readonly HashSet<string> Keywords = new(StringComparer.Ordinal) { "abstract", "async", "await", "bool", "class", "const", "else", "enum", "false", "for", "foreach", "if", "in", "interface", "internal", "namespace", "new", "null", "private", "protected", "public", "readonly", "record", "return", "static", "string", "struct", "throw", "true", "using", "void", "while" };
     private static readonly Regex TokenPattern = new("//.*|\"(?:\\\\.|[^\"])*\"|\\b[A-Za-z_][A-Za-z0-9_]*\\b|\\b\\d+(?:\\.\\d+)?\\b|\\s+|.", RegexOptions.Compiled);
-    public static DiffLineViewModel From(string line)
+    private static readonly string[] PaletteKeys = ["Primary", "Secondary", "DiffAdded", "DiffAddedBackground", "DiffRemoved", "DiffRemovedBackground", "DiffHunk", "CodeKeyword", "CodeType", "CodeMember", "CodeString", "CodeComment"];
+    public static CodePalette CapturePalette() => new(PaletteKeys.ToDictionary(key => key, key =>
+    {
+        var brush = ((Brush)Application.Current.Resources[key]).Clone();
+        brush.Freeze();
+        return brush;
+    }, StringComparer.Ordinal));
+    public static DiffLineViewModel From(string line, CodePalette palette)
     {
         var tokens = new List<CodeToken>();
         var content = line;
         Brush? background = null;
-        if (line.StartsWith('+') && !line.StartsWith("+++")) { tokens.Add(new CodeToken("+", Brush("DiffAdded"))); content = line[1..]; background = Brush("DiffAddedBackground"); }
-        else if (line.StartsWith('-') && !line.StartsWith("---")) { tokens.Add(new CodeToken("-", Brush("DiffRemoved"))); content = line[1..]; background = Brush("DiffRemovedBackground"); }
-        else if (line.StartsWith("@@")) return new([new CodeToken(line, Brush("DiffHunk"))], null);
-        else if (line.StartsWith("diff ") || line.StartsWith("+++") || line.StartsWith("---")) return new([new CodeToken(line, Brush("Secondary"))], null);
+        if (line.StartsWith('+') && !line.StartsWith("+++")) { tokens.Add(new CodeToken("+", palette["DiffAdded"])); content = line[1..]; background = palette["DiffAddedBackground"]; }
+        else if (line.StartsWith('-') && !line.StartsWith("---")) { tokens.Add(new CodeToken("-", palette["DiffRemoved"])); content = line[1..]; background = palette["DiffRemovedBackground"]; }
+        else if (line.StartsWith("@@")) return new([new CodeToken(line, palette["DiffHunk"])], null);
+        else if (line.StartsWith("diff ") || line.StartsWith("+++") || line.StartsWith("---")) return new([new CodeToken(line, palette["Secondary"])], null);
         var matches = TokenPattern.Matches(content);
         for (var index = 0; index < matches.Count; index++)
         {
             var value = matches[index].Value;
             var color = value.StartsWith("//") ? "CodeComment" : value.StartsWith('"') ? "CodeString" : Keywords.Contains(value) ? "CodeKeyword" : char.IsUpper(value.FirstOrDefault()) ? "CodeType" : IsMethod(matches, index) ? "CodeMember" : "Primary";
-            tokens.Add(new CodeToken(value, Brush(color)));
+            tokens.Add(new CodeToken(value, palette[color]));
         }
         return new(tokens, background);
     }
     private static bool IsMethod(MatchCollection matches, int index) { for (var i = index + 1; i < matches.Count; i++) { if (string.IsNullOrWhiteSpace(matches[i].Value)) continue; return matches[i].Value == "("; } return false; }
-    private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
 }
 internal static class CollectionExtensions { public static void Reset<T>(this ObservableCollection<T> items, IEnumerable<T> values) { items.Clear(); foreach (var value in values) items.Add(value); } }
