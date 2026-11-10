@@ -6,6 +6,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DataContext = new MainViewModel(new GitCliRepositoryService(), new LocalHeuristicDiffAnalysisProvider());
+        var codex = new CodexCliClient();
+        var heuristic = new LocalHeuristicDiffAnalysisProvider();
+        DataContext = new MainViewModel(
+            new GitCliRepositoryService(),
+            new CodexCliDiffAnalysisProvider(codex, heuristic),
+            heuristic,
+            codex);
     }
 }

@@ -25,7 +25,7 @@ public sealed partial class LocalHeuristicDiffAnalysisProvider : IDiffAnalysisPr
         var features = hunks.Select(CreateFeatures).ToList();
         var clusters = BuildClusters(features);
         var groups = clusters.Select(cluster => ToGroup(cluster, request.Language)).ToList();
-        return Task.FromResult(new DiffAnalysisResult(hunks, groups));
+        return Task.FromResult(new DiffAnalysisResult(hunks, groups, DiffAnalysisSource.Heuristic));
     }
 
     private static Features CreateFeatures(DiffHunk hunk)
