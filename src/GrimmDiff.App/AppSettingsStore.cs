@@ -3,7 +3,7 @@ using System.IO;
 
 namespace GrimmDiff.App;
 
-public sealed record AppSettings(List<string> RecentRepositories, string Theme = "System", string Language = "English")
+public sealed record AppSettings(List<string> RecentRepositories, string Theme = "System", string Language = "English", string Font = "Cascadia Code")
 {
     public static AppSettings Empty { get; } = new([]);
 }
@@ -15,9 +15,9 @@ public sealed class AppSettingsStore
         try { return File.Exists(FilePath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? AppSettings.Empty : AppSettings.Empty; }
         catch (JsonException) { return AppSettings.Empty; }
     }
-    public void Save(IEnumerable<string> recent, string theme, string language)
+    public void Save(IEnumerable<string> recent, string theme, string language, string font)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(new AppSettings(recent.ToList(), theme, language)));
+        File.WriteAllText(FilePath, JsonSerializer.Serialize(new AppSettings(recent.ToList(), theme, language, font)));
     }
 }

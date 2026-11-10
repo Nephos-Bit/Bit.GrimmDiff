@@ -30,6 +30,11 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
   --color-overlay-background: rgba(8, 8, 8, 0.84);
   --color-visual-base: #151515;
   --color-visual-detail: #242424;
+  --color-code-keyword: #D7A84A;
+  --color-code-type: #72B7E8;
+  --color-code-member: #C99BE8;
+  --color-code-string: #75C68A;
+  --color-code-comment: #6F6F6F;
 
   --color-critical: #FF3B0A;
   --color-critical-surface: rgba(255, 59, 10, 0.20);
@@ -57,6 +62,11 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
   --color-overlay-background: rgba(246, 246, 246, 0.84);
   --color-visual-base: #EFEFEF;
   --color-visual-detail: #D6D6D6;
+  --color-code-keyword: #805A00;
+  --color-code-type: #075F98;
+  --color-code-member: #734A92;
+  --color-code-string: #087A29;
+  --color-code-comment: #707070;
 
   --color-critical: #B72C08;
   --color-critical-surface: rgba(183, 44, 8, 0.16);

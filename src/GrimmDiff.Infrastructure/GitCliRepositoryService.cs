@@ -23,7 +23,10 @@ public sealed class GitCliRepositoryService : IGitRepositoryService
     {
         var arguments = scope == DiffScope.Staged ? new List<string> { "diff", "--cached", "--no-ext-diff", "--unified=3" } : ["diff", "--no-ext-diff", "--unified=3"];
         if (!string.IsNullOrWhiteSpace(path)) { arguments.Add("--"); arguments.Add(path); }
-        return (await RunAsync(repositoryPath, arguments, cancellationToken)).StandardOutput;
+        var diff = (await RunAsync(repositoryPath, arguments, cancellationToken)).StandardOutput;
+        return scope == DiffScope.WorkingTree && string.IsNullOrWhiteSpace(path)
+            ? diff + await GetUntrackedDiffAsync(repositoryPath, cancellationToken)
+            : diff;
     }
 
     public async Task<string> GetCommitDiffAsync(string repositoryPath, string commitId, string? path = null, CancellationToken cancellationToken = default)
@@ -50,6 +53,20 @@ public sealed class GitCliRepositoryService : IGitRepositoryService
         if (File.Exists(Path.Combine(path, ".git", "CHERRY_PICK_HEAD"))) return RepositoryState.CherryPickInProgress;
         var status = await RunAsync(path, ["diff", "--name-only", "--diff-filter=U"], ct);
         return string.IsNullOrWhiteSpace(status.StandardOutput) ? RepositoryState.Ready : RepositoryState.Conflict;
+    }
+
+    private static async Task<string> GetUntrackedDiffAsync(string repositoryPath, CancellationToken cancellationToken)
+    {
+        var files = await RunAsync(repositoryPath, ["ls-files", "--others", "--exclude-standard", "-z"], cancellationToken);
+        var paths = files.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries);
+        var diffs = new List<string>();
+        foreach (var file in paths)
+        {
+            // git diff returns exit code 1 when --no-index finds a difference; its output is the desired patch.
+            var diff = await RunAsync(repositoryPath, ["diff", "--no-index", "--no-ext-diff", "--unified=3", "--", "/dev/null", file], cancellationToken);
+            if (!string.IsNullOrWhiteSpace(diff.StandardOutput)) diffs.Add(diff.StandardOutput);
+        }
+        return diffs.Count == 0 ? string.Empty : "\n" + string.Join("\n", diffs);
     }
 
     private static IReadOnlyList<GitFileChange> ParseChanges(string text) => text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(line =>

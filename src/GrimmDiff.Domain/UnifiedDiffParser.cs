@@ -15,13 +15,16 @@ public static partial class UnifiedDiffParser
         var currentPath = string.Empty;
         var lines = diff.Replace("\r\n", "\n").Split('\n');
         DiffHunkBuilder? current = null;
+        var fileLines = new List<string>();
+        var hasHunk = false;
         foreach (var line in lines)
         {
             var file = FileHeader().Match(line);
             if (file.Success)
             {
-                AddCurrent();
+                AddFile();
                 currentPath = file.Groups[2].Value;
+                hasHunk = false;
                 continue;
             }
             var header = HunkHeader().Match(line);
@@ -29,11 +32,12 @@ public static partial class UnifiedDiffParser
             {
                 AddCurrent();
                 current = new DiffHunkBuilder(currentPath, line, int.Parse(header.Groups[1].Value), int.Parse(header.Groups[2].Value));
+                hasHunk = true;
                 continue;
             }
-            current?.Lines.Add(line);
+            if (current is null) fileLines.Add(line); else current.Lines.Add(line);
         }
-        AddCurrent();
+        AddFile();
         return hunks;
 
         void AddCurrent()
@@ -43,6 +47,14 @@ public static partial class UnifiedDiffParser
                 hunks.Add(new DiffHunk(current.Path, scope, current.Header, string.Join('\n', current.Lines), current.OldStart, current.NewStart));
                 current = null;
             }
+        }
+
+        void AddFile()
+        {
+            AddCurrent();
+            if (!string.IsNullOrEmpty(currentPath) && !hasHunk)
+                hunks.Add(new DiffHunk(currentPath, scope, "File metadata", string.Join('\n', fileLines), 0, 0));
+            fileLines.Clear();
         }
     }
 

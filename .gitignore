@@ -22,6 +22,32 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+[Pp]ublish/
+[Aa]pp[Pp]ackages/
+[Bb]undle[Aa]rtifacts/
+
+# Visual Studio and other IDEs
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.csproj.user
+*.rsuser
+*.DotSettings.user
+_ReSharper*/
+*.VC.db
+*.VC.VC.opendb
+*.opendb
+*.sdf
+*.pidb
+*.booproj
+*.svclog
+*.scc
+*.vssscc
+*.vspscc
 
 # .NET Core
 project.lock.json
@@ -32,6 +58,9 @@ artifacts/
 ScaffoldingReadMe.txt
 
 # NuGet Packages
+packages/
+*.nuget.props
+*.nuget.targets
 *.nupkg
 # NuGet Symbol Packages
 *.snupkg
@@ -42,7 +71,21 @@ ScaffoldingReadMe.txt
 # Others
 ~$*
 *~
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
 CodeCoverage/
+
+# Operating-system metadata
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # MSBuild Binary and Structured Log
 *.binlog
@@ -50,6 +93,13 @@ CodeCoverage/
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.cobertura.xml
+.coverage/
 
 # NUnit
 *.VisualState.xml
