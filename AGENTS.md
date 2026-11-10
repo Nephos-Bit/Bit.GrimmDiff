@@ -11,6 +11,12 @@ GitHub landing page; use this file and the relevant source files instead.
 
 ### Find the relevant code and tests
 
+- `src/GrimmDiff.Domain`: Git- und Diff-Domänenmodelle, Parser und Provider-Schnittstellen.
+- `src/GrimmDiff.Infrastructure`: Git-CLI-Adapter und lokale, austauschbare Diff-Heuristik.
+- `src/GrimmDiff.App`: WPF-Anwendung, MVVM-Viewmodel, lokale Einstellungen und UI.
+- `tests/GrimmDiff.Tests`: ausführbare, paketfreie Unit-Tests für Parser und Heuristik.
+- `scripts`: Auslieferungs- und lokale Wartungsskripte.
+
 
 ### UI-Styling
 

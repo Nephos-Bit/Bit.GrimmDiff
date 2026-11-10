@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\..\src\GrimmDiff.Domain\GrimmDiff.Domain.csproj" /><ProjectReference Include="..\..\src\GrimmDiff.Infrastructure\GrimmDiff.Infrastructure.csproj" /></ItemGroup>
+</Project>

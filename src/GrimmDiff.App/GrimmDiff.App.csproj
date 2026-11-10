@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><EnableWindowsTargeting>true</EnableWindowsTargeting></PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\GrimmDiff.Domain\GrimmDiff.Domain.csproj" /><ProjectReference Include="..\GrimmDiff.Infrastructure\GrimmDiff.Infrastructure.csproj" /></ItemGroup>
+</Project>
