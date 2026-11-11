@@ -11,6 +11,7 @@
                 <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}"/>
                 <MenuItem Header="Clone" Command="{Binding CloneCommand}"/><Separator/>
                 <MenuItem Header="AI risk notice / KI-Risikohinweis" Command="{Binding ShowAiRiskNoticeCommand}"/>
+                <MenuItem Header="Revoke AI approval for this repository" Command="{Binding RevokeAiApprovalCommand}"/>
                 <Separator/>
                 <MenuItem Header="Language">
                     <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}"/><MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}"/>

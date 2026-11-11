@@ -28,7 +28,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _aiRiskNoticeAccepted;
     private CancellationTokenSource? _analysisCancellation, _diffRenderCancellation;
     private long _analysisGeneration;
-    private string _analysisSourceLabel = "No analysis yet.", _aiStatusMessage = "Checking Codex CLI...";
+    private string _analysisSourceLabel = "No analysis yet.", _aiStatusMessage = "Checking Codex CLI...", _aiDisclosureText = "AI analysis has not been prepared.";
     private string? _codexEmail;
     private CodexCliStatusKind _codexStatusKind = CodexCliStatusKind.Unavailable;
     private long _diffRenderGeneration;
@@ -72,6 +72,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         LoginToCodexCommand = new AsyncCommand(LoginToCodexAsync, () => !IsAnalyzing);
         CancelAnalysisCommand = new AsyncCommand(CancelAnalysisAsync, () => IsAnalyzing);
         ShowAiRiskNoticeCommand = new AsyncCommand(async () => _ = await ShowAiRiskNoticeAsync());
+        RevokeAiApprovalCommand = new AsyncCommand(RevokeAiApprovalAsync, () => !string.IsNullOrWhiteSpace(RepositoryPath));
     }
 
     public BulkObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = [];
@@ -105,6 +106,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public AsyncCommand LoginToCodexCommand { get; }
     public AsyncCommand CancelAnalysisCommand { get; }
     public AsyncCommand ShowAiRiskNoticeCommand { get; }
+    public AsyncCommand RevokeAiApprovalCommand { get; }
     public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; }
     public DelegateCommand<string> OpenUrlCommand { get; }
 
@@ -196,9 +198,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public string LoginButtonText => SelectedLanguage == "Deutsch" ? "Mit ChatGPT anmelden" : "Sign in with ChatGPT";
     public string CancelButtonText => SelectedLanguage == "Deutsch" ? "Abbrechen" : "Cancel";
 
-    public string AiDisclosureText => SelectedLanguage == "Deutsch"
-        ? "Die CLI läuft lokal; gelesene Repository-Inhalte werden über den angemeldeten ChatGPT-Workspace verarbeitet."
-        : "The CLI runs locally; repository content it reads is processed through the signed-in ChatGPT workspace.";
+    public string AiDisclosureText => _aiDisclosureText;
 
     public string SelectedLanguage
     {
@@ -219,7 +219,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 OnPropertyChanged(nameof(CodexAccountText));
                 OnPropertyChanged(nameof(WeeklyQuotaText));
                 SavePreferences();
-                _ = LoadAnalysisAsync(true);
+                _ = LoadAnalysisAsync(false);
             }
         }
     }
@@ -328,7 +328,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (Set(ref _selectedCommit, value))
             {
                 OnPropertyChanged(nameof(ViewTitle));
-                _ = LoadAnalysisAsync(true);
+                _ = LoadAnalysisAsync(false);
             }
         }
     }
@@ -419,6 +419,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
 
         RepositoryPath = path;
+        RevokeAiApprovalCommand.RaiseCanExecuteChanged();
         AddRecent(path);
         _changeMonitor.Watch(path, ScheduleRefresh);
         await RefreshAsync(false);
@@ -437,7 +438,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private async Task ShowCurrentAsync()
     {
-        if (SelectedCommit is null) await LoadAnalysisAsync(true);
+        if (SelectedCommit is null) await LoadAnalysisAsync(false);
         else SelectedCommit = null;
     }
 
@@ -493,6 +494,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                     cancellationToken));
             if (generation != Interlocked.Read(ref _analysisGeneration)) return;
             var result = prepared.Analysis;
+            if (analyzeWithAi && result.AiPreview is not null) SetAiDisclosure(result.AiPreview);
             var previousSelection = SelectedFile;
             Groups.ReplaceAll(prepared.Groups);
             var firstFile = Groups.SelectMany(group => group.Files).FirstOrDefault();
@@ -543,11 +545,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private async Task AnalyzeWithAiAsync()
     {
+        var language = SelectedLanguage == "Deutsch" ? "de" : "en";
+        var preview = await _analysis.PreviewAiAsync(
+            new DiffAnalysisQuery(RepositoryPath, SelectedCommit?.Commit.Id, language, true));
+        SetAiDisclosure(preview);
         var repositoryId = RepositoryIdentity(RepositoryPath);
-        if (!_aiRepositoryApprovals.Any(approval => approval.RepositoryId == repositoryId))
+        if (!_aiRepositoryApprovals.Any(approval => approval.RepositoryId == repositoryId &&
+                                             approval.ProviderId == "ChatGPT Codex CLI" &&
+                                             approval.SafetyPolicyVersion == AiDiffSafetyPolicy.Version))
         {
             var confirmation = _dialogs.Ask("AI analysis",
-                "Repository diffs, including untracked files except protected key and credential files, will be processed by your signed-in ChatGPT workspace. Type ALLOW to approve this repository.");
+                $"This repository approval permits optional processing by the signed-in ChatGPT workspace. This analysis will transfer {preview.TransferableSections} changed section(s), up to {preview.TransferableCharacters:N0} characters. {preview.ExcludedSections} section(s) are excluded and stay local. Approval is invalidated when repository configuration, provider, or the safety policy changes. Type ALLOW to approve this repository.");
             if (!string.Equals(confirmation, "ALLOW", StringComparison.Ordinal))
             {
                 StatusMessage = "AI analysis was not approved.";
@@ -556,20 +564,32 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             _aiRepositoryApprovals.RemoveAll(approval =>
                 approval.RepositoryId.StartsWith(Path.GetFullPath(RepositoryPath), StringComparison.OrdinalIgnoreCase));
-            _aiRepositoryApprovals.Add(new AiRepositoryApproval(repositoryId, "Pending trusted CLI",
-                "Pending verification", DateTimeOffset.UtcNow));
+            _aiRepositoryApprovals.Add(new AiRepositoryApproval(repositoryId, "ChatGPT Codex CLI",
+                AiDiffSafetyPolicy.Version, DateTimeOffset.UtcNow));
             SavePreferences();
         }
 
         await LoadAnalysisAsync(true);
     }
 
+    private Task RevokeAiApprovalAsync()
+    {
+        var root = Path.GetFullPath(RepositoryPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        _aiRepositoryApprovals.RemoveAll(approval =>
+            approval.RepositoryId.StartsWith(root + "|", StringComparison.OrdinalIgnoreCase));
+        SavePreferences();
+        StatusMessage = SelectedLanguage == "Deutsch"
+            ? "Die KI-Freigabe für dieses Repository wurde widerrufen."
+            : "AI approval for this repository was revoked.";
+        return Task.CompletedTask;
+    }
+
     private Task<bool> ShowAiRiskNoticeAsync()
     {
         var german = SelectedLanguage == "Deutsch";
         var confirmation = _dialogs.Ask(german ? "KI-Risikohinweis" : "AI risk notice", german
-            ? "Die Anwendung hat Zugriff auf das von dir geöffnete lokale Git-Repository. Nach deiner Freigabe erhält die KI ausschließlich staged-, Arbeitsbaum- und nicht versionierte Diffs. Geschützte Schlüssel- und Zugangsdaten-Dateien werden lokal analysiert und nicht übertragen. Die KI wird im angemeldeten ChatGPT-Workspace ausgeführt; sie hat keinen freien Lesezugriff auf weitere Repository-Dateien.\n\nTippe ACCEPT, um die Anwendung zu verwenden."
-            : "The application can access the local Git repository you open. After your approval, AI receives only staged, working-tree, and untracked diffs. Protected key and credential files stay local. AI runs in your signed-in ChatGPT workspace and has no unrestricted access to other repository files.\n\nType ACCEPT to use the application.");
+            ? "Die Anwendung hat Zugriff auf das von dir geöffnete lokale Git-Repository. Die optionale KI-Analyse benötigt eine separate Repository-Freigabe. Vor jeder Analyse zeigt die Anwendung Umfang und ausgeschlossene Abschnitte; sensible, binäre und zu große Änderungen bleiben lokal. Die KI wird im angemeldeten ChatGPT-Workspace ausgeführt; sie hat keinen freien Lesezugriff auf weitere Repository-Dateien.\n\nTippe ACCEPT, um die Anwendung zu verwenden."
+            : "The application can access the local Git repository you open. Optional AI analysis requires separate repository approval. Before every analysis, the application shows the scope and excluded sections; sensitive, binary, and oversized changes stay local. AI runs in your signed-in ChatGPT workspace and has no unrestricted access to other repository files.\n\nType ACCEPT to use the application.");
         if (!string.Equals(confirmation, "ACCEPT", StringComparison.Ordinal)) return Task.FromResult(false);
         if (!_aiRiskNoticeAccepted)
         {
@@ -800,6 +820,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private static void ApplyFont(string font)
     {
         System.Windows.Application.Current.Resources["AppFontFamily"] = new FontFamily(font);
+    }
+
+    private void SetAiDisclosure(AiAnalysisPreview preview)
+    {
+        _aiDisclosureText = SelectedLanguage == "Deutsch"
+            ? $"KI-Datenübersicht: {preview.TransferableSections} von {preview.TotalSections} Abschnitten ({preview.TransferableCharacters:N0} Zeichen) werden an ChatGPT übertragen; {preview.ExcludedSections} bleiben lokal."
+            : $"AI data overview: {preview.TransferableSections} of {preview.TotalSections} sections ({preview.TransferableCharacters:N0} characters) are sent to ChatGPT; {preview.ExcludedSections} stay local.";
+        OnPropertyChanged(nameof(AiDisclosureText));
     }
 
     private void AddRecent(string path)

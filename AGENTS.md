@@ -19,6 +19,8 @@ GitHub landing page; use this file and the relevant source files instead.
 - `src/GrimmDiff.App`: WPF-Komposition und Haupt-ViewModel; `Services` enthält WPF-/Shell-/Dateisystemadapter, `ViewModels` Darstellungsmodelle.
 - `tests/GrimmDiff.Tests`: ausführbare, paketfreie Unit-Tests für Parser, Analyseprovider, Codex-Adapter und Application-Use-Cases.
 - `scripts`: Auslieferungs- und lokale Wartungsskripte.
+- `docs/compliance` und `docs/security`: versionierte CRA-Nachweise, Threat Model, sichere Nutzungs- und Incident-Response-Verfahren.
+- `.github/workflows`: CI-Sicherheitsprüfungen für Tests, Dependency-Scan und SBOM-Erzeugung.
 
 
 ### UI-Styling

@@ -141,6 +141,23 @@ Test("protected diff files stay local", () =>
     if (client.Prompts.Single().Contains("PASSWORD=secret") || result.Hunks.Count != 2 || result.Groups.Count < 2)
         throw new Exception("Protected files must remain in the local result only.");
 });
+Test("AI safety policy excludes sensitive binary and oversized changes", () =>
+{
+    var large = new string('x', AiDiffSafetyPolicy.MaximumRemoteHunkCharacters + 1);
+    var source = $"diff --git a/.aws/credentials b/.aws/credentials\n@@ -0,0 +1 @@\n+SECRET=value\ndiff --git a/assets/logo.png b/assets/logo.png\nBinary files a/assets/logo.png and b/assets/logo.png differ\ndiff --git a/src/Large.cs b/src/Large.cs\n@@ -0,0 +1 @@\n+{large}\ndiff --git a/src/Safe.cs b/src/Safe.cs\n@@ -0,0 +1 @@\n+class Safe {{}}\n";
+    var assessment = AiDiffSafetyPolicy.Assess(source, DiffScope.WorkingTree);
+    if (assessment.Preview.TransferableSections != 1 || assessment.Preview.ExcludedSections != 3 || assessment.TransferableHunks.Single().FilePath != "src/Safe.cs")
+        throw new Exception("Expected only safe bounded text to be transferable.");
+});
+Test("AI analysis preview matches the provider safety policy", () =>
+{
+    var diffs = new FakeDiffReader("", "diff --git a/.env b/.env\n@@ -0,0 +1 @@\n+TOKEN=secret\n", "");
+    var provider = new RecordingAnalysisProvider();
+    var preview = new DiffAnalysisService(diffs, provider, provider)
+        .PreviewAiAsync(new DiffAnalysisQuery("repo", null, "en", true)).GetAwaiter().GetResult();
+    if (preview.TotalSections != 1 || preview.TransferableSections != 0 || preview.ExcludedSections != 1)
+        throw new Exception("Expected a transparent local-only preview.");
+});
 Test("Codex client rejects API key authentication", () =>
 {
     var runner = new RecordingProcessRunner(new CodexProcessResult(0, "Logged in using an API key", string.Empty));

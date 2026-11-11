@@ -1,0 +1,25 @@
+name: Security checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore GrimmDiff.sln --locked-mode
+      - run: dotnet test GrimmDiff.sln --no-restore --configuration Release
+      - shell: pwsh
+        run: ./scripts/Test-DependencyVulnerabilities.ps1
+      - shell: pwsh
+        run: ./scripts/New-Sbom.ps1 -OutputPath artifacts/GrimmDiff-win-x64.sbom.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: security-evidence
+          path: artifacts/*.sbom.cdx.json

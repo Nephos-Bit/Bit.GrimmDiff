@@ -11,7 +11,7 @@ namespace GrimmDiff.Infrastructure;
 
 public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
 {
-    private const int PromptVersion = 1;
+    private const int PromptVersion = 2;
     private static readonly TimeSpan InvocationTimeout = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan TotalTimeout = TimeSpan.FromMinutes(10);
 
@@ -44,25 +44,27 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
     public async Task<DiffAnalysisResult> AnalyzeAsync(DiffAnalysisRequest request,
         CancellationToken cancellationToken = default)
     {
-        var hunks = UnifiedDiffParser.Parse(request.Diff, request.Scope);
+        var assessment = AiDiffSafetyPolicy.Assess(request.Diff, request.Scope);
+        var hunks = assessment.TransferableHunks.Concat(assessment.ExcludedHunks).ToList();
         if (hunks.Count == 0) return new DiffAnalysisResult(hunks, [], DiffAnalysisSource.Codex);
 
-        var protectedHunks = hunks.Where(hunk => IsProtectedPath(hunk.FilePath)).ToList();
-        if (protectedHunks.Count > 0)
+        var excludedHunks = assessment.ExcludedHunks;
+        if (excludedHunks.Count > 0)
         {
-            var allowedHunks = hunks.Except(protectedHunks).ToList();
-            var local = await _fallback.AnalyzeAsync(request with { Diff = BuildDiff(protectedHunks) },
+            var allowedHunks = assessment.TransferableHunks;
+            var local = await _fallback.AnalyzeAsync(request with { Diff = BuildDiff(excludedHunks) },
                 cancellationToken);
             if (allowedHunks.Count == 0)
                 return local with
                 {
                     Hunks = hunks,
-                    Diagnostic = $"{protectedHunks.Count} protected file change(s) were analysed locally."
+                    Diagnostic = $"{excludedHunks.Count} excluded file change(s) were analysed locally.",
+                    AiPreview = assessment.Preview
                 };
 
             var remote = await AnalyzeAsync(request with { Diff = BuildDiff(allowedHunks) }, cancellationToken);
             return new DiffAnalysisResult(hunks, remote.Groups.Concat(local.Groups).ToList(), remote.Source,
-                $"{protectedHunks.Count} protected file change(s) were analysed locally.");
+                $"{excludedHunks.Count} excluded file change(s) were analysed locally.", assessment.Preview);
         }
 
         var cacheKey = CacheKey(request);
@@ -135,7 +137,7 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
                 group.Description,
                 group.ItemIds.OrderBy(id => order[id]).Select(id => hunkById[id]).ToList(),
                 group.Confidence)).ToList();
-            var result = new DiffAnalysisResult(hunks, groups, DiffAnalysisSource.Codex);
+            var result = new DiffAnalysisResult(hunks, groups, DiffAnalysisSource.Codex, AiPreview: assessment.Preview);
             _cache[cacheKey] = result;
             return result;
         }
@@ -310,20 +312,6 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
         var value =
             $"{PromptVersion}\n{request.RepositoryPath}\n{request.Scope}\n{request.Language}\n{request.Diff.Replace("\r\n", "\n", StringComparison.Ordinal)}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
-    }
-
-    private static bool IsProtectedPath(string path)
-    {
-        var name = Path.GetFileName(path);
-        return name.Equals(".env", StringComparison.OrdinalIgnoreCase) ||
-               name.StartsWith(".env.", StringComparison.OrdinalIgnoreCase) ||
-               name.Equals("id_rsa", StringComparison.OrdinalIgnoreCase) ||
-               name.Equals("id_ed25519", StringComparison.OrdinalIgnoreCase) ||
-               path.EndsWith(".pem", StringComparison.OrdinalIgnoreCase) ||
-               path.EndsWith(".key", StringComparison.OrdinalIgnoreCase) ||
-               path.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase) ||
-               path.EndsWith(".p12", StringComparison.OrdinalIgnoreCase) ||
-               path.EndsWith(".kdbx", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string BuildDiff(IEnumerable<DiffHunk> hunks)
