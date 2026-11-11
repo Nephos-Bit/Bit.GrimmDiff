@@ -8,6 +8,7 @@ public sealed class LocalizedText(Func<string> language)
             ["Open"] = ("Open repository", "Repository öffnen"), ["Clone"] = ("Clone", "Klonen"),
             ["Fetch"] = ("Fetch", "Abrufen"), ["Pull"] = ("Pull", "Holen"), ["Push"] = ("Push", "Senden"),
             ["Repository"] = ("REPOSITORY", "REPOSITORY"), ["Branches"] = ("BRANCHES", "BRANCHES"),
+            ["Branch"] = ("Branch", "Branch"), ["NoBranch"] = ("No branch selected", "Kein Branch ausgewählt"),
             ["Recent"] = ("RECENT", "ZULETZT"), ["NewBranch"] = ("New branch", "Neuer Branch"),
             ["Changes"] = ("CHANGES", "ÄNDERUNGEN"), ["Working"] = ("Working tree", "Arbeitsbaum"),
             ["Staged"] = ("Staged", "Gestaged"), ["CommitMessage"] = ("COMMIT MESSAGE", "COMMIT-NACHRICHT"),

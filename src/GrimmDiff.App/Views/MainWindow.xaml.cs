@@ -23,5 +23,12 @@ public partial class MainWindow : Window
         await _viewModel.InitializeAsync();
     }
 
+    private void BranchButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (BranchButton.ContextMenu is null || !BranchButton.IsEnabled) return;
+        BranchButton.ContextMenu.PlacementTarget = BranchButton;
+        BranchButton.ContextMenu.IsOpen = true;
+    }
+
     #endregion
 }

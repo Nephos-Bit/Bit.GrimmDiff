@@ -36,9 +36,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _hasMoreDiff;
     private int _initialized, _refreshRunning, _refreshPending;
     private DateTimeOffset _lastAccountRefreshUtc = DateTimeOffset.MinValue;
-    private bool _loading, _isAnalyzing, _isAnalysisStale;
+    private bool _loading, _isAnalyzing, _isAnalysisStale, _isRepositoryOperation;
 
     private string _repositoryPath = string.Empty,
+        _currentBranch = string.Empty,
         _statusMessage = "Select a repository to inspect its changes.",
         _selectedLanguage = "English",
         _selectedTheme = "System",
@@ -74,11 +75,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         ShowAiRiskNoticeCommand = new AsyncCommand(async () => _ = await ShowAiRiskNoticeAsync());
         RevokeAiApprovalCommand =
             new AsyncCommand(RevokeAiApprovalAsync, () => !string.IsNullOrWhiteSpace(RepositoryPath));
+        PullCommand = new AsyncCommand(PullAsync, CanRunRepositoryOperation);
+        SwitchBranchCommand = new AsyncCommand<BranchInfo>(SwitchBranchAsync,
+            branch => CanRunRepositoryOperation() && !branch.IsCurrent);
     }
 
     public BulkObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = [];
     public BulkObservableCollection<CommitHistoryItem> History { get; } = [];
     public BulkObservableCollection<AnalysisGroupViewModel> Groups { get; } = [];
+    public BulkObservableCollection<BranchInfo> Branches { get; } = [];
 
     public DiffRenderDocument? DisplayedDiff
     {
@@ -108,6 +113,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public AsyncCommand CancelAnalysisCommand { get; }
     public AsyncCommand ShowAiRiskNoticeCommand { get; }
     public AsyncCommand RevokeAiApprovalCommand { get; }
+    public AsyncCommand PullCommand { get; }
+    public AsyncCommand<BranchInfo> SwitchBranchCommand { get; }
     public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; }
     public DelegateCommand<string> OpenUrlCommand { get; }
 
@@ -119,7 +126,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (Set(ref _repositoryPath, value))
             {
                 OnPropertyChanged(nameof(RepositoryName));
+                OnPropertyChanged(nameof(HasRepository));
                 AnalyzeWithAiCommand.RaiseCanExecuteChanged();
+                PullCommand.RaiseCanExecuteChanged();
+                SwitchBranchCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -127,6 +137,23 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public string RepositoryName => string.IsNullOrWhiteSpace(RepositoryPath)
         ? string.Empty
         : Path.GetFileName(Path.TrimEndingDirectorySeparator(RepositoryPath));
+
+    public bool HasRepository => !string.IsNullOrWhiteSpace(RepositoryPath);
+
+    public string CurrentBranch
+    {
+        get => _currentBranch;
+        private set
+        {
+            if (Set(ref _currentBranch, value)) OnPropertyChanged(nameof(BranchToolTip));
+        }
+    }
+
+    public string BranchToolTip => string.IsNullOrWhiteSpace(CurrentBranch)
+        ? Text["NoBranch"]
+        : $"{Text["Branch"]}: {CurrentBranch}";
+
+    public string PullToolTip => Text["Pull"];
 
     public string StatusMessage
     {
@@ -219,6 +246,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 OnPropertyChanged(nameof(CodexAccountText));
                 OnPropertyChanged(nameof(WeeklyQuotaText));
                 OnPropertyChanged(nameof(WeeklyQuotaToolTip));
+                OnPropertyChanged(nameof(BranchToolTip));
+                OnPropertyChanged(nameof(PullToolTip));
                 SavePreferences();
                 _ = LoadAnalysisAsync(false);
             }
@@ -420,6 +449,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
 
         RepositoryPath = path;
+        Branches.Clear();
+        CurrentBranch = string.Empty;
         RevokeAiApprovalCommand.RaiseCanExecuteChanged();
         AddRecent(path);
         _changeMonitor.Watch(path, ScheduleRefresh);
@@ -453,6 +484,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             var repositoryPath = RepositoryPath;
             var snapshot = await _workspace.OpenAsync(repositoryPath);
             History.ReplaceAll(snapshot.History.Select(commit => new CommitHistoryItem(commit)));
+            Branches.ReplaceAll(snapshot.Branches);
+            CurrentBranch = snapshot.Branch;
+            SwitchBranchCommand.RaiseCanExecuteChanged();
             StatusMessage = snapshot.State == RepositoryState.Ready
                 ? $"{snapshot.Changes.Count} current file changes."
                 : $"Git state: {snapshot.State}. Resolve it before editing.";
@@ -468,6 +502,51 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
 
         if (refreshAnalysis) await LoadAnalysisAsync(analyzeWithAi);
+    }
+
+    private bool CanRunRepositoryOperation()
+    {
+        return !string.IsNullOrWhiteSpace(RepositoryPath) && !_isRepositoryOperation;
+    }
+
+    private async Task PullAsync()
+    {
+        await RunRepositoryOperationAsync(() => _workspace.PullAsync(RepositoryPath),
+            SelectedLanguage == "Deutsch" ? "Änderungen werden geholt..." : "Pulling changes...");
+    }
+
+    private async Task SwitchBranchAsync(BranchInfo branch)
+    {
+        if (branch.IsCurrent) return;
+        await RunRepositoryOperationAsync(() => _workspace.SwitchBranchAsync(RepositoryPath, branch.Name),
+            SelectedLanguage == "Deutsch" ? $"Wechsle zu {branch.Name}..." : $"Switching to {branch.Name}...");
+    }
+
+    private async Task RunRepositoryOperationAsync(Func<Task<GitCommandResult>> operation, string progressMessage)
+    {
+        if (!CanRunRepositoryOperation()) return;
+        _isRepositoryOperation = true;
+        PullCommand.RaiseCanExecuteChanged();
+        SwitchBranchCommand.RaiseCanExecuteChanged();
+        try
+        {
+            StatusMessage = progressMessage;
+            var result = await operation();
+            if (!result.IsSuccess)
+            {
+                StatusMessage = result.ErrorMessage;
+                return;
+            }
+
+            SelectedCommit = null;
+            await RefreshAsync(false);
+        }
+        finally
+        {
+            _isRepositoryOperation = false;
+            PullCommand.RaiseCanExecuteChanged();
+            SwitchBranchCommand.RaiseCanExecuteChanged();
+        }
     }
 
     private async Task LoadAnalysisAsync(bool analyzeWithAi)

@@ -13,7 +13,7 @@ public static class AppCompositionRoot
         var heuristic = new LocalHeuristicDiffAnalysisProvider();
         return new MainViewModel(
             new RepositoryWorkspaceService(new GitCliRepositoryAvailability(git), new GitCliRepositoryReader(git),
-                commands),
+                commands, commands),
             new DiffAnalysisService(new GitCliDiffReader(git), new CodexCliDiffAnalysisProvider(codex, heuristic),
                 heuristic),
             new CodexSessionService(codex),

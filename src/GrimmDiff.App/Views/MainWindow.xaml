@@ -50,10 +50,49 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300" MinWidth="220" /><ColumnDefinition Width="6" />
-                    <ColumnDefinition Width="440" MinWidth="280" /><ColumnDefinition Width="*" MinWidth="320" />
+                    <ColumnDefinition Width="44" /><ColumnDefinition Width="300" MinWidth="220" />
+                    <ColumnDefinition Width="6" /><ColumnDefinition Width="440" MinWidth="280" />
+                    <ColumnDefinition Width="*" MinWidth="320" />
                 </Grid.ColumnDefinitions>
-                <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
+                <Border Grid.Column="0" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0">
+                    <StackPanel VerticalAlignment="Top">
+                        <Button x:Name="BranchButton" Style="{StaticResource IconButton}" ToolTip="{Binding BranchToolTip}"
+                                AutomationProperties.Name="{Binding BranchToolTip}" IsEnabled="{Binding HasRepository}"
+                                Click="BranchButton_OnClick">
+                            <Button.ContextMenu>
+                                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                                             ItemsSource="{Binding Branches}">
+                                    <ContextMenu.ItemContainerStyle>
+                                        <Style TargetType="MenuItem">
+                                            <Setter Property="Header" Value="{Binding Name}" />
+                                            <Setter Property="Command"
+                                                    Value="{Binding DataContext.SwitchBranchCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                            <Setter Property="CommandParameter" Value="{Binding}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource Active}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContextMenu.ItemContainerStyle>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <Path Width="16" Height="16" Stretch="Uniform"
+                                  Data="M12,2 L20,6 L12,10 L4,6 Z M4,12 L12,16 L20,12 M4,18 L12,22 L20,18"
+                                  Stroke="{DynamicResource Primary}" StrokeThickness="1.5" Fill="Transparent"
+                                  StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
+                        </Button>
+                        <Button Style="{StaticResource IconButton}" Command="{Binding PullCommand}"
+                                ToolTip="{Binding PullToolTip}" AutomationProperties.Name="{Binding PullToolTip}">
+                            <Path Width="16" Height="16" Stretch="Uniform"
+                                  Data="M12,3 L12,18 M6,12 L12,18 L18,12 M4,21 L20,21"
+                                  Stroke="{DynamicResource Primary}" StrokeThickness="1.5" Fill="Transparent"
+                                  StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
@@ -110,10 +149,10 @@
                         </ListBox>
                     </Grid>
                 </Border>
-                <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                <GridSplitter Grid.Column="2" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                               ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
                               Background="{DynamicResource Border}" ShowsPreview="True" Cursor="SizeWE" />
-                <Border Grid.Column="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0" Padding="16">
+                <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
@@ -206,7 +245,7 @@
                         </ListBox>
                     </Grid>
                 </Border>
-                <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
+                <Border Grid.Column="4" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" />
