@@ -78,7 +78,11 @@ public sealed record DiffAnalysisResult(
     string? Diagnostic = null,
     AiAnalysisPreview? AiPreview = null);
 
-public sealed record AiAnalysisPreview(int TotalSections, int TransferableSections, int ExcludedSections, int TransferableCharacters);
+public sealed record AiAnalysisPreview(
+    int TotalSections,
+    int TransferableSections,
+    int ExcludedSections,
+    int TransferableCharacters);
 
 public sealed record GitCommandResult(int ExitCode, string StandardOutput, string StandardError)
 {

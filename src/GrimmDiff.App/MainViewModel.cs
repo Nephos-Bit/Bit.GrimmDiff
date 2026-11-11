@@ -28,7 +28,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _aiRiskNoticeAccepted;
     private CancellationTokenSource? _analysisCancellation, _diffRenderCancellation;
     private long _analysisGeneration;
-    private string _analysisSourceLabel = "No analysis yet.", _aiStatusMessage = "Checking Codex CLI...", _aiDisclosureText = "AI analysis has not been prepared.";
+    private string _analysisSourceLabel = "No analysis yet.", _aiStatusMessage = "Checking Codex CLI...";
     private string? _codexEmail;
     private CodexCliStatusKind _codexStatusKind = CodexCliStatusKind.Unavailable;
     private long _diffRenderGeneration;
@@ -72,7 +72,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         LoginToCodexCommand = new AsyncCommand(LoginToCodexAsync, () => !IsAnalyzing);
         CancelAnalysisCommand = new AsyncCommand(CancelAnalysisAsync, () => IsAnalyzing);
         ShowAiRiskNoticeCommand = new AsyncCommand(async () => _ = await ShowAiRiskNoticeAsync());
-        RevokeAiApprovalCommand = new AsyncCommand(RevokeAiApprovalAsync, () => !string.IsNullOrWhiteSpace(RepositoryPath));
+        RevokeAiApprovalCommand =
+            new AsyncCommand(RevokeAiApprovalAsync, () => !string.IsNullOrWhiteSpace(RepositoryPath));
     }
 
     public BulkObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = [];
@@ -150,8 +151,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             _codexStatusKind == CodexCliStatusKind.Ready ? "Active" : "Warning"];
 
     public string CodexStatusText => _codexStatusKind == CodexCliStatusKind.Ready
-        ?
-        SelectedLanguage == "Deutsch" ? "ChatGPT verbunden" : "ChatGPT connected"
+        ? SelectedLanguage == "Deutsch" ? "ChatGPT verbunden" : "ChatGPT connected"
         : SelectedLanguage == "Deutsch"
             ? "ChatGPT nicht verbunden"
             : "ChatGPT not connected";
@@ -198,7 +198,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public string LoginButtonText => SelectedLanguage == "Deutsch" ? "Mit ChatGPT anmelden" : "Sign in with ChatGPT";
     public string CancelButtonText => SelectedLanguage == "Deutsch" ? "Abbrechen" : "Cancel";
 
-    public string AiDisclosureText => _aiDisclosureText;
+    public string AiDisclosureText { get; private set; } = "AI analysis has not been prepared.";
 
     public string SelectedLanguage
     {
@@ -551,8 +551,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         SetAiDisclosure(preview);
         var repositoryId = RepositoryIdentity(RepositoryPath);
         if (!_aiRepositoryApprovals.Any(approval => approval.RepositoryId == repositoryId &&
-                                             approval.ProviderId == "ChatGPT Codex CLI" &&
-                                             approval.SafetyPolicyVersion == AiDiffSafetyPolicy.Version))
+                                                    approval.ProviderId == "ChatGPT Codex CLI" &&
+                                                    approval.SafetyPolicyVersion == AiDiffSafetyPolicy.Version))
         {
             var confirmation = _dialogs.Ask("AI analysis",
                 $"This repository approval permits optional processing by the signed-in ChatGPT workspace. This analysis will transfer {preview.TransferableSections} changed section(s), up to {preview.TransferableCharacters:N0} characters. {preview.ExcludedSections} section(s) are excluded and stay local. Approval is invalidated when repository configuration, provider, or the safety policy changes. Type ALLOW to approve this repository.");
@@ -574,7 +574,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private Task RevokeAiApprovalAsync()
     {
-        var root = Path.GetFullPath(RepositoryPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var root = Path.GetFullPath(RepositoryPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         _aiRepositoryApprovals.RemoveAll(approval =>
             approval.RepositoryId.StartsWith(root + "|", StringComparison.OrdinalIgnoreCase));
         SavePreferences();
@@ -824,7 +825,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private void SetAiDisclosure(AiAnalysisPreview preview)
     {
-        _aiDisclosureText = SelectedLanguage == "Deutsch"
+        AiDisclosureText = SelectedLanguage == "Deutsch"
             ? $"KI-Datenübersicht: {preview.TransferableSections} von {preview.TotalSections} Abschnitten ({preview.TransferableCharacters:N0} Zeichen) werden an ChatGPT übertragen; {preview.ExcludedSections} bleiben lokal."
             : $"AI data overview: {preview.TransferableSections} of {preview.TotalSections} sections ({preview.TransferableCharacters:N0} characters) are sent to ChatGPT; {preview.ExcludedSections} stay local.";
         OnPropertyChanged(nameof(AiDisclosureText));

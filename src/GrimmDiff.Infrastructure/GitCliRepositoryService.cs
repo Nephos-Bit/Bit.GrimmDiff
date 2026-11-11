@@ -189,8 +189,10 @@ public sealed class GitCliRepositoryService
             var hardened = command switch
             {
                 "fetch" or "pull" or "push" or "clone" => new[]
-                    { "-c", "protocol.ext.allow=never", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=" }.Concat(args),
-                _ => new[] { "-c", "core.fsmonitor=false", "-c", "core.hooksPath=", "-c", "diff.external=" }.Concat(args)
+                        { "-c", "protocol.ext.allow=never", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=" }
+                    .Concat(args),
+                _ => new[] { "-c", "core.fsmonitor=false", "-c", "core.hooksPath=", "-c", "diff.external=" }
+                    .Concat(args)
             };
             var start = new ProcessStartInfo(ResolveGitExecutable())
             {

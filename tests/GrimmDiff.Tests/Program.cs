@@ -144,9 +144,11 @@ Test("protected diff files stay local", () =>
 Test("AI safety policy excludes sensitive binary and oversized changes", () =>
 {
     var large = new string('x', AiDiffSafetyPolicy.MaximumRemoteHunkCharacters + 1);
-    var source = $"diff --git a/.aws/credentials b/.aws/credentials\n@@ -0,0 +1 @@\n+SECRET=value\ndiff --git a/assets/logo.png b/assets/logo.png\nBinary files a/assets/logo.png and b/assets/logo.png differ\ndiff --git a/src/Large.cs b/src/Large.cs\n@@ -0,0 +1 @@\n+{large}\ndiff --git a/src/Safe.cs b/src/Safe.cs\n@@ -0,0 +1 @@\n+class Safe {{}}\n";
+    var source =
+        $"diff --git a/.aws/credentials b/.aws/credentials\n@@ -0,0 +1 @@\n+SECRET=value\ndiff --git a/assets/logo.png b/assets/logo.png\nBinary files a/assets/logo.png and b/assets/logo.png differ\ndiff --git a/src/Large.cs b/src/Large.cs\n@@ -0,0 +1 @@\n+{large}\ndiff --git a/src/Safe.cs b/src/Safe.cs\n@@ -0,0 +1 @@\n+class Safe {{}}\n";
     var assessment = AiDiffSafetyPolicy.Assess(source, DiffScope.WorkingTree);
-    if (assessment.Preview.TransferableSections != 1 || assessment.Preview.ExcludedSections != 3 || assessment.TransferableHunks.Single().FilePath != "src/Safe.cs")
+    if (assessment.Preview.TransferableSections != 1 || assessment.Preview.ExcludedSections != 3 ||
+        assessment.TransferableHunks.Single().FilePath != "src/Safe.cs")
         throw new Exception("Expected only safe bounded text to be transferable.");
 });
 Test("AI analysis preview matches the provider safety policy", () =>

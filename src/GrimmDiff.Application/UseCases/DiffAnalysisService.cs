@@ -28,9 +28,11 @@ public sealed class DiffAnalysisService(
     {
         var historical = !string.IsNullOrWhiteSpace(query.CommitId);
         var diff = historical
-            ? await diffs.GetCommitDiffAsync(query.RepositoryPath, query.CommitId!, cancellationToken: cancellationToken)
+            ? await diffs.GetCommitDiffAsync(query.RepositoryPath, query.CommitId!,
+                cancellationToken: cancellationToken)
             : await diffs.GetDiffAsync(query.RepositoryPath, DiffScope.Staged, cancellationToken: cancellationToken) +
-              await diffs.GetDiffAsync(query.RepositoryPath, DiffScope.WorkingTree, cancellationToken: cancellationToken);
+              await diffs.GetDiffAsync(query.RepositoryPath, DiffScope.WorkingTree,
+                  cancellationToken: cancellationToken);
         return (diff, historical ? DiffScope.Historical : DiffScope.WorkingTree);
     }
 }
