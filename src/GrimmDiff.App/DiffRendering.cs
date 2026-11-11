@@ -5,47 +5,6 @@ using GrimmDiff.Domain;
 
 namespace GrimmDiff.App;
 
-public enum DiffHighlightKind
-{
-    AddedLine,
-    RemovedLine,
-    Hunk,
-    AddedWord,
-    RemovedWord
-}
-
-public sealed record DiffTextMarker(int Offset, int Length, DiffHighlightKind Kind);
-
-public sealed record DiffPageCursor(int HunkIndex, int ContentLineIndex);
-
-public sealed record DiffRenderPage(string Text, IReadOnlyList<DiffTextMarker> Markers, DiffPageCursor? NextPage);
-
-public sealed class DiffRenderDocument
-{
-    public DiffRenderDocument(string text, IReadOnlyList<DiffTextMarker> markers, DiffPageCursor? nextPage)
-    {
-        (Text, Markers, NextPage) = (text, markers, nextPage);
-    }
-
-    public string Text { get; }
-    public IReadOnlyList<DiffTextMarker> Markers { get; }
-    public DiffPageCursor? NextPage { get; }
-
-    public static DiffRenderDocument FromPage(DiffRenderPage page)
-    {
-        return new DiffRenderDocument(page.Text, page.Markers, page.NextPage);
-    }
-
-    public DiffRenderDocument Append(DiffRenderPage page)
-    {
-        var offset = Text.Length;
-        var markers = new List<DiffTextMarker>(Markers.Count + page.Markers.Count);
-        markers.AddRange(Markers);
-        markers.AddRange(page.Markers.Select(marker => marker with { Offset = marker.Offset + offset }));
-        return new DiffRenderDocument(Text + page.Text, markers, page.NextPage);
-    }
-}
-
 public static class DiffRenderBuilder
 {
     public const int MaximumPageLines = 2_000;

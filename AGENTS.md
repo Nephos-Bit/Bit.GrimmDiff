@@ -31,3 +31,8 @@ Use the in the projectfolde containing UI-DESIGN.md
 
 Whenever a change adds, removes, renames, or repurposes a top-level directory or a major source/test area, update this Repo Map in the same change. Keep each entry aligned with the directory's actual contents and responsibilities; do not list generated or local-only directories as source areas unless they are relevant to repository structure.
 
+### Quellcode-Organisation
+
+- Jede C#-Datei enthält genau einen Top-Level-Typ. Mehrere Klassen, Records, Interfaces, Structs oder Enums in einer Datei sind unzulässig.
+- Private, eng gekoppelte Hilfstypen dürfen ausschließlich als geschachtelte Typen innerhalb ihres Besitzertyps verbleiben.
+

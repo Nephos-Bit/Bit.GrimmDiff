@@ -56,8 +56,3 @@ public static class AiDiffSafetyPolicy
                    ProtectedDirectories.Contains(segment, StringComparer.OrdinalIgnoreCase));
     }
 }
-
-public sealed record AiDiffSafetyAssessment(
-    IReadOnlyList<DiffHunk> TransferableHunks,
-    IReadOnlyList<DiffHunk> ExcludedHunks,
-    AiAnalysisPreview Preview);
