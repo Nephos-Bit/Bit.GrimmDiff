@@ -162,11 +162,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             ? "Anmelden"
             : "Sign in";
 
-    public string WeeklyQuotaText => _weeklyRemainingPercent is int remaining
-        ? SelectedLanguage == "Deutsch" ? $"WOCHE · {remaining} % VERBLEIBEND" : $"WEEK · {remaining}% LEFT"
-        : SelectedLanguage == "Deutsch"
-            ? "WOCHE · –"
-            : "WEEK · –";
+    public string WeeklyQuotaText => _weeklyRemainingPercent is int remaining ? $"{remaining} %" : "–";
+
+    public string WeeklyQuotaToolTip => _weeklyRemainingPercent is int remaining
+        ? SelectedLanguage == "Deutsch" ? $"Wöchentliches Restkontingent: {remaining} %" : $"Weekly remaining quota: {remaining}%"
+        : SelectedLanguage == "Deutsch" ? "Wöchentliches Restkontingent nicht verfügbar" : "Weekly remaining quota unavailable";
 
     public bool IsAnalyzing
     {
@@ -218,6 +218,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 OnPropertyChanged(nameof(CodexStatusText));
                 OnPropertyChanged(nameof(CodexAccountText));
                 OnPropertyChanged(nameof(WeeklyQuotaText));
+                OnPropertyChanged(nameof(WeeklyQuotaToolTip));
                 SavePreferences();
                 _ = LoadAnalysisAsync(false);
             }
@@ -651,6 +652,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             _weeklyRemainingPercent = usage.WeeklyRemainingPercent;
             OnPropertyChanged(nameof(CodexAccountText));
             OnPropertyChanged(nameof(WeeklyQuotaText));
+            OnPropertyChanged(nameof(WeeklyQuotaToolTip));
         }
         finally
         {
@@ -672,6 +674,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(CodexStatusText));
         OnPropertyChanged(nameof(CodexAccountText));
         OnPropertyChanged(nameof(WeeklyQuotaText));
+        OnPropertyChanged(nameof(WeeklyQuotaToolTip));
     }
 
     private string LocalizeCodexStatus(CodexCliStatus status)

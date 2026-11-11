@@ -7,10 +7,33 @@
             <RowDefinition Height="44" /><RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Margin="32,0">
-            <TextBlock Text="grimmdiff" FontSize="20" VerticalAlignment="Center" />
+            <TextBlock Text="grimmdiff" FontSize="20" VerticalAlignment="Center"
+                       HorizontalAlignment="Left" />
+            <Menu Height="44" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent">
+                <MenuItem Header="Open repository" Style="{StaticResource MenuBarItem}"
+                          Command="{Binding OpenRepositoryCommand}" />
+                <MenuItem Header="Clone" Style="{StaticResource MenuBarItem}" Command="{Binding CloneCommand}" />
+                <MenuItem Header="AI risk notice / KI-Risikohinweis" Style="{StaticResource MenuBarItem}"
+                          Command="{Binding ShowAiRiskNoticeCommand}" />
+                <MenuItem Header="Revoke AI approval" Style="{StaticResource MenuBarItem}"
+                          Command="{Binding RevokeAiApprovalCommand}" />
+                <MenuItem Header="Language" Style="{StaticResource MenuBarItem}">
+                    <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}" />
+                    <MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}" />
+                </MenuItem>
+                <MenuItem Header="Theme" Style="{StaticResource MenuBarItem}">
+                    <MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}" />
+                    <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}" />
+                    <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}" />
+                </MenuItem>
+                <MenuItem Header="Font" Style="{StaticResource MenuBarItem}">
+                    <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}" />
+                    <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}" />
+                </MenuItem>
+            </Menu>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <TextBlock Text="{Binding WeeklyQuotaText}" Foreground="{DynamicResource Secondary}" FontSize="12"
-                           VerticalAlignment="Center" Margin="0,0,16,0" />
+                           ToolTip="{Binding WeeklyQuotaToolTip}" VerticalAlignment="Center" Margin="0,0,16,0" />
                 <Button Style="{StaticResource HeaderAction}" Command="{Binding LoginToCodexCommand}"
                         ToolTip="{Binding CodexStatusText}">
                     <StackPanel Orientation="Horizontal">
@@ -19,33 +42,9 @@
                         <TextBlock Text="{Binding CodexAccountText}" FontSize="12" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
-                <Menu Height="44" VerticalAlignment="Center" Background="Transparent">
-                    <MenuItem Header="MENU" Style="{StaticResource MenuBarItem}">
-                        <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}" />
-                        <MenuItem Header="Clone" Command="{Binding CloneCommand}" /><Separator />
-                        <MenuItem Header="AI risk notice / KI-Risikohinweis"
-                                  Command="{Binding ShowAiRiskNoticeCommand}" />
-                        <MenuItem Header="Revoke AI approval for this repository"
-                                  Command="{Binding RevokeAiApprovalCommand}" />
-                        <Separator />
-                        <MenuItem Header="Language">
-                            <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}" />
-                            <MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}" />
-                        </MenuItem>
-                        <MenuItem Header="Theme">
-                            <MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}" />
-                            <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}" />
-                            <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}" />
-                        </MenuItem>
-                        <MenuItem Header="Font">
-                            <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}" />
-                            <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}" />
-                        </MenuItem>
-                    </MenuItem>
-                </Menu>
             </StackPanel>
         </Grid>
-        <Grid Grid.Row="1" Margin="32,24,32,32">
+        <Grid Grid.Row="1" Margin="32,0,32,32">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" /><RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
