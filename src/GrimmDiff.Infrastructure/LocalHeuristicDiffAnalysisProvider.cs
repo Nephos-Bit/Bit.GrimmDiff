@@ -13,14 +13,20 @@ public sealed partial class LocalHeuristicDiffAnalysisProvider : IDiffAnalysisPr
         "await", "const", "readonly", "null", "true", "false", "new", "get", "set", "list", "task", "var"
     };
 
-    public Task<DiffAnalysisResult> AnalyzeAsync(DiffAnalysisRequest request, CancellationToken cancellationToken = default)
+    public Task<DiffAnalysisResult> AnalyzeAsync(DiffAnalysisRequest request, CancellationToken cancellationToken = default) => Task.Run(() =>
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var hunks = UnifiedDiffParser.Parse(request.Diff, request.Scope);
-        var features = hunks.Select(CreateFeatures).ToList();
-        var clusters = BuildClusters(features);
+        var features = new List<Features>(hunks.Count);
+        foreach (var hunk in hunks)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            features.Add(CreateFeatures(hunk));
+        }
+        var clusters = BuildClusters(features, cancellationToken);
         var groups = clusters.Select(cluster => ToGroup(cluster, request.Language)).ToList();
-        return Task.FromResult(new DiffAnalysisResult(hunks, groups, DiffAnalysisSource.Heuristic));
-    }
+        return new DiffAnalysisResult(hunks, groups, DiffAnalysisSource.Heuristic);
+    }, cancellationToken);
 
     #region Private
 
@@ -53,12 +59,13 @@ public sealed partial class LocalHeuristicDiffAnalysisProvider : IDiffAnalysisPr
         return new Features(hunk, Tokens(hunk), declarations, identifiers, concepts, methods, hasAdditions, hasRemovals, Directory(hunk.FilePath));
     }
 
-    private static List<List<Features>> BuildClusters(List<Features> features)
+    private static List<List<Features>> BuildClusters(List<Features> features, CancellationToken cancellationToken)
     {
         var clusters = features.Select(f => new List<Features> { f }).ToList();
         for (var i = 0; i < clusters.Count; i++)
         for (var j = clusters.Count - 1; j > i; j--)
         {
+            if ((j & 31) == 0) cancellationToken.ThrowIfCancellationRequested();
             if (clusters[i].Any(left => clusters[j].Any(right => Similarity(left, right) >= 0.35)))
             {
                 clusters[i].AddRange(clusters[j]);
