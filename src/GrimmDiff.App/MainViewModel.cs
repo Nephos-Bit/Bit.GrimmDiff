@@ -26,11 +26,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private CodexCliStatusKind _codexStatusKind = CodexCliStatusKind.Unavailable;
     private List<AiRepositoryApproval> _aiRepositoryApprovals = [];
     private bool _aiRiskNoticeAccepted;
-    private CancellationTokenSource? _analysisCancellation; private long _analysisGeneration; private long _diffRenderGeneration; private int _initialized;
+    private CancellationTokenSource? _analysisCancellation, _diffRenderCancellation; private long _analysisGeneration; private long _diffRenderGeneration; private int _initialized, _refreshRunning, _refreshPending;
+    private readonly SemaphoreSlim _accountRefreshGate = new(1, 1); private DateTimeOffset _lastAccountRefreshUtc = DateTimeOffset.MinValue;
     public MainViewModel(RepositoryWorkspaceService workspace, DiffAnalysisService analysis, CodexSessionService codex, PreferencesService preferences, IUserDialogService dialogs, IExternalNavigationService navigation, IRepositoryChangeMonitor changeMonitor)
     {
         _workspace = workspace; _analysis = analysis; _codex = codex; _preferences = preferences; _dialogs = dialogs; _navigation = navigation; _changeMonitor = changeMonitor; _refreshTimer.Elapsed += OnRefreshTimerElapsed;
-        OpenRepositoryCommand = new AsyncCommand(OpenRepositoryAsync); CloneCommand = new AsyncCommand(CloneAsync); ShowCurrentCommand = new AsyncCommand(ShowCurrentAsync); SelectFileCommand = new DelegateCommand<AnalysisFileViewModel>(SelectFile); OpenUrlCommand = new DelegateCommand<string>(OpenUrl);
+        OpenRepositoryCommand = new AsyncCommand(OpenRepositoryAsync); CloneCommand = new AsyncCommand(CloneAsync); ShowCurrentCommand = new AsyncCommand(ShowCurrentAsync); LoadMoreDiffCommand = new AsyncCommand(LoadMoreDiffAsync, () => HasMoreDiff); SelectFileCommand = new DelegateCommand<AnalysisFileViewModel>(SelectFile); OpenUrlCommand = new DelegateCommand<string>(OpenUrl);
         AnalyzeWithAiCommand = new AsyncCommand(AnalyzeWithAiAsync, () => !string.IsNullOrWhiteSpace(RepositoryPath) && !IsAnalyzing);
         LoginToCodexCommand = new AsyncCommand(LoginToCodexAsync, () => !IsAnalyzing);
         CancelAnalysisCommand = new AsyncCommand(CancelAnalysisAsync, () => IsAnalyzing);
@@ -38,9 +39,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     }
     public event PropertyChangedEventHandler? PropertyChanged;
     public BulkObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = []; public BulkObservableCollection<CommitHistoryItem> History { get; } = []; public BulkObservableCollection<AnalysisGroupViewModel> Groups { get; } = [];
-    private IReadOnlyList<DiffLineViewModel> _diffLines = []; public IReadOnlyList<DiffLineViewModel> DiffLines { get => _diffLines; private set => Set(ref _diffLines, value); }
+    private DiffRenderDocument? _displayedDiff; private bool _hasMoreDiff;
+    public DiffRenderDocument? DisplayedDiff { get => _displayedDiff; private set => Set(ref _displayedDiff, value); }
+    public bool HasMoreDiff { get => _hasMoreDiff; private set { if (Set(ref _hasMoreDiff, value)) LoadMoreDiffCommand.RaiseCanExecuteChanged(); } }
     public IReadOnlyList<string> Languages { get; } = ["English", "Deutsch"]; public IReadOnlyList<string> Themes { get; } = ["System", "Dark", "Light"]; public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Verdana"]; public LocalizedText Text => new(() => SelectedLanguage);
-    public AsyncCommand OpenRepositoryCommand { get; } public AsyncCommand CloneCommand { get; } public AsyncCommand ShowCurrentCommand { get; } public AsyncCommand AnalyzeWithAiCommand { get; } public AsyncCommand LoginToCodexCommand { get; } public AsyncCommand CancelAnalysisCommand { get; } public AsyncCommand ShowAiRiskNoticeCommand { get; } public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; } public DelegateCommand<string> OpenUrlCommand { get; }
+    public AsyncCommand OpenRepositoryCommand { get; } public AsyncCommand CloneCommand { get; } public AsyncCommand ShowCurrentCommand { get; } public AsyncCommand LoadMoreDiffCommand { get; } public AsyncCommand AnalyzeWithAiCommand { get; } public AsyncCommand LoginToCodexCommand { get; } public AsyncCommand CancelAnalysisCommand { get; } public AsyncCommand ShowAiRiskNoticeCommand { get; } public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; } public DelegateCommand<string> OpenUrlCommand { get; }
     public string RepositoryPath { get => _repositoryPath; private set { if (Set(ref _repositoryPath, value)) { OnPropertyChanged(nameof(RepositoryName)); AnalyzeWithAiCommand.RaiseCanExecuteChanged(); } } } public string RepositoryName => string.IsNullOrWhiteSpace(RepositoryPath) ? string.Empty : Path.GetFileName(Path.TrimEndingDirectorySeparator(RepositoryPath)); public string StatusMessage { get => _statusMessage; private set => Set(ref _statusMessage, value); }
     public string AnalysisSourceLabel { get => _analysisSourceLabel; private set => Set(ref _analysisSourceLabel, value); }
     public string AiStatusMessage { get => _aiStatusMessage; private set => Set(ref _aiStatusMessage, value); }
@@ -88,8 +91,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public void Dispose()
     {
-        _analysisCancellation?.Cancel();
-        _analysisCancellation?.Dispose();
+        _analysisCancellation?.Cancel(); _analysisCancellation?.Dispose();
+        _diffRenderCancellation?.Cancel(); _diffRenderCancellation?.Dispose();
         _changeMonitor.Dispose();
         _refreshTimer.Dispose();
     }
@@ -127,9 +130,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             var prepared = (Analysis: analysisView.Result, Groups: await Task.Run(() => analysisView.Result.Groups.Select(group => new AnalysisGroupViewModel(group)).ToList(), cancellationToken));
             if (generation != Interlocked.Read(ref _analysisGeneration)) return;
             var result = prepared.Analysis;
+            var previousSelection = SelectedFile;
             Groups.ReplaceAll(prepared.Groups);
             var firstFile = Groups.SelectMany(group => group.Files).FirstOrDefault();
-            if (!Equals(SelectedFile, firstFile)) SelectedFile = firstFile; else _ = ShowFileAsync(firstFile);
+            var restoredSelection = previousSelection is null ? null : Groups.SelectMany(group => group.Files).FirstOrDefault(file =>
+                file.Path.Equals(previousSelection.Path, StringComparison.OrdinalIgnoreCase) && file.GroupTitle.Equals(previousSelection.GroupTitle, StringComparison.Ordinal));
+            var selectedFile = restoredSelection ?? firstFile;
+            if (!ReferenceEquals(SelectedFile, selectedFile)) SelectedFile = selectedFile;
             OnPropertyChanged(nameof(SelectedAnalysisTitle)); OnPropertyChanged(nameof(SelectedAnalysisDescription)); OnPropertyChanged(nameof(ViewTitle));
             IsAnalysisStale = !analyzeWithAi;
             AnalysisSourceLabel = result.Source == DiffAnalysisSource.Codex
@@ -143,7 +150,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                     ? $"{result.Hunks.Count} geänderte Abschnitte wurden in {result.Groups.Count} Arbeitsschritte gruppiert."
                     : $"{result.Hunks.Count} changed sections grouped into {result.Groups.Count} work steps.";
             StatusMessage = string.IsNullOrWhiteSpace(result.Diagnostic) ? summary : $"{result.Diagnostic} {summary}";
-            if (result.Source == DiffAnalysisSource.Codex) _ = RefreshCodexAccountAsync();
         }
         catch (OperationCanceledException) { if (generation == Interlocked.Read(ref _analysisGeneration)) StatusMessage = SelectedLanguage == "Deutsch" ? "Analyse abgebrochen." : "Analysis cancelled."; }
         catch (Exception ex) { StatusMessage = ex.Message; }
@@ -173,15 +179,23 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         return Task.FromResult(true);
     }
     private Task CancelAnalysisAsync() { _analysisCancellation?.Cancel(); return Task.CompletedTask; }
-    private async Task CheckCodexAsync() { try { var status = await Task.Run(() => _codex.GetStatusAsync()); SetCodexStatus(status); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
-    private async Task LoginToCodexAsync() { AiStatusMessage = SelectedLanguage == "Deutsch" ? "ChatGPT-Anmeldung wird geöffnet..." : "Opening ChatGPT sign-in..."; try { var status = await Task.Run(() => _codex.LoginAsync()); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
-    private async Task RefreshCodexAccountAsync()
+    private async Task CheckCodexAsync() { try { var status = await Task.Run(() => _codex.GetStatusAsync()); SetCodexStatus(status); if (status.IsReady) _ = RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
+    private async Task LoginToCodexAsync() { AiStatusMessage = SelectedLanguage == "Deutsch" ? "ChatGPT-Anmeldung wird geöffnet..." : "Opening ChatGPT sign-in..."; try { var status = await Task.Run(() => _codex.LoginAsync()); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(true); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
+    private async Task RefreshCodexAccountAsync(bool force = false)
     {
-        var usage = await Task.Run(() => _codex.GetAccountUsageAsync());
-        _codexEmail = usage.Email;
-        _weeklyRemainingPercent = usage.WeeklyRemainingPercent;
-        OnPropertyChanged(nameof(CodexAccountText));
-        OnPropertyChanged(nameof(WeeklyQuotaText));
+        if (!force && DateTimeOffset.UtcNow - _lastAccountRefreshUtc < TimeSpan.FromMinutes(15)) return;
+        if (!await _accountRefreshGate.WaitAsync(0)) return;
+        try
+        {
+            if (!force && DateTimeOffset.UtcNow - _lastAccountRefreshUtc < TimeSpan.FromMinutes(15)) return;
+            var usage = await Task.Run(() => _codex.GetAccountUsageAsync());
+            _lastAccountRefreshUtc = DateTimeOffset.UtcNow;
+            _codexEmail = usage.Email;
+            _weeklyRemainingPercent = usage.WeeklyRemainingPercent;
+            OnPropertyChanged(nameof(CodexAccountText));
+            OnPropertyChanged(nameof(WeeklyQuotaText));
+        }
+        finally { _accountRefreshGate.Release(); }
     }
     private void SetCodexStatus(CodexCliStatus status) { _codexStatusKind = status.Kind; if (!status.IsReady) { _codexEmail = null; _weeklyRemainingPercent = null; } AiStatusMessage = LocalizeCodexStatus(status); OnPropertyChanged(nameof(CodexStatusBrush)); OnPropertyChanged(nameof(CodexStatusText)); OnPropertyChanged(nameof(CodexAccountText)); OnPropertyChanged(nameof(WeeklyQuotaText)); }
     private string LocalizeCodexStatus(CodexCliStatus status) => status.Kind switch
@@ -197,14 +211,38 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private async Task ShowFileAsync(AnalysisFileViewModel? file)
     {
         var generation = Interlocked.Increment(ref _diffRenderGeneration);
-        if (file is null) { DiffLines = []; return; }
-        var palette = DiffLineViewModel.CapturePalette();
-        var diff = file.Diff;
-        // Prepare a bounded display model on a worker before the ListBox is updated.
-        var lines = await Task.Run(() => DiffLineViewModel.CreateDisplayLines(diff, palette));
-        if (generation == Interlocked.Read(ref _diffRenderGeneration) && Equals(file, SelectedFile)) DiffLines = lines;
+        _diffRenderCancellation?.Cancel(); _diffRenderCancellation?.Dispose(); _diffRenderCancellation = new CancellationTokenSource();
+        var cancellationToken = _diffRenderCancellation.Token;
+        if (file is null) { PublishDiffDocument(null); return; }
+        if (file.RenderDocument is not null) { PublishDiffDocument(file.RenderDocument); return; }
+        try
+        {
+            var page = await Task.Run(() => DiffRenderBuilder.CreatePage(file.Hunks, cancellationToken: cancellationToken), cancellationToken);
+            if (generation != Interlocked.Read(ref _diffRenderGeneration) || !ReferenceEquals(file, SelectedFile)) return;
+            file.RenderDocument = DiffRenderDocument.FromPage(page);
+            PublishDiffDocument(file.RenderDocument);
+        }
+        catch (OperationCanceledException) { }
     }
-    private void ScheduleRefresh(string path) { if (IsGeneratedPath(path)) return; _analysisCancellation?.Cancel(); _refreshTimer.Stop(); _refreshTimer.Start(); }
+    private async Task LoadMoreDiffAsync()
+    {
+        var file = SelectedFile;
+        var document = file?.RenderDocument;
+        if (file is null || document?.NextPage is null) return;
+        var generation = Interlocked.Increment(ref _diffRenderGeneration);
+        _diffRenderCancellation?.Cancel(); _diffRenderCancellation?.Dispose(); _diffRenderCancellation = new CancellationTokenSource();
+        var cancellationToken = _diffRenderCancellation.Token;
+        try
+        {
+            var page = await Task.Run(() => DiffRenderBuilder.CreatePage(file.Hunks, document.NextPage, cancellationToken), cancellationToken);
+            if (generation != Interlocked.Read(ref _diffRenderGeneration) || !ReferenceEquals(file, SelectedFile) || !ReferenceEquals(document, file.RenderDocument)) return;
+            file.RenderDocument = document.Append(page);
+            PublishDiffDocument(file.RenderDocument);
+        }
+        catch (OperationCanceledException) { }
+    }
+    private void PublishDiffDocument(DiffRenderDocument? document) { DisplayedDiff = document; HasMoreDiff = document?.NextPage is not null; }
+    private void ScheduleRefresh(string path) { if (IsGeneratedPath(path)) return; _analysisCancellation?.Cancel(); Interlocked.Exchange(ref _refreshPending, 1); _refreshTimer.Stop(); _refreshTimer.Start(); }
     private static bool IsGeneratedPath(string path)
     {
         var segments = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -216,7 +254,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             && !gitEntry.Equals("refs", StringComparison.OrdinalIgnoreCase)
             && !gitEntry.Equals("packed-refs", StringComparison.OrdinalIgnoreCase);
     }
-    private async void OnRefreshTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e) => await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => RefreshAsync(false)).Task.Unwrap();
+    private void OnRefreshTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e) => _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(ProcessRefreshQueueAsync);
+    private async Task ProcessRefreshQueueAsync()
+    {
+        if (Interlocked.CompareExchange(ref _refreshRunning, 1, 0) != 0) return;
+        try
+        {
+            do
+            {
+                Interlocked.Exchange(ref _refreshPending, 0);
+                await RefreshAsync(false);
+            }
+            while (Interlocked.Exchange(ref _refreshPending, 0) != 0);
+        }
+        finally { Interlocked.Exchange(ref _refreshRunning, 0); }
+    }
     private static void ApplyFont(string font) => System.Windows.Application.Current.Resources["AppFontFamily"] = new FontFamily(font);
     private void AddRecent(string path) { var preferences = _preferences.AddRecent(new AppPreferences(RecentRepositories.Select(item => item.Path).ToList(), SelectedTheme, SelectedLanguage, SelectedFont), path); RecentRepositories.ReplaceAll(preferences.RecentRepositories.Select(item => new RecentRepositoryItem(item))); SavePreferences(); }
     private void SavePreferences() => _ = _preferences.SaveAsync(new AppPreferences(RecentRepositories.Select(item => item.Path).ToList(), SelectedTheme, SelectedLanguage, SelectedFont, _aiRepositoryApprovals, _aiRiskNoticeAccepted));
@@ -232,17 +284,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     #endregion
 }
-public sealed class AnalysisGroupViewModel { public AnalysisGroupViewModel(WorkStepGroup group) { Title = group.Title; Description = group.Description; Files = group.Hunks.GroupBy(x => x.FilePath, StringComparer.OrdinalIgnoreCase).Select(x => new AnalysisFileViewModel(x.Key, string.Join("\n", x.Select(h => $"{h.Header}\n{h.Content}")), group.Title, group.Description)).ToList(); } public string Title { get; } public string Description { get; } public IReadOnlyList<AnalysisFileViewModel> Files { get; } }
+public sealed class AnalysisGroupViewModel { public AnalysisGroupViewModel(WorkStepGroup group) { Title = group.Title; Description = group.Description; Files = group.Hunks.GroupBy(x => x.FilePath, StringComparer.OrdinalIgnoreCase).Select(x => new AnalysisFileViewModel(x.Key, x.ToList(), group.Title, group.Description)).ToList(); } public string Title { get; } public string Description { get; } public IReadOnlyList<AnalysisFileViewModel> Files { get; } }
 public sealed class AnalysisFileViewModel
 {
-    public AnalysisFileViewModel(string path, string diff, string groupTitle, string groupDescription) => (Path, Diff, GroupTitle, GroupDescription) = (path, diff, groupTitle, groupDescription);
+    public AnalysisFileViewModel(string path, IReadOnlyList<DiffHunk> hunks, string groupTitle, string groupDescription) => (Path, Hunks, GroupTitle, GroupDescription) = (path, hunks, groupTitle, groupDescription);
     public string Path { get; }
-    public string Diff { get; }
+    public IReadOnlyList<DiffHunk> Hunks { get; }
     public string GroupTitle { get; }
     public string GroupDescription { get; }
-
-    // The generated record implementation includes Diff, which can be several MB.
-    // WPF also hashes bound items, so this class intentionally uses reference identity.
+    public DiffRenderDocument? RenderDocument { get; internal set; }
     public override string ToString() => Path;
 }
 public sealed record RecentRepositoryItem(string Path)
@@ -266,53 +316,6 @@ public sealed class CommitHistoryItem
     }
     public CommitInfo Commit { get; }
     public IReadOnlyList<CommitSubjectPart> SubjectParts { get; }
-}
-public sealed record CodePalette(IReadOnlyDictionary<string, Brush> Brushes)
-{
-    public Brush this[string key] => Brushes[key];
-}
-public sealed class DiffLineViewModel
-{
-    private const int MaximumDisplayLines = 1_000;
-    private const int MaximumDisplayLineLength = 600;
-    private static readonly string[] PaletteKeys = ["Primary", "Secondary", "DiffAdded", "DiffAddedBackground", "DiffRemoved", "DiffRemovedBackground", "DiffHunk", "CodeKeyword", "CodeType", "CodeMember", "CodeString", "CodeComment"];
-    public DiffLineViewModel(string line, CodePalette palette) => (Text, Foreground, Background) = Parse(line, palette);
-    public string Text { get; }
-    public Brush Foreground { get; }
-    public Brush? Background { get; }
-    public static CodePalette CapturePalette() => new(PaletteKeys.ToDictionary(key => key, key =>
-    {
-        var brush = ((Brush)System.Windows.Application.Current.Resources[key]).Clone();
-        brush.Freeze();
-        return brush;
-    }, StringComparer.Ordinal));
-    public static IReadOnlyList<DiffLineViewModel> CreateDisplayLines(string diff, CodePalette palette)
-    {
-        var sourceLines = diff.Split('\n');
-        var count = Math.Min(sourceLines.Length, MaximumDisplayLines);
-        var lines = new List<DiffLineViewModel>(count + (sourceLines.Length > count ? 1 : 0));
-        for (var index = 0; index < count; index++)
-        {
-            var line = sourceLines[index];
-            if (line.Length > MaximumDisplayLineLength) line = line[..MaximumDisplayLineLength] + " … [line truncated]";
-            lines.Add(new DiffLineViewModel(line, palette));
-        }
-        if (sourceLines.Length > count) lines.Add(new DiffLineViewModel($"… [{sourceLines.Length - count:N0} further lines omitted for responsive display]", palette));
-        return lines;
-    }
-
-    #region Private
-
-    private static (string Text, Brush Foreground, Brush? Background) Parse(string line, CodePalette palette)
-    {
-        if (line.StartsWith('+') && !line.StartsWith("+++")) return (line, palette["DiffAdded"], palette["DiffAddedBackground"]);
-        if (line.StartsWith('-') && !line.StartsWith("---")) return (line, palette["DiffRemoved"], palette["DiffRemovedBackground"]);
-        if (line.StartsWith("@@")) return (line, palette["DiffHunk"], null);
-        if (line.StartsWith("diff ") || line.StartsWith("+++") || line.StartsWith("---")) return (line, palette["Secondary"], null);
-        return (line, palette["Primary"], null);
-    }
-
-    #endregion
 }
 public sealed class BulkObservableCollection<T> : ObservableCollection<T>
 {

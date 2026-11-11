@@ -6,7 +6,26 @@
         <Button Style="{StaticResource HeaderAction}" Command="{Binding LoginToCodexCommand}" ToolTip="{Binding CodexStatusText}">
           <StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{Binding CodexStatusBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBlock Text="{Binding CodexAccountText}" FontSize="12" VerticalAlignment="Center"/></StackPanel>
         </Button>
-        <Menu Height="44" VerticalAlignment="Center" Background="Transparent"><MenuItem Header="MENU" Style="{StaticResource MenuBarItem}"><MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}"/><MenuItem Header="Clone" Command="{Binding CloneCommand}"/><Separator/><MenuItem Header="AI risk notice / KI-Risikohinweis" Command="{Binding ShowAiRiskNoticeCommand}"/><Separator/><MenuItem Header="Language"><MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}"/><MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}"/></MenuItem><MenuItem Header="Theme"><MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}"/><MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}"/><MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}"/></MenuItem><MenuItem Header="Font"><MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}"/><MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}"/></MenuItem></MenuItem></Menu>
+        <Menu Height="44" VerticalAlignment="Center" Background="Transparent">
+            <MenuItem Header="MENU" Style="{StaticResource MenuBarItem}">
+                <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}"/>
+                <MenuItem Header="Clone" Command="{Binding CloneCommand}"/><Separator/>
+                <MenuItem Header="AI risk notice / KI-Risikohinweis" Command="{Binding ShowAiRiskNoticeCommand}"/>
+                <Separator/>
+                <MenuItem Header="Language">
+                    <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}"/><MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}"/>
+                </MenuItem>
+                <MenuItem Header="Theme">
+                    <MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}"/>
+                    <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}"/>
+                    <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}"/>
+                </MenuItem>
+                <MenuItem Header="Font">
+                    <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}"/>
+                    <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}"/>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
       </StackPanel>
     </Grid>
   <Grid Grid.Row="1" Margin="32,24,32,32"><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -34,15 +53,16 @@
           <ProgressBar Grid.Row="1" Height="2" IsIndeterminate="True" Foreground="{DynamicResource Active}" Background="{DynamicResource Border}" BorderThickness="0" Margin="0,8,0,0">
             <ProgressBar.Style><Style TargetType="ProgressBar"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsAnalyzing}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></ProgressBar.Style>
           </ProgressBar>
-          <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,16,0,0"><ItemsControl ItemsSource="{Binding Groups}"><ItemsControl.ItemTemplate><DataTemplate><Expander IsExpanded="False" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="0,8"><Expander.Header><StackPanel><TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" FontSize="14"/><TextBlock Text="{Binding Description}" Foreground="{DynamicResource Secondary}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/></StackPanel></Expander.Header><ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2" BorderThickness="0" Background="Transparent" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"><ListBox.ItemTemplate><DataTemplate><Button Style="{StaticResource FileLink}" Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" HorizontalAlignment="Stretch"><TextBlock Text="{Binding Path}" TextTrimming="CharacterEllipsis"/></Button></DataTemplate></ListBox.ItemTemplate></ListBox></Expander></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></ScrollViewer>
+          <ListBox Grid.Row="2" ItemsSource="{Binding Groups}" BorderThickness="0" Background="Transparent" Margin="0,16,0,0" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"><ListBox.ItemTemplate><DataTemplate><Expander IsExpanded="False" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="0,8"><Expander.Header><StackPanel><TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" FontSize="14"/><TextBlock Text="{Binding Description}" Foreground="{DynamicResource Secondary}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/></StackPanel></Expander.Header><ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2" BorderThickness="0" Background="Transparent" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"><ListBox.ItemTemplate><DataTemplate><Button Style="{StaticResource FileLink}" Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" HorizontalAlignment="Stretch"><TextBlock Text="{Binding Path}" TextTrimming="CharacterEllipsis"/></Button></DataTemplate></ListBox.ItemTemplate></ListBox></Expander></DataTemplate></ListBox.ItemTemplate></ListBox>
         </Grid>
       </Border>
       <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
         <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
           <TextBlock Text="CODE" Foreground="{DynamicResource Secondary}" FontSize="12"/>
-          <ListBox Grid.Row="1" ItemsSource="{Binding DiffLines}" BorderThickness="0" Background="Transparent" FontSize="13" Margin="0,16,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True" ScrollViewer.IsDeferredScrollingEnabled="True" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"><ListBox.ItemTemplate><DataTemplate><Border Background="{Binding Background}" Padding="2,0" ClipToBounds="True"><TextBlock Text="{Binding Text}" Foreground="{Binding Foreground}" TextTrimming="CharacterEllipsis" TextOptions.TextFormattingMode="Display"/></Border></DataTemplate></ListBox.ItemTemplate></ListBox>
+          <local:DiffViewer Grid.Row="1" RenderDocument="{Binding DisplayedDiff, Mode=OneWay}" BorderThickness="0" Background="Transparent" FontSize="13" Margin="0,16,0,0"/>
           <Border Grid.Row="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,16,0,0">
             <StackPanel>
+              <Button Content="Weitere Änderungen laden" Command="{Binding LoadMoreDiffCommand}" HorizontalAlignment="Left" Margin="0,0,0,12"><Button.Style><Style TargetType="Button"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasMoreDiff}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
               <TextBlock Text="AI DESCRIPTION" Foreground="{DynamicResource Secondary}" FontSize="12"/>
               <TextBlock Text="{Binding SelectedAnalysisTitle}" FontSize="14" Margin="0,8,0,0"/>
               <TextBlock Text="{Binding SelectedAnalysisDescription}" TextWrapping="Wrap" Margin="0,8,0,0"/>

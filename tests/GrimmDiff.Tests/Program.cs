@@ -1,6 +1,8 @@
 using GrimmDiff.Domain;
 using GrimmDiff.Application;
 using GrimmDiff.Infrastructure;
+using GrimmDiff.App;
+using System.IO;
 
 var failures = new List<string>();
 void Test(string name, Action action) { try { action(); Console.WriteLine($"PASS {name}"); } catch (Exception ex) { failures.Add($"{name}: {ex.Message}"); Console.Error.WriteLine($"FAIL {name}: {ex.Message}"); } }
@@ -79,6 +81,41 @@ Test("analysis use case loads historical diff only", () =>
     var provider = new RecordingAnalysisProvider();
     _ = new DiffAnalysisService(diffs, provider, provider).AnalyzeAsync(new DiffAnalysisQuery("repo", "abc", "de", false)).GetAwaiter().GetResult();
     if (provider.Requests.Single().Diff != "historical" || provider.Requests.Single().Scope != DiffScope.Historical) throw new Exception("Expected historical diff.");
+});
+Test("diff renderer marks added removed and changed words", () =>
+{
+    var hunk = new DiffHunk("src/Foo.cs", DiffScope.WorkingTree, "@@ -1 +1 @@", "-return oldValue;\n+return newValue;\n context", 1, 1);
+    var page = DiffRenderBuilder.CreatePage([hunk]);
+    if (!page.Markers.Any(marker => marker.Kind == DiffHighlightKind.RemovedLine) || !page.Markers.Any(marker => marker.Kind == DiffHighlightKind.AddedLine)) throw new Exception("Expected line markers.");
+    if (!page.Markers.Any(marker => marker.Kind == DiffHighlightKind.RemovedWord) || !page.Markers.Any(marker => marker.Kind == DiffHighlightKind.AddedWord)) throw new Exception("Expected word markers.");
+});
+Test("diff renderer handles unicode word changes", () =>
+{
+    var hunk = new DiffHunk("src/Text.cs", DiffScope.WorkingTree, "@@ -1 +1 @@", "-string title = \"Überblick\";\n+string title = \"Übersicht\";", 1, 1);
+    var page = DiffRenderBuilder.CreatePage([hunk]);
+    if (!page.Markers.Any(marker => marker.Kind == DiffHighlightKind.RemovedWord) || !page.Markers.Any(marker => marker.Kind == DiffHighlightKind.AddedWord)) throw new Exception("Expected unicode word markers.");
+});
+Test("diff renderer pages large hunks without dropping content", () =>
+{
+    var content = string.Join('\n', Enumerable.Range(0, DiffRenderBuilder.MaximumPageLines + 25).Select(index => $"+line {index}"));
+    var hunk = new DiffHunk("src/Large.cs", DiffScope.WorkingTree, "@@ -0,0 +1,2025 @@", content, 0, 1);
+    var first = DiffRenderBuilder.CreatePage([hunk]);
+    if (first.NextPage is null || !first.Text.Contains("+line 0")) throw new Exception("Expected a first page and continuation.");
+    var second = DiffRenderBuilder.CreatePage([hunk], first.NextPage);
+    if (!second.Text.Contains($"+line {DiffRenderBuilder.MaximumPageLines - 1}") && !second.Text.Contains($"+line {DiffRenderBuilder.MaximumPageLines}")) throw new Exception("Expected remaining diff lines.");
+});
+Test("diff renderer bounds an initial 20000 line page", () =>
+{
+    var content = string.Join('\n', Enumerable.Range(0, 20_000).Select(index => $"+line {index}"));
+    var page = DiffRenderBuilder.CreatePage([new DiffHunk("src/Huge.cs", DiffScope.WorkingTree, "@@ -0,0 +1,20000 @@", content, 0, 1)]);
+    if (page.NextPage is null || page.Text.Count(character => character == '\n') > DiffRenderBuilder.MaximumPageLines) throw new Exception("Expected a bounded initial page.");
+});
+Test("render document preserves marker offsets when appending a page", () =>
+{
+    var first = new DiffRenderPage("+one\n", [new DiffTextMarker(0, 4, DiffHighlightKind.AddedLine)], new DiffPageCursor(0, 1));
+    var second = new DiffRenderPage("-two\n", [new DiffTextMarker(0, 4, DiffHighlightKind.RemovedLine)], null);
+    var document = DiffRenderDocument.FromPage(first).Append(second);
+    if (document.Text != "+one\n-two\n" || document.Markers.Last().Offset != 5 || document.NextPage is not null) throw new Exception("Expected appended render document.");
 });
 Environment.ExitCode = failures.Count == 0 ? 0 : 1;
 
