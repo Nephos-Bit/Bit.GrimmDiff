@@ -8,7 +8,7 @@ public static class InputDialog
     public static string? Ask(string title, string prompt)
     {
         var input = new TextBox { MinWidth = 360, Margin = new Thickness(0, 8, 0, 16) };
-        var dialog = new Window { Title = title, Width = 460, Height = 180, WindowStartupLocation = WindowStartupLocation.CenterOwner, Owner = Application.Current.MainWindow, Background = Application.Current.Resources["Background"] as System.Windows.Media.Brush, Foreground = Application.Current.Resources["Primary"] as System.Windows.Media.Brush };
+        var dialog = new Window { Title = title, Width = 460, Height = 180, WindowStartupLocation = WindowStartupLocation.CenterOwner, Owner = System.Windows.Application.Current.MainWindow, Background = System.Windows.Application.Current.Resources["Background"] as System.Windows.Media.Brush, Foreground = System.Windows.Application.Current.Resources["Primary"] as System.Windows.Media.Brush };
         var panel = new StackPanel { Margin = new Thickness(24) }; panel.Children.Add(new TextBlock { Text = prompt }); panel.Children.Add(input);
         var ok = new Button { Content = "OK", IsDefault = true, Width = 80, HorizontalAlignment = HorizontalAlignment.Right }; ok.Click += (_, _) => dialog.DialogResult = true; panel.Children.Add(ok); dialog.Content = panel;
         return dialog.ShowDialog() == true ? input.Text.Trim() : null;

@@ -1,25 +1,9 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using GrimmDiff.Application;
 
 namespace GrimmDiff.Infrastructure;
-
-public enum CodexCliStatusKind
-{
-    Ready,
-    Missing,
-    NotAuthenticated,
-    ApiKeyAuthentication,
-    UnsupportedAuthentication,
-    Unavailable
-}
-
-public sealed record CodexCliStatus(CodexCliStatusKind Kind, string Message)
-{
-    public bool IsReady => Kind == CodexCliStatusKind.Ready;
-}
-
-public sealed record CodexAccountUsage(string? Email, int? WeeklyRemainingPercent);
 
 public sealed record CodexProcessRequest(
     string Executable,
@@ -36,13 +20,8 @@ public interface ICodexProcessRunner
     Task<CodexProcessResult> RunAsync(CodexProcessRequest request, CancellationToken cancellationToken = default);
 }
 
-public interface ICodexCliClient
+public interface ICodexCliClient : ICodexStructuredRunner
 {
-    Task<CodexCliStatus> GetStatusAsync(CancellationToken cancellationToken = default);
-    Task<CodexCliStatus> LoginAsync(CancellationToken cancellationToken = default);
-    Task<CodexAccountUsage> GetAccountUsageAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(new CodexAccountUsage(null, null));
-    Task<string> RunStructuredAsync(string repositoryPath, string prompt, string schema, TimeSpan timeout, CancellationToken cancellationToken = default);
 }
 
 public sealed class CodexCliInvocationException(string message, string diagnostic) : Exception(message)

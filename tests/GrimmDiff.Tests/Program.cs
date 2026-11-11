@@ -1,4 +1,5 @@
 using GrimmDiff.Domain;
+using GrimmDiff.Application;
 using GrimmDiff.Infrastructure;
 
 var failures = new List<string>();
@@ -57,7 +58,37 @@ Test("Codex client rejects API key authentication", () =>
     var status = new CodexCliClient(runner).GetStatusAsync().GetAwaiter().GetResult();
     if (status.Kind != CodexCliStatusKind.ApiKeyAuthentication) throw new Exception("Expected API-key authentication rejection.");
 });
+Test("analysis use case combines staged and working diffs", () =>
+{
+    var diffs = new FakeDiffReader("staged", "working", "historical");
+    var provider = new RecordingAnalysisProvider();
+    var result = new DiffAnalysisService(diffs, provider, provider).AnalyzeAsync(new DiffAnalysisQuery("repo", null, "en", true)).GetAwaiter().GetResult();
+    if (!result.IsAiRequested || provider.Requests.Single().Diff != "stagedworking") throw new Exception("Expected combined current diff.");
+});
+Test("analysis use case loads historical diff only", () =>
+{
+    var diffs = new FakeDiffReader("staged", "working", "historical");
+    var provider = new RecordingAnalysisProvider();
+    _ = new DiffAnalysisService(diffs, provider, provider).AnalyzeAsync(new DiffAnalysisQuery("repo", "abc", "de", false)).GetAwaiter().GetResult();
+    if (provider.Requests.Single().Diff != "historical" || provider.Requests.Single().Scope != DiffScope.Historical) throw new Exception("Expected historical diff.");
+});
 Environment.ExitCode = failures.Count == 0 ? 0 : 1;
+
+sealed class FakeDiffReader(string staged, string working, string historical) : IRepositoryDiffReader
+{
+    public Task<string> GetDiffAsync(string repositoryPath, DiffScope scope, string? path = null, CancellationToken cancellationToken = default) => Task.FromResult(scope == DiffScope.Staged ? staged : working);
+    public Task<string> GetCommitDiffAsync(string repositoryPath, string commitId, string? path = null, CancellationToken cancellationToken = default) => Task.FromResult(historical);
+}
+
+sealed class RecordingAnalysisProvider : IDiffAnalysisProvider
+{
+    public List<DiffAnalysisRequest> Requests { get; } = [];
+    public Task<DiffAnalysisResult> AnalyzeAsync(DiffAnalysisRequest request, CancellationToken cancellationToken = default)
+    {
+        Requests.Add(request);
+        return Task.FromResult(new DiffAnalysisResult([], [], DiffAnalysisSource.Heuristic));
+    }
+}
 
 sealed class FakeCodexCliClient(IEnumerable<string> responses) : ICodexCliClient
 {

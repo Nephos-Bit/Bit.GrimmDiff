@@ -1,11 +1,12 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.ComponentModel;
+using GrimmDiff.Application;
 using GrimmDiff.Domain;
 
 namespace GrimmDiff.Infrastructure;
 
-public sealed class GitCliRepositoryService : IGitRepositoryService
+public sealed class GitCliRepositoryService
 {
     public async Task<bool> IsGitAvailableAsync(CancellationToken cancellationToken = default) => (await RunAsync(null, ["--version"], cancellationToken)).IsSuccess;
 

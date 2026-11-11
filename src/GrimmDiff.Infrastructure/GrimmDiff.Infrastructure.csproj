@@ -1,3 +1,3 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup><ProjectReference Include="..\GrimmDiff.Domain\GrimmDiff.Domain.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="..\GrimmDiff.Domain\GrimmDiff.Domain.csproj" /><ProjectReference Include="..\GrimmDiff.Application\GrimmDiff.Application.csproj" /></ItemGroup>
 </Project>

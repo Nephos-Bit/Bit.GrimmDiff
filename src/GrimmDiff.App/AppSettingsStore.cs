@@ -1,23 +1,21 @@
 using System.Text.Json;
 using System.IO;
+using GrimmDiff.Application;
 
 namespace GrimmDiff.App;
 
-public sealed record AppSettings(List<string> RecentRepositories, string Theme = "System", string Language = "English", string Font = "Cascadia Code")
-{
-    public static AppSettings Empty { get; } = new([]);
-}
-public sealed class AppSettingsStore
+public sealed class AppSettingsStore : IPreferencesStore
 {
     private static readonly string FilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GrimmDiff", "settings.json");
-    public AppSettings Load()
+    public Task<AppPreferences> LoadAsync(CancellationToken cancellationToken = default)
     {
-        try { return File.Exists(FilePath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? AppSettings.Empty : AppSettings.Empty; }
-        catch (JsonException) { return AppSettings.Empty; }
+        try { return Task.FromResult(File.Exists(FilePath) ? JsonSerializer.Deserialize<AppPreferences>(File.ReadAllText(FilePath)) ?? AppPreferences.Empty : AppPreferences.Empty); }
+        catch (JsonException) { return Task.FromResult(AppPreferences.Empty); }
     }
-    public void Save(IEnumerable<string> recent, string theme, string language, string font)
+    public Task SaveAsync(AppPreferences preferences, CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(new AppSettings(recent.ToList(), theme, language, font)));
+        File.WriteAllText(FilePath, JsonSerializer.Serialize(preferences));
+        return Task.CompletedTask;
     }
 }
