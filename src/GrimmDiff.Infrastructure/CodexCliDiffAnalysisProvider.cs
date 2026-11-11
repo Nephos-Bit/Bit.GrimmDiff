@@ -43,6 +43,19 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
         var hunks = UnifiedDiffParser.Parse(request.Diff, request.Scope);
         if (hunks.Count == 0) return new(hunks, [], DiffAnalysisSource.Codex);
 
+        var protectedHunks = hunks.Where(hunk => IsProtectedPath(hunk.FilePath)).ToList();
+        if (protectedHunks.Count > 0)
+        {
+            var allowedHunks = hunks.Except(protectedHunks).ToList();
+            var local = await _fallback.AnalyzeAsync(request with { Diff = BuildDiff(protectedHunks) }, cancellationToken);
+            if (allowedHunks.Count == 0)
+                return local with { Hunks = hunks, Diagnostic = $"{protectedHunks.Count} protected file change(s) were analysed locally." };
+
+            var remote = await AnalyzeAsync(request with { Diff = BuildDiff(allowedHunks) }, cancellationToken);
+            return new(hunks, remote.Groups.Concat(local.Groups).ToList(), remote.Source,
+                $"{protectedHunks.Count} protected file change(s) were analysed locally.");
+        }
+
         var cacheKey = CacheKey(request);
         if (_cache.TryGetValue(cacheKey, out var cached)) return cached;
 
@@ -68,7 +81,6 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
             foreach (var chunk in chunks)
             {
                 var response = await _client.RunStructuredAsync(
-                    request.RepositoryPath,
                     BuildChunkPrompt(chunk, request.Language),
                     BuildAnalysisSchema(chunk.Select(x => x.Id)),
                     InvocationTimeout,
@@ -86,7 +98,6 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
             else
             {
                 var response = await _client.RunStructuredAsync(
-                    request.RepositoryPath,
                     BuildMergePrompt(provisional, inputs, request.Language),
                     BuildMergeSchema(provisional.Select(x => x.Id)),
                     InvocationTimeout,
@@ -258,6 +269,17 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
         var value = $"{PromptVersion}\n{request.RepositoryPath}\n{request.Scope}\n{request.Language}\n{request.Diff.Replace("\r\n", "\n", StringComparison.Ordinal)}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
     }
+
+    private static bool IsProtectedPath(string path)
+    {
+        var name = Path.GetFileName(path);
+        return name.Equals(".env", StringComparison.OrdinalIgnoreCase) || name.StartsWith(".env.", StringComparison.OrdinalIgnoreCase) ||
+            name.Equals("id_rsa", StringComparison.OrdinalIgnoreCase) || name.Equals("id_ed25519", StringComparison.OrdinalIgnoreCase) ||
+            path.EndsWith(".pem", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".key", StringComparison.OrdinalIgnoreCase) ||
+            path.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".p12", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".kdbx", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildDiff(IEnumerable<DiffHunk> hunks) => string.Join("\n", hunks.Select(hunk => $"diff --git a/{hunk.FilePath} b/{hunk.FilePath}\n{hunk.Header}\n{hunk.Content}"));
 
     private static string StatusDiagnostic(CodexCliStatusKind status, string language) => status switch
     {

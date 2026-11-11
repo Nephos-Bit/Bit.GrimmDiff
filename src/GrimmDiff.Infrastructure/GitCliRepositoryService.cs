@@ -22,7 +22,7 @@ public sealed class GitCliRepositoryService
 
     public async Task<string> GetDiffAsync(string repositoryPath, DiffScope scope, string? path = null, CancellationToken cancellationToken = default)
     {
-        var arguments = scope == DiffScope.Staged ? new List<string> { "diff", "--cached", "--no-ext-diff", "--unified=3" } : ["diff", "--no-ext-diff", "--unified=3"];
+        var arguments = scope == DiffScope.Staged ? new List<string> { "-c", "core.fsmonitor=false", "diff", "--cached", "--no-ext-diff", "--no-textconv", "--unified=3" } : ["-c", "core.fsmonitor=false", "diff", "--no-ext-diff", "--no-textconv", "--unified=3"];
         if (!string.IsNullOrWhiteSpace(path)) { arguments.Add("--"); arguments.Add(path); }
         var diff = (await RunAsync(repositoryPath, arguments, cancellationToken)).StandardOutput;
         return scope == DiffScope.WorkingTree && string.IsNullOrWhiteSpace(path)
@@ -32,7 +32,7 @@ public sealed class GitCliRepositoryService
 
     public async Task<string> GetCommitDiffAsync(string repositoryPath, string commitId, string? path = null, CancellationToken cancellationToken = default)
     {
-        var arguments = new List<string> { "show", "--format=", "--no-ext-diff", "--unified=3", commitId };
+        var arguments = new List<string> { "-c", "core.fsmonitor=false", "show", "--format=", "--no-ext-diff", "--no-textconv", "--unified=3", commitId };
         if (!string.IsNullOrWhiteSpace(path)) { arguments.Add("--"); arguments.Add(path); }
         return (await RunAsync(repositoryPath, arguments, cancellationToken)).StandardOutput;
     }
@@ -82,15 +82,33 @@ public sealed class GitCliRepositoryService
     {
         try
         {
-            var start = new ProcessStartInfo("git") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+            var command = args.FirstOrDefault() ?? string.Empty;
+            var hardened = command switch
+            {
+                "fetch" or "pull" or "push" or "clone" => new[] { "-c", "protocol.ext.allow=never", "-c", "core.fsmonitor=false" }.Concat(args),
+                "commit" => args,
+                _ => new[] { "-c", "core.fsmonitor=false", "-c", "diff.external=" }.Concat(args)
+            };
+            var start = new ProcessStartInfo(ResolveGitExecutable()) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
             if (!string.IsNullOrWhiteSpace(workingDirectory)) start.WorkingDirectory = workingDirectory;
-            foreach (var arg in args) start.ArgumentList.Add(arg);
+            foreach (var arg in hardened) start.ArgumentList.Add(arg);
             using var process = Process.Start(start) ?? throw new InvalidOperationException("Git process could not be started.");
             var output = process.StandardOutput.ReadToEndAsync(ct); var error = process.StandardError.ReadToEndAsync(ct);
             await process.WaitForExitAsync(ct);
             return new GitCommandResult(process.ExitCode, await output, await error);
         }
-        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or FileNotFoundException)
         { return new GitCommandResult(-1, string.Empty, ex.Message); }
+    }
+
+    private static string ResolveGitExecutable()
+    {
+        if (!OperatingSystem.IsWindows()) return "git";
+        var candidates = new[]
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Git", "cmd", "git.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Git", "cmd", "git.exe")
+        };
+        return candidates.FirstOrDefault(File.Exists) ?? throw new FileNotFoundException("Git was not found in a trusted installation directory.");
     }
 }

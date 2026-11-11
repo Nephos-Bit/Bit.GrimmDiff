@@ -45,12 +45,20 @@ Test("Codex client enforces Luna and safe execution", () =>
 {
     var runner = new RecordingProcessRunner(new CodexProcessResult(0, "{}", string.Empty));
     var client = new CodexCliClient(runner);
-    _ = client.RunStructuredAsync(".", "prompt", "{}", TimeSpan.FromSeconds(1)).GetAwaiter().GetResult();
+    _ = client.RunStructuredAsync("prompt", "{}", TimeSpan.FromSeconds(1)).GetAwaiter().GetResult();
     var request = runner.LastRequest ?? throw new Exception("Expected process request.");
-    if (!request.Arguments.Contains("gpt-6-luna") || !request.Arguments.Contains("read-only") || !request.Arguments.Contains("approval_policy=\"never\"") || !request.Arguments.Contains("web_search=\"disabled\"") || !request.Arguments.Contains("--output-last-message")) throw new Exception("Missing safe Codex arguments or final-message output.");
+    if (!request.Arguments.Contains("gpt-6-luna") || !request.Arguments.Contains("read-only") || !request.Arguments.Contains("approval_policy=\"never\"") || !request.Arguments.Contains("web_search=\"disabled\"") || !request.Arguments.Contains("--skip-git-repo-check") || !request.Arguments.Contains("--output-last-message")) throw new Exception("Missing safe Codex arguments or final-message output.");
     if (!request.EnvironmentVariablesToRemove.Contains("OPENAI_API_KEY") || !request.EnvironmentVariablesToRemove.Contains("CODEX_API_KEY") || !request.EnvironmentVariablesToRemove.Contains("CODEX_ACCESS_TOKEN")) throw new Exception("Expected API credentials to be removed.");
     if (!runner.SchemaExistedDuringRun) throw new Exception("Expected output schema file.");
     if (!runner.SchemaWasValidJsonDuringRun || runner.SchemaHadUtf8BomDuringRun) throw new Exception("Expected BOM-free UTF-8 JSON schema.");
+    if (request.Arguments.Contains("-C")) throw new Exception("Codex must not receive a repository working-directory argument.");
+});
+Test("protected diff files stay local", () =>
+{
+    const string mixed = "diff --git a/.env b/.env\n@@ -0,0 +1 @@\n+PASSWORD=secret\ndiff --git a/src/App.cs b/src/App.cs\n@@ -0,0 +1 @@\n+class App {}\n";
+    var client = new FakeCodexCliClient(["""{"groups":[{"title":"App","description":"Adds the app.","hunkIds":["H0001"],"confidence":0.9}]}"""]);
+    var result = new CodexCliDiffAnalysisProvider(client, new LocalHeuristicDiffAnalysisProvider()).AnalyzeAsync(new DiffAnalysisRequest("repo", DiffScope.WorkingTree, mixed, "en")).GetAwaiter().GetResult();
+    if (client.Prompts.Single().Contains("PASSWORD=secret") || result.Hunks.Count != 2 || result.Groups.Count < 2) throw new Exception("Protected files must remain in the local result only.");
 });
 Test("Codex client rejects API key authentication", () =>
 {
@@ -97,7 +105,7 @@ sealed class FakeCodexCliClient(IEnumerable<string> responses) : ICodexCliClient
     public List<string> Schemas { get; } = [];
     public Task<CodexCliStatus> GetStatusAsync(CancellationToken cancellationToken = default) => Task.FromResult(new CodexCliStatus(CodexCliStatusKind.Ready, "Ready"));
     public Task<CodexCliStatus> LoginAsync(CancellationToken cancellationToken = default) => GetStatusAsync(cancellationToken);
-    public Task<string> RunStructuredAsync(string repositoryPath, string prompt, string schema, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public Task<string> RunStructuredAsync(string prompt, string schema, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         Prompts.Add(prompt);
         Schemas.Add(schema);

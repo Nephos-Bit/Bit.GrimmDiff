@@ -216,7 +216,7 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         }
     }
 
-    public async Task<string> RunStructuredAsync(string repositoryPath, string prompt, string schema, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public async Task<string> RunStructuredAsync(string prompt, string schema, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         var executable = ResolveExecutable();
         var tempDirectory = Path.Combine(Path.GetTempPath(), "GrimmDiff", Guid.NewGuid().ToString("N"));
@@ -230,10 +230,10 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
             [
                 "exec", "-m", "gpt-6-luna", "--ephemeral", "--ignore-user-config",
                 "--sandbox", "read-only", "-c", "approval_policy=\"never\"",
-                "-c", "web_search=\"disabled\"", "--output-schema", schemaPath,
-                "--output-last-message", outputPath, "--color", "never", "-C", repositoryPath, "-"
+                "-c", "web_search=\"disabled\"", "--skip-git-repo-check", "--output-schema", schemaPath,
+                "--output-last-message", outputPath, "--color", "never", "-"
             ];
-            var result = await _processRunner.RunAsync(Request(executable, arguments, prompt, timeout, repositoryPath), cancellationToken);
+            var result = await _processRunner.RunAsync(Request(executable, arguments, prompt, timeout, tempDirectory), cancellationToken);
             if (result.TimedOut) throw new TimeoutException("GPT-6 Luna analysis timed out.");
             if (result.ExitCode != 0)
                 throw new CodexCliInvocationException("GPT-6 Luna analysis failed.", Limit(result.StandardError));
@@ -321,16 +321,6 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
 
     private static string ResolveExecutable()
     {
-        var configured = Environment.GetEnvironmentVariable("CODEX_CLI_PATH");
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured)) return configured;
-
-        var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
-        foreach (var entry in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            var candidate = Path.Combine(entry.Trim('"'), OperatingSystem.IsWindows() ? "codex.exe" : "codex");
-            if (File.Exists(candidate)) return candidate;
-        }
-
         if (OperatingSystem.IsWindows())
         {
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -346,7 +336,7 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
             catch (UnauthorizedAccessException) { }
         }
 
-        return OperatingSystem.IsWindows() ? "codex.exe" : "codex";
+        throw new FileNotFoundException("A Codex CLI installed by OpenAI was not found.");
     }
 
     private static string Limit(string value) => value.Length <= 2000 ? value : value[^2000..];
