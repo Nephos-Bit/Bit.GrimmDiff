@@ -12,9 +12,13 @@ public partial class MainWindow : Window
         Closed += (_, _) => _viewModel.Dispose();
     }
 
+    #region Private
+
     private async void OnContentRendered(object? sender, EventArgs e)
     {
         ContentRendered -= OnContentRendered;
         await _viewModel.InitializeAsync();
     }
+
+    #endregion
 }

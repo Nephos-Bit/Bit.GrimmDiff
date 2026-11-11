@@ -84,6 +84,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         await Task.Delay(750);
         await CheckCodexAsync();
     }
+
+    public void Dispose()
+    {
+        _analysisCancellation?.Cancel();
+        _analysisCancellation?.Dispose();
+        _changeMonitor.Dispose();
+        _refreshTimer.Dispose();
+    }
+
+    #region Private
+
     private async Task OpenRepositoryAsync() { var path = _dialogs.SelectRepository(); if (!string.IsNullOrWhiteSpace(path)) await OpenRepositoryAsync(path); }
     private async Task OpenRepositoryAsync(string path) { if (!await _workspace.IsGitAvailableAsync()) { StatusMessage = "Git is not installed or unavailable on PATH."; return; } RepositoryPath = path; AddRecent(path); _changeMonitor.Watch(path, ScheduleRefresh); await RefreshAsync(false); }
     private async Task CloneAsync() { var source = _dialogs.Ask("Clone repository", "Repository URL or local source:"); if (string.IsNullOrWhiteSpace(source)) return; var destination = _dialogs.Ask("Clone repository", "Destination folder:"); if (string.IsNullOrWhiteSpace(destination)) return; var result = await _workspace.CloneAsync(source, destination); StatusMessage = result.IsSuccess ? "Repository cloned." : result.ErrorMessage; if (result.IsSuccess) await OpenRepositoryAsync(destination); }
@@ -213,7 +224,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         var configHash = File.Exists(config) ? Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(config))) : "NO_CONFIG";
         return $"{root}|{configHash}";
     }
-    private bool Set<T>(ref T field, T value, [CallerMemberName] string? property = null) { if (EqualityComparer<T>.Default.Equals(field, value)) return false; field = value; OnPropertyChanged(property); return true; } private void OnPropertyChanged([CallerMemberName] string? property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property)); public void Dispose() { _analysisCancellation?.Cancel(); _analysisCancellation?.Dispose(); _changeMonitor.Dispose(); _refreshTimer.Dispose(); }
+    private bool Set<T>(ref T field, T value, [CallerMemberName] string? property = null) { if (EqualityComparer<T>.Default.Equals(field, value)) return false; field = value; OnPropertyChanged(property); return true; }
+    private void OnPropertyChanged([CallerMemberName] string? property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+
+    #endregion
 }
 public sealed class AnalysisGroupViewModel { public AnalysisGroupViewModel(WorkStepGroup group) { Title = group.Title; Description = group.Description; Files = group.Hunks.GroupBy(x => x.FilePath, StringComparer.OrdinalIgnoreCase).Select(x => new AnalysisFileViewModel(x.Key, string.Join("\n", x.Select(h => $"{h.Header}\n{h.Content}")), group.Title, group.Description)).ToList(); } public string Title { get; } public string Description { get; } public IReadOnlyList<AnalysisFileViewModel> Files { get; } }
 public sealed record AnalysisFileViewModel(string Path, string Diff, string GroupTitle, string GroupDescription);
@@ -263,6 +277,9 @@ public sealed class DiffLineViewModel
         brush.Freeze();
         return brush;
     }, StringComparer.Ordinal));
+
+    #region Private
+
     private void EnsureParsed()
     {
         if (_isParsed) return;
@@ -288,5 +305,7 @@ public sealed class DiffLineViewModel
         return (tokens, background);
     }
     private static bool IsMethod(MatchCollection matches, int index) { for (var i = index + 1; i < matches.Count; i++) { if (string.IsNullOrWhiteSpace(matches[i].Value)) continue; return matches[i].Value == "("; } return false; }
+
+    #endregion
 }
 internal static class CollectionExtensions { public static void Reset<T>(this ObservableCollection<T> items, IEnumerable<T> values) { items.Clear(); foreach (var value in values) items.Add(value); } }

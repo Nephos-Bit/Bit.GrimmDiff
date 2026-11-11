@@ -82,12 +82,16 @@ public sealed class SystemCodexProcessRunner : ICodexProcessRunner
         return new CodexProcessResult(process.ExitCode, await outputTask, await errorTask);
     }
 
+    #region Private
+
     private static void TryKill(Process process)
     {
         try { if (!process.HasExited) process.Kill(true); }
         catch (InvalidOperationException) { }
         catch (System.ComponentModel.Win32Exception) { }
     }
+
+    #endregion
 }
 
 public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : ICodexCliClient
@@ -252,6 +256,8 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         }
     }
 
+    #region Private
+
     private static CodexProcessRequest Request(string executable, IReadOnlyList<string> arguments, string? input, TimeSpan timeout, string? workingDirectory = null) =>
         new(executable, arguments, workingDirectory ?? Environment.CurrentDirectory, input, timeout, RemovedCredentialVariables);
 
@@ -340,4 +346,6 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
     }
 
     private static string Limit(string value) => value.Length <= 2000 ? value : value[^2000..];
+
+    #endregion
 }

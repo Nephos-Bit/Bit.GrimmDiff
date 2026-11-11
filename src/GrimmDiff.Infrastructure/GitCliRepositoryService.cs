@@ -47,6 +47,8 @@ public sealed class GitCliRepositoryService
     public Task<GitCommandResult> CreateBranchAsync(string repositoryPath, string branch, CancellationToken cancellationToken = default) => RunAsync(repositoryPath, ["switch", "-c", branch], cancellationToken);
     public Task<GitCommandResult> CloneAsync(string source, string destination, CancellationToken cancellationToken = default) => RunAsync(null, ["clone", source, destination], cancellationToken);
 
+    #region Private
+
     private static async Task<RepositoryState> GetStateAsync(string path, CancellationToken ct)
     {
         if (Directory.Exists(Path.Combine(path, ".git", "rebase-merge")) || Directory.Exists(Path.Combine(path, ".git", "rebase-apply"))) return RepositoryState.RebaseInProgress;
@@ -111,4 +113,6 @@ public sealed class GitCliRepositoryService
         };
         return candidates.FirstOrDefault(File.Exists) ?? throw new FileNotFoundException("Git was not found in a trusted installation directory.");
     }
+
+    #endregion
 }

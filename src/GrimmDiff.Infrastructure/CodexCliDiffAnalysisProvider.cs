@@ -139,6 +139,8 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
         }
     }
 
+    #region Private
+
     private async Task<DiffAnalysisResult> FallbackAsync(DiffAnalysisRequest request, string diagnostic, CancellationToken cancellationToken)
     {
         var result = await _fallback.AnalyzeAsync(request, cancellationToken);
@@ -399,4 +401,6 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
           "additionalProperties": false
         }
         """;
+
+    #endregion
 }

@@ -4,11 +4,6 @@ namespace GrimmDiff.Domain;
 
 public static partial class UnifiedDiffParser
 {
-    [GeneratedRegex("^diff --git a/(.+?) b/(.+)$")]
-    private static partial Regex FileHeader();
-    [GeneratedRegex("^@@ -(\\d+)(?:,\\d+)? \\+(\\d+)(?:,\\d+)? @@(.*)$")]
-    private static partial Regex HunkHeader();
-
     public static IReadOnlyList<DiffHunk> Parse(string diff, DiffScope scope)
     {
         var hunks = new List<DiffHunk>();
@@ -58,6 +53,14 @@ public static partial class UnifiedDiffParser
         }
     }
 
+    #region Private
+
+    [GeneratedRegex("^diff --git a/(.+?) b/(.+)$")]
+    private static partial Regex FileHeader();
+
+    [GeneratedRegex("^@@ -(\\d+)(?:,\\d+)? \\+(\\d+)(?:,\\d+)? @@(.*)$")]
+    private static partial Regex HunkHeader();
+
     private sealed class DiffHunkBuilder(string path, string header, int oldStart, int newStart)
     {
         public string Path { get; } = path;
@@ -66,4 +69,6 @@ public static partial class UnifiedDiffParser
         public int NewStart { get; } = newStart;
         public List<string> Lines { get; } = [];
     }
+
+    #endregion
 }

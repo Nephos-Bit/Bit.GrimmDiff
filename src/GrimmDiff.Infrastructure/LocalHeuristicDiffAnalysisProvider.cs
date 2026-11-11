@@ -6,13 +6,6 @@ namespace GrimmDiff.Infrastructure;
 
 public sealed partial class LocalHeuristicDiffAnalysisProvider : IDiffAnalysisProvider
 {
-    [GeneratedRegex("\\b(?<kind>class|interface|struct|enum|record)\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)", RegexOptions.IgnoreCase)]
-    private static partial Regex DeclarationPattern();
-    [GeneratedRegex("[A-Za-z_][A-Za-z0-9_]{2,}")]
-    private static partial Regex TokenPattern();
-    [GeneratedRegex("\\b(?:public|private|protected|internal)\\s+(?:async\\s+)?[A-Za-z_][A-Za-z0-9_<>,.\\[\\]?]*\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\\s*\\(", RegexOptions.IgnoreCase)]
-    private static partial Regex MethodPattern();
-
     private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
     {
         "public", "private", "protected", "internal", "static", "class", "interface", "struct", "enum", "record",
@@ -28,6 +21,17 @@ public sealed partial class LocalHeuristicDiffAnalysisProvider : IDiffAnalysisPr
         var groups = clusters.Select(cluster => ToGroup(cluster, request.Language)).ToList();
         return Task.FromResult(new DiffAnalysisResult(hunks, groups, DiffAnalysisSource.Heuristic));
     }
+
+    #region Private
+
+    [GeneratedRegex("\\b(?<kind>class|interface|struct|enum|record)\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)", RegexOptions.IgnoreCase)]
+    private static partial Regex DeclarationPattern();
+
+    [GeneratedRegex("[A-Za-z_][A-Za-z0-9_]{2,}")]
+    private static partial Regex TokenPattern();
+
+    [GeneratedRegex("\\b(?:public|private|protected|internal)\\s+(?:async\\s+)?[A-Za-z_][A-Za-z0-9_<>,.\\[\\]?]*\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\\s*\\(", RegexOptions.IgnoreCase)]
+    private static partial Regex MethodPattern();
 
     private static Features CreateFeatures(DiffHunk hunk)
     {
@@ -143,4 +147,6 @@ public sealed partial class LocalHeuristicDiffAnalysisProvider : IDiffAnalysisPr
 
     private sealed record Declaration(string Kind, string Name);
     private sealed record Features(DiffHunk Hunk, HashSet<string> Tokens, List<Declaration> Declarations, HashSet<string> Identifiers, HashSet<string> Concepts, HashSet<string> Methods, bool HasAdditions, bool HasRemovals, string Directory);
+
+    #endregion
 }
