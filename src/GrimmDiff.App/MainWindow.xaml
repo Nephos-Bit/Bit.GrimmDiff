@@ -1,80 +1,254 @@
-<Window x:Class="GrimmDiff.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:GrimmDiff.App" Title="grimmdiff" Width="1440" Height="900" Background="{DynamicResource Background}" Foreground="{DynamicResource Primary}">
-  <Grid><Grid.RowDefinitions><RowDefinition Height="44"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <Grid Grid.Row="0" Margin="32,0"><TextBlock Text="grimmdiff" FontSize="20" VerticalAlignment="Center"/>
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-        <TextBlock Text="{Binding WeeklyQuotaText}" Foreground="{DynamicResource Secondary}" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0"/>
-        <Button Style="{StaticResource HeaderAction}" Command="{Binding LoginToCodexCommand}" ToolTip="{Binding CodexStatusText}">
-          <StackPanel Orientation="Horizontal"><Ellipse Width="8" Height="8" Fill="{Binding CodexStatusBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBlock Text="{Binding CodexAccountText}" FontSize="12" VerticalAlignment="Center"/></StackPanel>
-        </Button>
-        <Menu Height="44" VerticalAlignment="Center" Background="Transparent">
-            <MenuItem Header="MENU" Style="{StaticResource MenuBarItem}">
-                <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}"/>
-                <MenuItem Header="Clone" Command="{Binding CloneCommand}"/><Separator/>
-                <MenuItem Header="AI risk notice / KI-Risikohinweis" Command="{Binding ShowAiRiskNoticeCommand}"/>
-                <MenuItem Header="Revoke AI approval for this repository" Command="{Binding RevokeAiApprovalCommand}"/>
-                <Separator/>
-                <MenuItem Header="Language">
-                    <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}"/><MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}"/>
-                </MenuItem>
-                <MenuItem Header="Theme">
-                    <MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}"/>
-                    <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}"/>
-                    <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}"/>
-                </MenuItem>
-                <MenuItem Header="Font">
-                    <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}"/>
-                    <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}"/>
-                </MenuItem>
-            </MenuItem>
-        </Menu>
-      </StackPanel>
-    </Grid>
-  <Grid Grid.Row="1" Margin="32,24,32,32"><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-    <Grid Grid.Row="0"><Grid.ColumnDefinitions><ColumnDefinition Width="300" MinWidth="220"/><ColumnDefinition Width="6"/><ColumnDefinition Width="440" MinWidth="280"/><ColumnDefinition Width="*" MinWidth="320"/></Grid.ColumnDefinitions>
-      <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="160"/></Grid.RowDefinitions><TextBlock Text="REPOSITORY" Foreground="{DynamicResource Secondary}" FontSize="12"/><TextBlock Grid.Row="1" Text="{Binding RepositoryName}" TextTrimming="CharacterEllipsis" Margin="0,8,0,24"/><Grid Grid.Row="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Button Content="Current changes" Command="{Binding ShowCurrentCommand}" HorizontalAlignment="Left"/><TextBlock Grid.Row="1" Text="HISTORICAL COMMITS" Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,24,0,8"/><ListBox Grid.Row="2" ItemsSource="{Binding History}" SelectedItem="{Binding SelectedCommit}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled"><ListBox.ItemTemplate><DataTemplate><ItemsControl ItemsSource="{Binding SubjectParts}" ClipToBounds="True"><ItemsControl.ItemsPanel><ItemsPanelTemplate><DockPanel LastChildFill="True"/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.Resources><DataTemplate DataType="{x:Type local:PlainCommitSubjectPart}"><TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis"/></DataTemplate><DataTemplate DataType="{x:Type local:JiraCommitSubjectPart}"><Button Content="{Binding Text}" Style="{StaticResource IssueLink}" Command="{Binding DataContext.OpenUrlCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Url}"/></DataTemplate></ItemsControl.Resources></ItemsControl></DataTemplate></ListBox.ItemTemplate></ListBox></Grid><TextBlock Grid.Row="3" Text="RECENT REPOSITORIES" Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,16,0,8"/><ListBox Grid.Row="4" ItemsSource="{Binding RecentRepositories}" SelectedItem="{Binding SelectedRecent}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/></DataTemplate></ListBox.ItemTemplate></ListBox></Grid></Border>
-      <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" Background="{DynamicResource Border}" ShowsPreview="True" Cursor="SizeWE"/>
-      <Border Grid.Column="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0" Padding="16">
-        <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-          <DockPanel LastChildFill="True">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-              <Button Style="{StaticResource IconButton}" Command="{Binding AnalyzeWithAiCommand}" ToolTip="{Binding AnalyzeButtonText}">
-                <Path Width="16" Height="16" Stretch="Uniform" Data="M4,12 A8,8 0 0 1 18,6 M18,6 L18,2 M18,6 L14,6 M20,12 A8,8 0 0 1 6,18 M6,18 L6,22 M6,18 L10,18" Stroke="{DynamicResource Primary}" StrokeThickness="1.5" Fill="Transparent" StrokeStartLineCap="Square" StrokeEndLineCap="Square"/>
-              </Button>
-              <Button Style="{StaticResource IconButton}" Command="{Binding CancelAnalysisCommand}" ToolTip="{Binding CancelButtonText}">
-                <Path Width="16" Height="16" Stretch="Uniform" Data="M6,6 L18,18 M18,6 L6,18" Stroke="{DynamicResource Critical}" StrokeThickness="1.5" Fill="Transparent" StrokeStartLineCap="Square" StrokeEndLineCap="Square"/>
-              </Button>
+<Window x:Class="GrimmDiff.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:GrimmDiff.App"
+        Title="grimmdiff" Width="1440" Height="900" Background="{DynamicResource Background}"
+        Foreground="{DynamicResource Primary}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="44" /><RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Margin="32,0">
+            <TextBlock Text="grimmdiff" FontSize="20" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <TextBlock Text="{Binding WeeklyQuotaText}" Foreground="{DynamicResource Secondary}" FontSize="12"
+                           VerticalAlignment="Center" Margin="0,0,16,0" />
+                <Button Style="{StaticResource HeaderAction}" Command="{Binding LoginToCodexCommand}"
+                        ToolTip="{Binding CodexStatusText}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Fill="{Binding CodexStatusBrush}" VerticalAlignment="Center"
+                                 Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding CodexAccountText}" FontSize="12" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Menu Height="44" VerticalAlignment="Center" Background="Transparent">
+                    <MenuItem Header="MENU" Style="{StaticResource MenuBarItem}">
+                        <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}" />
+                        <MenuItem Header="Clone" Command="{Binding CloneCommand}" /><Separator />
+                        <MenuItem Header="AI risk notice / KI-Risikohinweis"
+                                  Command="{Binding ShowAiRiskNoticeCommand}" />
+                        <MenuItem Header="Revoke AI approval for this repository"
+                                  Command="{Binding RevokeAiApprovalCommand}" />
+                        <Separator />
+                        <MenuItem Header="Language">
+                            <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}" />
+                            <MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}" />
+                        </MenuItem>
+                        <MenuItem Header="Theme">
+                            <MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}" />
+                            <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}" />
+                            <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}" />
+                        </MenuItem>
+                        <MenuItem Header="Font">
+                            <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}" />
+                            <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}" />
+                        </MenuItem>
+                    </MenuItem>
+                </Menu>
             </StackPanel>
-            <StackPanel VerticalAlignment="Center">
-              <TextBlock Text="{Binding ViewTitle}" TextTrimming="CharacterEllipsis" FontSize="20"/>
-              <TextBlock Text="{Binding AnalysisProgressText}" Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,4,0,0">
-                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsAnalyzing}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-              </TextBlock>
-            </StackPanel>
-          </DockPanel>
-          <ProgressBar Grid.Row="1" Height="2" IsIndeterminate="True" Foreground="{DynamicResource Active}" Background="{DynamicResource Border}" BorderThickness="0" Margin="0,8,0,0">
-            <ProgressBar.Style><Style TargetType="ProgressBar"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsAnalyzing}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></ProgressBar.Style>
-          </ProgressBar>
-          <ListBox Grid.Row="2" ItemsSource="{Binding Groups}" BorderThickness="0" Background="Transparent" Margin="0,16,0,0" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"><ListBox.ItemTemplate><DataTemplate><Expander IsExpanded="False" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1" Padding="0,8"><Expander.Header><StackPanel><TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" FontSize="14"/><TextBlock Text="{Binding Description}" Foreground="{DynamicResource Secondary}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/></StackPanel></Expander.Header><ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2" BorderThickness="0" Background="Transparent" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"><ListBox.ItemTemplate><DataTemplate><Button Style="{StaticResource FileLink}" Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" HorizontalAlignment="Stretch"><TextBlock Text="{Binding Path}" TextTrimming="CharacterEllipsis"/></Button></DataTemplate></ListBox.ItemTemplate></ListBox></Expander></DataTemplate></ListBox.ItemTemplate></ListBox>
         </Grid>
-      </Border>
-      <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
-        <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-          <TextBlock Text="CODE" Foreground="{DynamicResource Secondary}" FontSize="12"/>
-          <local:DiffViewer Grid.Row="1" RenderDocument="{Binding DisplayedDiff, Mode=OneWay}" BorderThickness="0" Background="Transparent" FontFamily="{DynamicResource AppFontFamily}" FontSize="13" Margin="0,16,0,0"/>
-          <Border Grid.Row="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,16,0,0">
-            <StackPanel>
-              <Button Content="Weitere Änderungen laden" Command="{Binding LoadMoreDiffCommand}" HorizontalAlignment="Left" Margin="0,0,0,12"><Button.Style><Style TargetType="Button"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasMoreDiff}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
-              <TextBlock Text="AI DESCRIPTION" Foreground="{DynamicResource Secondary}" FontSize="12"/>
-              <TextBlock Text="{Binding SelectedAnalysisTitle}" FontSize="14" Margin="0,8,0,0"/>
-              <TextBlock Text="{Binding SelectedAnalysisDescription}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-              <TextBlock Text="{Binding AnalysisSourceLabel}" Foreground="{DynamicResource Active}" FontSize="12" Margin="0,8,0,0"/>
-              <TextBlock Text="{Binding AiStatusMessage}" Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,4,0,0"/>
-              <TextBlock Text="{Binding AiDisclosureText}" Foreground="{DynamicResource Secondary}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
-            </StackPanel>
-          </Border>
+        <Grid Grid.Row="1" Margin="32,24,32,32">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" /><RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" MinWidth="220" /><ColumnDefinition Width="6" />
+                    <ColumnDefinition Width="440" MinWidth="280" /><ColumnDefinition Width="*" MinWidth="320" />
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" /><RowDefinition Height="160" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="REPOSITORY" Foreground="{DynamicResource Secondary}" FontSize="12" />
+                        <TextBlock Grid.Row="1" Text="{Binding RepositoryName}" TextTrimming="CharacterEllipsis"
+                                   Margin="0,8,0,24" />
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Button Content="Current changes" Command="{Binding ShowCurrentCommand}"
+                                    HorizontalAlignment="Left" />
+                            <TextBlock Grid.Row="1" Text="HISTORICAL COMMITS" Foreground="{DynamicResource Secondary}"
+                                       FontSize="12" Margin="0,24,0,8" />
+                            <ListBox Grid.Row="2" ItemsSource="{Binding History}"
+                                     SelectedItem="{Binding SelectedCommit}" BorderThickness="0"
+                                     Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding SubjectParts}" ClipToBounds="True">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <DockPanel LastChildFill="True" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.Resources>
+                                                <DataTemplate DataType="{x:Type local:PlainCommitSubjectPart}">
+                                                    <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+                                                </DataTemplate>
+                                                <DataTemplate DataType="{x:Type local:JiraCommitSubjectPart}">
+                                                    <Button Content="{Binding Text}" Style="{StaticResource IssueLink}"
+                                                            Command="{Binding DataContext.OpenUrlCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding Url}" />
+                                                </DataTemplate>
+                                            </ItemsControl.Resources>
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                        <TextBlock Grid.Row="3" Text="RECENT REPOSITORIES" Foreground="{DynamicResource Secondary}"
+                                   FontSize="12" Margin="0,16,0,8" />
+                        <ListBox Grid.Row="4" ItemsSource="{Binding RecentRepositories}"
+                                 SelectedItem="{Binding SelectedRecent}" BorderThickness="0" Background="Transparent"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+                <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                              ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                              Background="{DynamicResource Border}" ShowsPreview="True" Cursor="SizeWE" />
+                <Border Grid.Column="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0" Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <DockPanel LastChildFill="True">
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Style="{StaticResource IconButton}" Command="{Binding AnalyzeWithAiCommand}"
+                                        ToolTip="{Binding AnalyzeButtonText}">
+                                    <Path Width="16" Height="16" Stretch="Uniform"
+                                          Data="M4,12 A8,8 0 0 1 18,6 M18,6 L18,2 M18,6 L14,6 M20,12 A8,8 0 0 1 6,18 M6,18 L6,22 M6,18 L10,18"
+                                          Stroke="{DynamicResource Primary}" StrokeThickness="1.5" Fill="Transparent"
+                                          StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
+                                </Button>
+                                <Button Style="{StaticResource IconButton}" Command="{Binding CancelAnalysisCommand}"
+                                        ToolTip="{Binding CancelButtonText}">
+                                    <Path Width="16" Height="16" Stretch="Uniform" Data="M6,6 L18,18 M18,6 L6,18"
+                                          Stroke="{DynamicResource Critical}" StrokeThickness="1.5" Fill="Transparent"
+                                          StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
+                                </Button>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ViewTitle}" TextTrimming="CharacterEllipsis" FontSize="20" />
+                                <TextBlock Text="{Binding AnalysisProgressText}"
+                                           Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAnalyzing}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </DockPanel>
+                        <ProgressBar Grid.Row="1" Height="2" IsIndeterminate="True"
+                                     Foreground="{DynamicResource Active}" Background="{DynamicResource Border}"
+                                     BorderThickness="0" Margin="0,8,0,0">
+                            <ProgressBar.Style>
+                                <Style TargetType="ProgressBar">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAnalyzing}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ProgressBar.Style>
+                        </ProgressBar>
+                        <ListBox Grid.Row="2" ItemsSource="{Binding Groups}" BorderThickness="0"
+                                 Background="Transparent" Margin="0,16,0,0" ScrollViewer.CanContentScroll="True"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 VirtualizingPanel.IsVirtualizing="True"
+                                 VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Expander IsExpanded="False" BorderBrush="{DynamicResource Border}"
+                                              BorderThickness="0,0,0,1" Padding="0,8">
+                                        <Expander.Header>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"
+                                                           FontSize="14" />
+                                                <TextBlock Text="{Binding Description}"
+                                                           Foreground="{DynamicResource Secondary}" FontSize="12"
+                                                           TextWrapping="Wrap" Margin="0,4,0,0" />
+                                            </StackPanel>
+                                        </Expander.Header>
+                                        <ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2"
+                                                 BorderThickness="0" Background="Transparent"
+                                                 ScrollViewer.CanContentScroll="True"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                 VirtualizingPanel.IsVirtualizing="True"
+                                                 VirtualizingPanel.VirtualizationMode="Recycling">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Style="{StaticResource FileLink}"
+                                                            Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" HorizontalAlignment="Stretch">
+                                                        <TextBlock Text="{Binding Path}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Expander>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+                <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="CODE" Foreground="{DynamicResource Secondary}" FontSize="12" />
+                        <local:DiffViewer Grid.Row="1" RenderDocument="{Binding DisplayedDiff, Mode=OneWay}"
+                                          BorderThickness="0" Background="Transparent"
+                                          FontFamily="{DynamicResource AppFontFamily}" FontSize="13" Margin="0,16,0,0" />
+                        <Border Grid.Row="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0"
+                                Margin="0,16,0,0" Padding="0,16,0,0">
+                            <StackPanel>
+                                <Button Content="Weitere Änderungen laden" Command="{Binding LoadMoreDiffCommand}"
+                                        HorizontalAlignment="Left" Margin="0,0,0,12">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasMoreDiff}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <TextBlock Text="AI DESCRIPTION" Foreground="{DynamicResource Secondary}" FontSize="12" />
+                                <TextBlock Text="{Binding SelectedAnalysisTitle}" FontSize="14" Margin="0,8,0,0" />
+                                <TextBlock Text="{Binding SelectedAnalysisDescription}" TextWrapping="Wrap"
+                                           Margin="0,8,0,0" />
+                                <TextBlock Text="{Binding AnalysisSourceLabel}" Foreground="{DynamicResource Active}"
+                                           FontSize="12" Margin="0,8,0,0" />
+                                <TextBlock Text="{Binding AiStatusMessage}" Foreground="{DynamicResource Secondary}"
+                                           FontSize="12" Margin="0,4,0,0" />
+                                <TextBlock Text="{Binding AiDisclosureText}" Foreground="{DynamicResource Secondary}"
+                                           FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+            <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" Foreground="{DynamicResource Secondary}"
+                       Margin="0,16,0,0" />
         </Grid>
-      </Border>
     </Grid>
-    <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" Foreground="{DynamicResource Secondary}" Margin="0,16,0,0"/>
-  </Grid></Grid>
 </Window>
