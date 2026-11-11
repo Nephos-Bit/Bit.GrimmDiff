@@ -11,12 +11,12 @@ GitHub landing page; use this file and the relevant source files instead.
 
 ### Find the relevant code and tests
 
-- `src/GrimmDiff.Domain`: reine Git- und Diff-Domänenmodelle sowie den Unified-Diff-Parser; keine UI-, Use-Case- oder Infrastrukturabhängigkeiten.
+- `src/GrimmDiff.Domain`: reine Git- und Diff-Domänenmodelle (`Models`), Richtlinien (`Policies`) sowie Parser (`Parsers`); keine UI-, Use-Case- oder Infrastrukturabhängigkeiten.
 - `src/GrimmDiff.Application/Ports`: kleine, verbraucherorientierte Schnittstellen für Repository-, Analyse-, Codex- und Einstellungszugriffe.
 - `src/GrimmDiff.Application/Models`: Application-spezifische Transport- und Statusmodelle.
 - `src/GrimmDiff.Application/UseCases`: Repository-, Diff-Analyse-, Codex-Sitzungs- und Einstellungs-Use-Cases.
-- `src/GrimmDiff.Infrastructure`: Implementierungen der Application-Ports für Git CLI, Codex CLI sowie die lokale Diff-Heuristik.
-- `src/GrimmDiff.App`: WPF-Komposition und Haupt-ViewModel; `Services` enthält WPF-/Shell-/Dateisystemadapter, `ViewModels` Darstellungsmodelle.
+- `src/GrimmDiff.Infrastructure`: Implementierungen der Application-Ports; `Adapters/Git` und `Adapters/Codex` kapseln die CLIs, `Processors/DiffAnalysis` enthält die lokale Diff-Heuristik.
+- `src/GrimmDiff.App`: WPF-Anwendung mit `Composition`, `Configuration`, `Commands`, `Controls`, `Models`, `Rendering`, `Services`, `ViewModels` und `Views`.
 - `tests/GrimmDiff.Tests`: ausführbare, paketfreie Unit-Tests für Parser, Analyseprovider, Codex-Adapter und Application-Use-Cases.
 - `scripts`: Auslieferungs- und lokale Wartungsskripte.
 - `docs/compliance` und `docs/security`: versionierte CRA-Nachweise, Threat Model, sichere Nutzungs- und Incident-Response-Verfahren.
