@@ -59,7 +59,7 @@
       <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
         <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
           <TextBlock Text="CODE" Foreground="{DynamicResource Secondary}" FontSize="12"/>
-          <local:DiffViewer Grid.Row="1" RenderDocument="{Binding DisplayedDiff, Mode=OneWay}" BorderThickness="0" Background="Transparent" FontSize="13" Margin="0,16,0,0"/>
+          <local:DiffViewer Grid.Row="1" RenderDocument="{Binding DisplayedDiff, Mode=OneWay}" BorderThickness="0" Background="Transparent" FontFamily="{DynamicResource AppFontFamily}" FontSize="13" Margin="0,16,0,0"/>
           <Border Grid.Row="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,16,0,0">
             <StackPanel>
               <Button Content="Weitere Änderungen laden" Command="{Binding LoadMoreDiffCommand}" HorizontalAlignment="Left" Margin="0,0,0,12"><Button.Style><Style TargetType="Button"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasMoreDiff}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Button.Style></Button>
