@@ -1,0 +1,2 @@
+namespace GrimmDiff.Application;
+public sealed class CodexSessionService(ICodexSessionClient client) { public Task<CodexCliStatus> GetStatusAsync(CancellationToken cancellationToken = default) => client.GetStatusAsync(cancellationToken); public Task<CodexCliStatus> LoginAsync(CancellationToken cancellationToken = default) => client.LoginAsync(cancellationToken); public Task<CodexAccountUsage> GetAccountUsageAsync(CancellationToken cancellationToken = default) => client.GetAccountUsageAsync(cancellationToken); }

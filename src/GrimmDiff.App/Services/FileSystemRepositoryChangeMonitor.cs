@@ -1,0 +1,3 @@
+using System.IO;
+namespace GrimmDiff.App;
+public sealed class FileSystemRepositoryChangeMonitor : IRepositoryChangeMonitor { private FileSystemWatcher? _watcher; public void Watch(string path, Action<string> onChanged) { _watcher?.Dispose(); _watcher = new FileSystemWatcher(path) { IncludeSubdirectories = true, EnableRaisingEvents = true }; _watcher.Changed += (_, e) => onChanged(e.FullPath); _watcher.Created += (_, e) => onChanged(e.FullPath); _watcher.Deleted += (_, e) => onChanged(e.FullPath); _watcher.Renamed += (_, e) => onChanged(e.FullPath); } public void Dispose() => _watcher?.Dispose(); }
