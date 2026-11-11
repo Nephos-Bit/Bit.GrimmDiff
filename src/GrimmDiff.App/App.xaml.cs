@@ -1,3 +1,5 @@
-using System.Windows;
 namespace GrimmDiff.App;
-public partial class App : System.Windows.Application { }
+
+public partial class App : System.Windows.Application
+{
+}

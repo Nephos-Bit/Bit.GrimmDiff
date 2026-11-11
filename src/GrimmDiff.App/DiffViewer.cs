@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
@@ -9,23 +10,23 @@ namespace GrimmDiff.App;
 public sealed class DiffViewer : TextEditor
 {
     private const int MaximumCachedDocuments = 8;
-    private readonly DiffColorizer _colorizer = new();
-    private readonly DiffLineBackgroundRenderer _lineBackgroundRenderer = new();
-    private readonly Dictionary<DiffRenderDocument, TextDocument> _documents = new(ReferenceEqualityComparer.Instance);
-    private readonly Queue<DiffRenderDocument> _documentOrder = [];
 
     public static readonly DependencyProperty RenderDocumentProperty = DependencyProperty.Register(
-        nameof(RenderDocument), typeof(object), typeof(DiffViewer), new PropertyMetadata(null, OnRenderDocumentChanged));
+        nameof(RenderDocument), typeof(object), typeof(DiffViewer),
+        new PropertyMetadata(null, OnRenderDocumentChanged));
 
-    public object? RenderDocument { get => GetValue(RenderDocumentProperty); set => SetValue(RenderDocumentProperty, value); }
+    private readonly DiffColorizer _colorizer = new();
+    private readonly Queue<DiffRenderDocument> _documentOrder = [];
+    private readonly Dictionary<DiffRenderDocument, TextDocument> _documents = new(ReferenceEqualityComparer.Instance);
+    private readonly DiffLineBackgroundRenderer _lineBackgroundRenderer = new();
 
     public DiffViewer()
     {
         IsReadOnly = true;
         ShowLineNumbers = false;
         WordWrap = false;
-        HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
-        VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+        VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
         Options.EnableEmailHyperlinks = false;
         Options.EnableHyperlinks = false;
         Options.EnableTextDragDrop = false;
@@ -33,9 +34,19 @@ public sealed class DiffViewer : TextEditor
         TextArea.TextView.BackgroundRenderers.Add(_lineBackgroundRenderer);
     }
 
+    public object? RenderDocument
+    {
+        get => GetValue(RenderDocumentProperty);
+        set => SetValue(RenderDocumentProperty, value);
+    }
+
     #region Private
 
-    private static void OnRenderDocumentChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args) => ((DiffViewer)dependencyObject).ApplyDocument(args.NewValue as DiffRenderDocument);
+    private static void OnRenderDocumentChanged(DependencyObject dependencyObject,
+        DependencyPropertyChangedEventArgs args)
+    {
+        ((DiffViewer)dependencyObject).ApplyDocument(args.NewValue as DiffRenderDocument);
+    }
 
     private void ApplyDocument(DiffRenderDocument? renderDocument)
     {
@@ -46,6 +57,7 @@ public sealed class DiffViewer : TextEditor
             _lineBackgroundRenderer.SetMarkers([]);
             return;
         }
+
         if (!_documents.TryGetValue(renderDocument, out var document))
         {
             document = new TextDocument(renderDocument.Text);
@@ -57,6 +69,7 @@ public sealed class DiffViewer : TextEditor
                 _documents.Remove(stale);
             }
         }
+
         Document = document;
         _colorizer.SetMarkers(renderDocument.Markers);
         _lineBackgroundRenderer.SetMarkers(renderDocument.Markers);
@@ -70,7 +83,10 @@ internal sealed class DiffColorizer : DocumentColorizingTransformer
 {
     private IReadOnlyList<DiffTextMarker> _markers = [];
 
-    public void SetMarkers(IReadOnlyList<DiffTextMarker> markers) => _markers = markers.OrderBy(marker => marker.Offset).ToList();
+    public void SetMarkers(IReadOnlyList<DiffTextMarker> markers)
+    {
+        _markers = markers.OrderBy(marker => marker.Offset).ToList();
+    }
 
     protected override void ColorizeLine(DocumentLine line)
     {
@@ -106,7 +122,8 @@ internal sealed class DiffColorizer : DocumentColorizingTransformer
 
     private static Brush Brush(string resourceKey, byte alpha)
     {
-        var source = System.Windows.Application.Current.Resources[resourceKey] as SolidColorBrush ?? Brushes.Transparent;
+        var source = System.Windows.Application.Current.Resources[resourceKey] as SolidColorBrush ??
+                     Brushes.Transparent;
         var color = source.Color;
         color.A = alpha;
         var brush = new SolidColorBrush(color);
@@ -122,8 +139,6 @@ internal sealed class DiffLineBackgroundRenderer : IBackgroundRenderer
     private IReadOnlyList<DiffTextMarker> _markers = [];
     public KnownLayer Layer => KnownLayer.Background;
 
-    public void SetMarkers(IReadOnlyList<DiffTextMarker> markers) => _markers = markers.Where(marker => marker.Kind is DiffHighlightKind.AddedLine or DiffHighlightKind.RemovedLine).OrderBy(marker => marker.Offset).ToList();
-
     public void Draw(TextView textView, DrawingContext drawingContext)
     {
         if (!textView.VisualLinesValid || textView.VisualLines.Count == 0) return;
@@ -134,11 +149,18 @@ internal sealed class DiffLineBackgroundRenderer : IBackgroundRenderer
             if (marker.Offset > lastOffset) break;
             if (marker.Offset + marker.Length < firstOffset) continue;
             var segment = new TextSegment { StartOffset = marker.Offset, Length = marker.Length };
-            var geometryBuilder = new BackgroundGeometryBuilder { AlignToWholePixels = true, ExtendToFullWidthAtLineEnd = true };
+            var geometryBuilder = new BackgroundGeometryBuilder
+                { AlignToWholePixels = true, ExtendToFullWidthAtLineEnd = true };
             geometryBuilder.AddSegment(textView, segment);
             var geometry = geometryBuilder.CreateGeometry();
             if (geometry is not null) drawingContext.DrawGeometry(BackgroundBrush(marker.Kind), null, geometry);
         }
+    }
+
+    public void SetMarkers(IReadOnlyList<DiffTextMarker> markers)
+    {
+        _markers = markers.Where(marker => marker.Kind is DiffHighlightKind.AddedLine or DiffHighlightKind.RemovedLine)
+            .OrderBy(marker => marker.Offset).ToList();
     }
 
     private static Brush BackgroundBrush(DiffHighlightKind kind)

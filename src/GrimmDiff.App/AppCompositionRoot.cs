@@ -12,8 +12,10 @@ public static class AppCompositionRoot
         var codex = new CodexCliClient();
         var heuristic = new LocalHeuristicDiffAnalysisProvider();
         return new MainViewModel(
-            new RepositoryWorkspaceService(new GitCliRepositoryAvailability(git), new GitCliRepositoryReader(git), commands),
-            new DiffAnalysisService(new GitCliDiffReader(git), new CodexCliDiffAnalysisProvider(codex, heuristic), heuristic),
+            new RepositoryWorkspaceService(new GitCliRepositoryAvailability(git), new GitCliRepositoryReader(git),
+                commands),
+            new DiffAnalysisService(new GitCliDiffReader(git), new CodexCliDiffAnalysisProvider(codex, heuristic),
+                heuristic),
             new CodexSessionService(codex),
             new PreferencesService(new AppSettingsStore()),
             new WpfUserDialogService(),

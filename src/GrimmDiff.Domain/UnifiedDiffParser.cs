@@ -22,16 +22,21 @@ public static partial class UnifiedDiffParser
                 hasHunk = false;
                 continue;
             }
+
             var header = HunkHeader().Match(line);
             if (header.Success)
             {
                 AddCurrent();
-                current = new DiffHunkBuilder(currentPath, line, int.Parse(header.Groups[1].Value), int.Parse(header.Groups[2].Value));
+                current = new DiffHunkBuilder(currentPath, line, int.Parse(header.Groups[1].Value),
+                    int.Parse(header.Groups[2].Value));
                 hasHunk = true;
                 continue;
             }
-            if (current is null) fileLines.Add(line); else current.Lines.Add(line);
+
+            if (current is null) fileLines.Add(line);
+            else current.Lines.Add(line);
         }
+
         AddFile();
         return hunks;
 
@@ -39,7 +44,8 @@ public static partial class UnifiedDiffParser
         {
             if (current is not null)
             {
-                hunks.Add(new DiffHunk(current.Path, scope, current.Header, string.Join('\n', current.Lines), current.OldStart, current.NewStart));
+                hunks.Add(new DiffHunk(current.Path, scope, current.Header, string.Join('\n', current.Lines),
+                    current.OldStart, current.NewStart));
                 current = null;
             }
         }

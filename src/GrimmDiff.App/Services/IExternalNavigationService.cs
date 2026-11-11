@@ -1,2 +1,6 @@
 namespace GrimmDiff.App;
-public interface IExternalNavigationService { void Open(string url); }
+
+public interface IExternalNavigationService
+{
+    void Open(string url);
+}

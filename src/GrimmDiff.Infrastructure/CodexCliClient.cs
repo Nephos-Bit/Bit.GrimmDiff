@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
@@ -13,7 +14,11 @@ public sealed record CodexProcessRequest(
     TimeSpan Timeout,
     IReadOnlyList<string> EnvironmentVariablesToRemove);
 
-public sealed record CodexProcessResult(int ExitCode, string StandardOutput, string StandardError, bool TimedOut = false);
+public sealed record CodexProcessResult(
+    int ExitCode,
+    string StandardOutput,
+    string StandardError,
+    bool TimedOut = false);
 
 public interface ICodexProcessRunner
 {
@@ -31,7 +36,8 @@ public sealed class CodexCliInvocationException(string message, string diagnosti
 
 public sealed class SystemCodexProcessRunner : ICodexProcessRunner
 {
-    public async Task<CodexProcessResult> RunAsync(CodexProcessRequest request, CancellationToken cancellationToken = default)
+    public async Task<CodexProcessResult> RunAsync(CodexProcessRequest request,
+        CancellationToken cancellationToken = default)
     {
         var startInfo = new ProcessStartInfo(request.Executable)
         {
@@ -52,7 +58,6 @@ public sealed class SystemCodexProcessRunner : ICodexProcessRunner
         var outputTask = process.StandardOutput.ReadToEndAsync(CancellationToken.None);
         var errorTask = process.StandardError.ReadToEndAsync(CancellationToken.None);
         if (request.StandardInput is not null)
-        {
             try
             {
                 await process.StandardInput.WriteAsync(request.StandardInput.AsMemory(), cancellationToken);
@@ -63,7 +68,6 @@ public sealed class SystemCodexProcessRunner : ICodexProcessRunner
                 TryKill(process);
                 throw;
             }
-        }
 
         using var timeout = new CancellationTokenSource(request.Timeout);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
@@ -86,9 +90,16 @@ public sealed class SystemCodexProcessRunner : ICodexProcessRunner
 
     private static void TryKill(Process process)
     {
-        try { if (!process.HasExited) process.Kill(true); }
-        catch (InvalidOperationException) { }
-        catch (System.ComponentModel.Win32Exception) { }
+        try
+        {
+            if (!process.HasExited) process.Kill(true);
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (Win32Exception)
+        {
+        }
     }
 
     #endregion
@@ -99,7 +110,10 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
     private static readonly TimeSpan StatusTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan AccountUsageTimeout = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan LoginTimeout = TimeSpan.FromMinutes(5);
-    private static readonly string[] RemovedCredentialVariables = ["OPENAI_API_KEY", "CODEX_API_KEY", "CODEX_ACCESS_TOKEN"];
+
+    private static readonly string[] RemovedCredentialVariables =
+        ["OPENAI_API_KEY", "CODEX_API_KEY", "CODEX_ACCESS_TOKEN"];
+
     private readonly ICodexProcessRunner _processRunner = processRunner ?? new SystemCodexProcessRunner();
 
     public async Task<CodexCliStatus> GetStatusAsync(CancellationToken cancellationToken = default)
@@ -107,26 +121,31 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         var executable = ResolveExecutable();
         try
         {
-            var result = await _processRunner.RunAsync(Request(executable, ["login", "status"], null, StatusTimeout), cancellationToken);
-            if (result.TimedOut) return new(CodexCliStatusKind.Unavailable, "The Codex CLI status check timed out.");
+            var result = await _processRunner.RunAsync(Request(executable, ["login", "status"], null, StatusTimeout),
+                cancellationToken);
+            if (result.TimedOut)
+                return new CodexCliStatus(CodexCliStatusKind.Unavailable, "The Codex CLI status check timed out.");
             var status = $"{result.StandardOutput}\n{result.StandardError}";
             if (status.Contains("not logged in", StringComparison.OrdinalIgnoreCase))
-                return new(CodexCliStatusKind.NotAuthenticated, "Codex is not signed in.");
-            if (status.Contains("api key", StringComparison.OrdinalIgnoreCase) || status.Contains("apikey", StringComparison.OrdinalIgnoreCase))
-                return new(CodexCliStatusKind.ApiKeyAuthentication, "Codex is signed in with an API key instead of ChatGPT.");
+                return new CodexCliStatus(CodexCliStatusKind.NotAuthenticated, "Codex is not signed in.");
+            if (status.Contains("api key", StringComparison.OrdinalIgnoreCase) ||
+                status.Contains("apikey", StringComparison.OrdinalIgnoreCase))
+                return new CodexCliStatus(CodexCliStatusKind.ApiKeyAuthentication,
+                    "Codex is signed in with an API key instead of ChatGPT.");
             if (result.ExitCode == 0 && status.Contains("ChatGPT", StringComparison.OrdinalIgnoreCase))
-                return new(CodexCliStatusKind.Ready, "ChatGPT sign-in is ready.");
+                return new CodexCliStatus(CodexCliStatusKind.Ready, "ChatGPT sign-in is ready.");
             if (result.ExitCode == 0)
-                return new(CodexCliStatusKind.UnsupportedAuthentication, "The active Codex authentication is not a ChatGPT sign-in.");
-            return new(CodexCliStatusKind.NotAuthenticated, "Codex is not signed in with ChatGPT.");
+                return new CodexCliStatus(CodexCliStatusKind.UnsupportedAuthentication,
+                    "The active Codex authentication is not a ChatGPT sign-in.");
+            return new CodexCliStatus(CodexCliStatusKind.NotAuthenticated, "Codex is not signed in with ChatGPT.");
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (Win32Exception)
         {
-            return new(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
+            return new CodexCliStatus(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
         }
         catch (FileNotFoundException)
         {
-            return new(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
+            return new CodexCliStatus(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
         }
     }
 
@@ -135,18 +154,21 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         var executable = ResolveExecutable();
         try
         {
-            var result = await _processRunner.RunAsync(Request(executable, ["login"], null, LoginTimeout), cancellationToken);
-            if (result.TimedOut) return new(CodexCliStatusKind.Unavailable, "The ChatGPT sign-in timed out.");
-            if (result.ExitCode != 0) return new(CodexCliStatusKind.Unavailable, "ChatGPT sign-in did not complete.");
+            var result =
+                await _processRunner.RunAsync(Request(executable, ["login"], null, LoginTimeout), cancellationToken);
+            if (result.TimedOut)
+                return new CodexCliStatus(CodexCliStatusKind.Unavailable, "The ChatGPT sign-in timed out.");
+            if (result.ExitCode != 0)
+                return new CodexCliStatus(CodexCliStatusKind.Unavailable, "ChatGPT sign-in did not complete.");
             return await GetStatusAsync(cancellationToken);
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (Win32Exception)
         {
-            return new(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
+            return new CodexCliStatus(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
         }
         catch (FileNotFoundException)
         {
-            return new(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
+            return new CodexCliStatus(CodexCliStatusKind.Missing, "The Codex CLI was not found.");
         }
     }
 
@@ -175,11 +197,16 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
             using var timeout = new CancellationTokenSource(AccountUsageTimeout);
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
 
-            await WriteRpcAsync(process, """{"method":"initialize","id":1,"params":{"clientInfo":{"name":"grimmdiff","title":"GrimmDiff","version":"1.0.0"}}}""", linked.Token);
+            await WriteRpcAsync(process,
+                """{"method":"initialize","id":1,"params":{"clientInfo":{"name":"grimmdiff","title":"GrimmDiff","version":"1.0.0"}}}""",
+                linked.Token);
             await ReadRpcResultAsync(process, 1, linked.Token);
             await WriteRpcAsync(process, """{"method":"initialized","params":{}}""", linked.Token);
-            await WriteRpcAsync(process, """{"method":"account/read","id":2,"params":{"refreshToken":false}}""", linked.Token);
-            await WriteRpcAsync(process, """{"method":"account/rateLimits/read","id":3,"params":{"excludeResetCreditDetails":true}}""", linked.Token);
+            await WriteRpcAsync(process, """{"method":"account/read","id":2,"params":{"refreshToken":false}}""",
+                linked.Token);
+            await WriteRpcAsync(process,
+                """{"method":"account/rateLimits/read","id":3,"params":{"excludeResetCreditDetails":true}}""",
+                linked.Token);
 
             string? email = null;
             int? weeklyRemaining = null;
@@ -187,18 +214,20 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
             while (pending.Count > 0)
             {
                 using var response = await ReadRpcMessageAsync(process, linked.Token);
-                if (!response.RootElement.TryGetProperty("id", out var idElement) || !idElement.TryGetInt32(out var id) || !pending.Remove(id)) continue;
+                if (!response.RootElement.TryGetProperty("id", out var idElement) ||
+                    !idElement.TryGetInt32(out var id) || !pending.Remove(id)) continue;
                 if (!response.RootElement.TryGetProperty("result", out var result)) continue;
                 if (id == 2) email = ReadEmail(result);
                 if (id == 3) weeklyRemaining = ReadWeeklyRemaining(result);
             }
+
             return new CodexAccountUsage(email, weeklyRemaining);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             return new CodexAccountUsage(null, null);
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (Win32Exception)
         {
             return new CodexAccountUsage(null, null);
         }
@@ -220,7 +249,8 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         }
     }
 
-    public async Task<string> RunStructuredAsync(string prompt, string schema, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public async Task<string> RunStructuredAsync(string prompt, string schema, TimeSpan timeout,
+        CancellationToken cancellationToken = default)
     {
         var executable = ResolveExecutable();
         var tempDirectory = Path.Combine(Path.GetTempPath(), "GrimmDiff", Guid.NewGuid().ToString("N"));
@@ -237,7 +267,8 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
                 "-c", "web_search=\"disabled\"", "--skip-git-repo-check", "--output-schema", schemaPath,
                 "--output-last-message", outputPath, "--color", "never", "-"
             ];
-            var result = await _processRunner.RunAsync(Request(executable, arguments, prompt, timeout, tempDirectory), cancellationToken);
+            var result = await _processRunner.RunAsync(Request(executable, arguments, prompt, timeout, tempDirectory),
+                cancellationToken);
             if (result.TimedOut) throw new TimeoutException("GPT-6 Luna analysis timed out.");
             if (result.ExitCode != 0)
                 throw new CodexCliInvocationException("GPT-6 Luna analysis failed.", Limit(result.StandardError));
@@ -250,16 +281,28 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         }
         finally
         {
-            try { Directory.Delete(tempDirectory, true); }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            try
+            {
+                Directory.Delete(tempDirectory, true);
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
         }
     }
 
     #region Private
 
-    private static CodexProcessRequest Request(string executable, IReadOnlyList<string> arguments, string? input, TimeSpan timeout, string? workingDirectory = null) =>
-        new(executable, arguments, workingDirectory ?? Environment.CurrentDirectory, input, timeout, RemovedCredentialVariables);
+    private static CodexProcessRequest Request(string executable, IReadOnlyList<string> arguments, string? input,
+        TimeSpan timeout, string? workingDirectory = null)
+    {
+        return new CodexProcessRequest(executable, arguments, workingDirectory ?? Environment.CurrentDirectory, input,
+            timeout,
+            RemovedCredentialVariables);
+    }
 
     private static async Task WriteRpcAsync(Process process, string message, CancellationToken cancellationToken)
     {
@@ -272,7 +315,8 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         while (true)
         {
             using var response = await ReadRpcMessageAsync(process, cancellationToken);
-            if (response.RootElement.TryGetProperty("id", out var id) && id.TryGetInt32(out var value) && value == expectedId) return;
+            if (response.RootElement.TryGetProperty("id", out var id) && id.TryGetInt32(out var value) &&
+                value == expectedId) return;
         }
     }
 
@@ -285,9 +329,13 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
 
     private static string? ReadEmail(JsonElement result)
     {
-        if (!result.TryGetProperty("account", out var account) || account.ValueKind != JsonValueKind.Object) return null;
-        if (!account.TryGetProperty("type", out var type) || !string.Equals(type.GetString(), "chatgpt", StringComparison.Ordinal)) return null;
-        return account.TryGetProperty("email", out var email) && email.ValueKind == JsonValueKind.String ? email.GetString() : null;
+        if (!result.TryGetProperty("account", out var account) || account.ValueKind != JsonValueKind.Object)
+            return null;
+        if (!account.TryGetProperty("type", out var type) ||
+            !string.Equals(type.GetString(), "chatgpt", StringComparison.Ordinal)) return null;
+        return account.TryGetProperty("email", out var email) && email.ValueKind == JsonValueKind.String
+            ? email.GetString()
+            : null;
     }
 
     private static int? ReadWeeklyRemaining(JsonElement result)
@@ -295,11 +343,12 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         var weeklyWindows = new List<(long Duration, int Used)>();
         if (result.TryGetProperty("rateLimits", out var rateLimits)) AddWindows(rateLimits, weeklyWindows);
         if (result.TryGetProperty("rateLimitsByLimitId", out var buckets) && buckets.ValueKind == JsonValueKind.Object)
-            foreach (var bucket in buckets.EnumerateObject()) AddWindows(bucket.Value, weeklyWindows);
+            foreach (var bucket in buckets.EnumerateObject())
+                AddWindows(bucket.Value, weeklyWindows);
 
         var weekly = weeklyWindows
             .Where(window => window.Duration is >= 6 * 24 * 60 and <= 8 * 24 * 60)
-            .OrderBy(window => Math.Abs((7 * 24 * 60) - window.Duration))
+            .OrderBy(window => Math.Abs(7 * 24 * 60 - window.Duration))
             .FirstOrDefault();
         return weekly.Duration == 0 ? null : Math.Clamp(100 - weekly.Used, 0, 100);
     }
@@ -310,19 +359,28 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         AddWindow(snapshot, "secondary", windows);
     }
 
-    private static void AddWindow(JsonElement snapshot, string propertyName, ICollection<(long Duration, int Used)> windows)
+    private static void AddWindow(JsonElement snapshot, string propertyName,
+        ICollection<(long Duration, int Used)> windows)
     {
         if (!snapshot.TryGetProperty(propertyName, out var window) || window.ValueKind != JsonValueKind.Object) return;
-        if (!window.TryGetProperty("windowDurationMins", out var duration) || !duration.TryGetInt64(out var minutes)) return;
+        if (!window.TryGetProperty("windowDurationMins", out var duration) ||
+            !duration.TryGetInt64(out var minutes)) return;
         if (!window.TryGetProperty("usedPercent", out var used) || !used.TryGetInt32(out var usedPercent)) return;
         windows.Add((minutes, usedPercent));
     }
 
     private static void StopProcess(Process process)
     {
-        try { if (!process.HasExited) process.Kill(true); }
-        catch (InvalidOperationException) { }
-        catch (System.ComponentModel.Win32Exception) { }
+        try
+        {
+            if (!process.HasExited) process.Kill(true);
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (Win32Exception)
+        {
+        }
     }
 
     private static string ResolveExecutable()
@@ -334,18 +392,26 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
             try
             {
                 var candidate = Directory.Exists(root)
-                    ? Directory.EnumerateFiles(root, "codex.exe", SearchOption.AllDirectories).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault()
+                    ? Directory.EnumerateFiles(root, "codex.exe", SearchOption.AllDirectories)
+                        .OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault()
                     : null;
                 if (candidate is not null) return candidate;
             }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
         }
 
         throw new FileNotFoundException("A Codex CLI installed by OpenAI was not found.");
     }
 
-    private static string Limit(string value) => value.Length <= 2000 ? value : value[^2000..];
+    private static string Limit(string value)
+    {
+        return value.Length <= 2000 ? value : value[^2000..];
+    }
 
     #endregion
 }
