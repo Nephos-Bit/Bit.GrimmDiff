@@ -21,7 +21,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private string? _codexEmail; private int? _weeklyRemainingPercent;
     private CommitHistoryItem? _selectedCommit; private AnalysisFileViewModel? _selectedFile; private string? _selectedRecent; private bool _loading, _isAnalyzing, _isAnalysisStale;
     private CodexCliStatusKind _codexStatusKind = CodexCliStatusKind.Unavailable;
-    private CancellationTokenSource? _analysisCancellation; private long _analysisGeneration; private long _diffRenderGeneration;
+    private CancellationTokenSource? _analysisCancellation; private long _analysisGeneration; private long _diffRenderGeneration; private int _initialized;
     public MainViewModel(IGitRepositoryService git, IDiffAnalysisProvider analysis, IDiffAnalysisProvider heuristicAnalysis, ICodexCliClient codex)
     {
         _git = git; _analysis = analysis; _heuristicAnalysis = heuristicAnalysis; _codex = codex; _refreshTimer.Elapsed += OnRefreshTimerElapsed;
@@ -31,7 +31,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         AnalyzeWithAiCommand = new AsyncCommand(AnalyzeWithAiAsync, () => !string.IsNullOrWhiteSpace(RepositoryPath) && !IsAnalyzing);
         LoginToCodexCommand = new AsyncCommand(LoginToCodexAsync, () => !IsAnalyzing);
         CancelAnalysisCommand = new AsyncCommand(CancelAnalysisAsync, () => IsAnalyzing);
-        _ = CheckCodexAsync();
     }
     public event PropertyChangedEventHandler? PropertyChanged;
     public ObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = []; public ObservableCollection<CommitHistoryItem> History { get; } = []; public ObservableCollection<AnalysisGroupViewModel> Groups { get; } = [];
@@ -72,6 +71,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public string SelectedAnalysisDescription => SelectedFile?.GroupDescription ?? Groups.FirstOrDefault()?.Description ?? string.Empty;
     public RecentRepositoryItem? SelectedRecent { get => RecentRepositories.FirstOrDefault(item => item.Path == _selectedRecent); set { if (Set(ref _selectedRecent, value?.Path) && value is not null) _ = OpenRepositoryAsync(value.Path); } }
     public string ViewTitle => SelectedCommit is null ? "Current changes" : $"{SelectedCommit.Commit.Subject} · {SelectedCommit.Commit.Id[..Math.Min(8, SelectedCommit.Commit.Id.Length)]}";
+    public async Task InitializeAsync()
+    {
+        if (Interlocked.Exchange(ref _initialized, 1) != 0) return;
+        await Task.Delay(750);
+        await CheckCodexAsync();
+    }
     private async Task OpenRepositoryAsync() { var picker = new OpenFolderDialog { Title = "Open Git repository" }; if (picker.ShowDialog() == true) await OpenRepositoryAsync(picker.FolderName); }
     private async Task OpenRepositoryAsync(string path) { if (!await Task.Run(() => _git.IsGitAvailableAsync())) { StatusMessage = "Git is not installed or unavailable on PATH."; return; } RepositoryPath = path; AddRecent(path); StartWatcher(path); await RefreshAsync(true); }
     private async Task CloneAsync() { var source = InputDialog.Ask("Clone repository", "Repository URL or local source:"); if (string.IsNullOrWhiteSpace(source)) return; var destination = InputDialog.Ask("Clone repository", "Destination folder:"); if (string.IsNullOrWhiteSpace(destination)) return; var result = await _git.CloneAsync(source, destination); StatusMessage = result.IsSuccess ? "Repository cloned." : result.ErrorMessage; if (result.IsSuccess) await OpenRepositoryAsync(destination); }
@@ -137,7 +142,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     }
     private Task AnalyzeWithAiAsync() => LoadAnalysisAsync(true);
     private Task CancelAnalysisAsync() { _analysisCancellation?.Cancel(); return Task.CompletedTask; }
-    private async Task CheckCodexAsync() { try { var status = await Task.Run(() => _codex.GetStatusAsync()); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
+    private async Task CheckCodexAsync() { try { var status = await Task.Run(() => _codex.GetStatusAsync()); SetCodexStatus(status); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
     private async Task LoginToCodexAsync() { AiStatusMessage = SelectedLanguage == "Deutsch" ? "ChatGPT-Anmeldung wird geöffnet..." : "Opening ChatGPT sign-in..."; try { var status = await Task.Run(() => _codex.LoginAsync()); SetCodexStatus(status); if (status.IsReady) await RefreshCodexAccountAsync(); } catch (Exception) { SetCodexStatus(new CodexCliStatus(CodexCliStatusKind.Unavailable, string.Empty)); } }
     private async Task RefreshCodexAccountAsync()
     {
@@ -164,12 +169,22 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         if (file is null) { DiffLines = []; return; }
         var palette = DiffLineViewModel.CapturePalette();
         var diff = file.Diff;
-        var lines = await Task.Run(() => diff.Split('\n').Select(line => DiffLineViewModel.From(line, palette)).ToList());
+        var lines = await Task.Run(() => diff.Split('\n').Select(line => new DiffLineViewModel(line, palette)).ToList());
         if (generation == Interlocked.Read(ref _diffRenderGeneration) && Equals(file, SelectedFile)) DiffLines = lines;
     }
     private void StartWatcher(string path) { _watcher?.Dispose(); _watcher = new FileSystemWatcher(path) { IncludeSubdirectories = true, EnableRaisingEvents = true }; _watcher.Changed += (_, e) => ScheduleRefresh(e.FullPath); _watcher.Created += (_, e) => ScheduleRefresh(e.FullPath); _watcher.Deleted += (_, e) => ScheduleRefresh(e.FullPath); _watcher.Renamed += (_, e) => ScheduleRefresh(e.FullPath); }
     private void ScheduleRefresh(string path) { if (IsGeneratedPath(path)) return; _analysisCancellation?.Cancel(); _refreshTimer.Stop(); _refreshTimer.Start(); }
-    private static bool IsGeneratedPath(string path) => path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(segment => segment.Equals("bin", StringComparison.OrdinalIgnoreCase) || segment.Equals("obj", StringComparison.OrdinalIgnoreCase) || segment.Equals("node_modules", StringComparison.OrdinalIgnoreCase) || segment.Equals(".vs", StringComparison.OrdinalIgnoreCase));
+    private static bool IsGeneratedPath(string path)
+    {
+        var segments = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (segments.Any(segment => segment.Equals("bin", StringComparison.OrdinalIgnoreCase) || segment.Equals("obj", StringComparison.OrdinalIgnoreCase) || segment.Equals("node_modules", StringComparison.OrdinalIgnoreCase) || segment.Equals(".vs", StringComparison.OrdinalIgnoreCase))) return true;
+        var gitIndex = Array.FindIndex(segments, segment => segment.Equals(".git", StringComparison.OrdinalIgnoreCase));
+        if (gitIndex < 0 || gitIndex + 1 >= segments.Length) return gitIndex >= 0;
+        var gitEntry = segments[gitIndex + 1];
+        return !gitEntry.Equals("HEAD", StringComparison.OrdinalIgnoreCase)
+            && !gitEntry.Equals("refs", StringComparison.OrdinalIgnoreCase)
+            && !gitEntry.Equals("packed-refs", StringComparison.OrdinalIgnoreCase);
+    }
     private async void OnRefreshTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e) => await Application.Current.Dispatcher.InvokeAsync(() => RefreshAsync(false)).Task.Unwrap();
     private static void ApplyFont(string font) => Application.Current.Resources["AppFontFamily"] = new FontFamily(font);
     private void AddRecent(string path) { var existing = RecentRepositories.FirstOrDefault(item => item.Path == path); if (existing is not null) RecentRepositories.Remove(existing); RecentRepositories.Insert(0, new RecentRepositoryItem(path)); while (RecentRepositories.Count > 10) RecentRepositories.RemoveAt(RecentRepositories.Count - 1); SavePreferences(); } private void SavePreferences() => _settings.Save(RecentRepositories.Select(item => item.Path), SelectedTheme, SelectedLanguage, SelectedFont);
@@ -204,26 +219,40 @@ public sealed record CodePalette(IReadOnlyDictionary<string, Brush> Brushes)
 {
     public Brush this[string key] => Brushes[key];
 }
-public sealed record DiffLineViewModel(IReadOnlyList<CodeToken> Tokens, Brush? Background)
+public sealed class DiffLineViewModel
 {
     private static readonly HashSet<string> Keywords = new(StringComparer.Ordinal) { "abstract", "async", "await", "bool", "class", "const", "else", "enum", "false", "for", "foreach", "if", "in", "interface", "internal", "namespace", "new", "null", "private", "protected", "public", "readonly", "record", "return", "static", "string", "struct", "throw", "true", "using", "void", "while" };
     private static readonly Regex TokenPattern = new("//.*|\"(?:\\\\.|[^\"])*\"|\\b[A-Za-z_][A-Za-z0-9_]*\\b|\\b\\d+(?:\\.\\d+)?\\b|\\s+|.", RegexOptions.Compiled);
     private static readonly string[] PaletteKeys = ["Primary", "Secondary", "DiffAdded", "DiffAddedBackground", "DiffRemoved", "DiffRemovedBackground", "DiffHunk", "CodeKeyword", "CodeType", "CodeMember", "CodeString", "CodeComment"];
+    private readonly string _line;
+    private readonly CodePalette _palette;
+    private IReadOnlyList<CodeToken>? _tokens;
+    private Brush? _background;
+    private bool _isParsed;
+    public DiffLineViewModel(string line, CodePalette palette) { _line = line; _palette = palette; }
+    public IReadOnlyList<CodeToken> Tokens { get { EnsureParsed(); return _tokens!; } }
+    public Brush? Background { get { EnsureParsed(); return _background; } }
     public static CodePalette CapturePalette() => new(PaletteKeys.ToDictionary(key => key, key =>
     {
         var brush = ((Brush)Application.Current.Resources[key]).Clone();
         brush.Freeze();
         return brush;
     }, StringComparer.Ordinal));
-    public static DiffLineViewModel From(string line, CodePalette palette)
+    private void EnsureParsed()
+    {
+        if (_isParsed) return;
+        (_tokens, _background) = Parse(_line, _palette);
+        _isParsed = true;
+    }
+    private static (IReadOnlyList<CodeToken> Tokens, Brush? Background) Parse(string line, CodePalette palette)
     {
         var tokens = new List<CodeToken>();
         var content = line;
         Brush? background = null;
         if (line.StartsWith('+') && !line.StartsWith("+++")) { tokens.Add(new CodeToken("+", palette["DiffAdded"])); content = line[1..]; background = palette["DiffAddedBackground"]; }
         else if (line.StartsWith('-') && !line.StartsWith("---")) { tokens.Add(new CodeToken("-", palette["DiffRemoved"])); content = line[1..]; background = palette["DiffRemovedBackground"]; }
-        else if (line.StartsWith("@@")) return new([new CodeToken(line, palette["DiffHunk"])], null);
-        else if (line.StartsWith("diff ") || line.StartsWith("+++") || line.StartsWith("---")) return new([new CodeToken(line, palette["Secondary"])], null);
+        else if (line.StartsWith("@@")) return ([new CodeToken(line, palette["DiffHunk"])], null);
+        else if (line.StartsWith("diff ") || line.StartsWith("+++") || line.StartsWith("---")) return ([new CodeToken(line, palette["Secondary"])], null);
         var matches = TokenPattern.Matches(content);
         for (var index = 0; index < matches.Count; index++)
         {
@@ -231,7 +260,7 @@ public sealed record DiffLineViewModel(IReadOnlyList<CodeToken> Tokens, Brush? B
             var color = value.StartsWith("//") ? "CodeComment" : value.StartsWith('"') ? "CodeString" : Keywords.Contains(value) ? "CodeKeyword" : char.IsUpper(value.FirstOrDefault()) ? "CodeType" : IsMethod(matches, index) ? "CodeMember" : "Primary";
             tokens.Add(new CodeToken(value, palette[color]));
         }
-        return new(tokens, background);
+        return (tokens, background);
     }
     private static bool IsMethod(MatchCollection matches, int index) { for (var i = index + 1; i < matches.Count; i++) { if (string.IsNullOrWhiteSpace(matches[i].Value)) continue; return matches[i].Value == "("; } return false; }
 }
