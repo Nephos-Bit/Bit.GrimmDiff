@@ -205,8 +205,12 @@
                                 </Style>
                             </ProgressBar.Style>
                         </ProgressBar>
-                        <ListBox Grid.Row="2" ItemsSource="{Binding Groups}" BorderThickness="0"
-                                 Background="Transparent" Margin="0,16,0,0" ScrollViewer.CanContentScroll="True"
+                        <Grid Grid.Row="2" Margin="0,16,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" /><RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                        <ListBox Grid.Row="0" ItemsSource="{Binding Groups}" BorderThickness="0"
+                                 Background="Transparent" ScrollViewer.CanContentScroll="True"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  VirtualizingPanel.IsVirtualizing="True"
                                  VirtualizingPanel.VirtualizationMode="Recycling">
@@ -215,12 +219,36 @@
                                     <Expander IsExpanded="False" BorderBrush="{DynamicResource Border}"
                                               BorderThickness="0,0,0,1" Padding="0,8">
                                         <Expander.Header>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"
-                                                           FontSize="14" />
-                                                <TextBlock Text="{Binding Description}"
-                                                           Foreground="{DynamicResource Secondary}" FontSize="12"
-                                                           TextWrapping="Wrap" Margin="0,4,0,0" />
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="8" Height="8" Margin="0,4,8,0"
+                                                         AutomationProperties.Name="{Binding ReviewAccessibilityLabel}">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasReview}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsReviewGood}" Value="True">
+                                                                    <Setter Property="Fill" Value="{DynamicResource Positive}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsReviewOk}" Value="True">
+                                                                    <Setter Property="Fill" Value="{DynamicResource Warning}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsReviewWarning}" Value="True">
+                                                                    <Setter Property="Fill" Value="{DynamicResource Critical}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"
+                                                               FontSize="14" />
+                                                    <TextBlock Text="{Binding Description}"
+                                                               Foreground="{DynamicResource Secondary}" FontSize="12"
+                                                               TextWrapping="Wrap" Margin="0,4,0,0" />
+                                                </StackPanel>
                                             </StackPanel>
                                         </Expander.Header>
                                         <ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2"
@@ -244,6 +272,18 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
+                        <Border Grid.Row="1" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0"
+                                Margin="0,16,0,0" Padding="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding AnalysisSourceLabel}" Foreground="{DynamicResource Secondary}"
+                                           FontSize="11" />
+                                <TextBlock Text="{Binding AiStatusMessage}" Foreground="{DynamicResource Secondary}"
+                                           FontSize="11" Margin="0,4,0,0" />
+                                <TextBlock Text="{Binding AiDisclosureText}" Foreground="{DynamicResource CodeComment}"
+                                           FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+                        </Grid>
                     </Grid>
                 </Border>
                 <Border Grid.Column="4" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
@@ -271,12 +311,49 @@
                                         </Style>
                                     </Button.Style>
                                 </Button>
-                                <TextBlock Text="{Binding AnalysisSourceLabel}" Foreground="{DynamicResource Secondary}"
-                                           FontSize="11" />
-                                <TextBlock Text="{Binding AiStatusMessage}" Foreground="{DynamicResource Secondary}"
-                                           FontSize="11" Margin="0,4,0,0" />
-                                <TextBlock Text="{Binding AiDisclosureText}" Foreground="{DynamicResource CodeComment}"
-                                           FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                <StackPanel>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasSelectedReview}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="{Binding SelectedReviewStatusText}" FontSize="11">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource Secondary}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelectedReviewGood}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource Positive}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsSelectedReviewOk}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource Warning}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsSelectedReviewWarning}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource Critical}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding SelectedReviewHint}" Foreground="{DynamicResource Secondary}"
+                                               FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasSelectedReviewHint}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </Grid>

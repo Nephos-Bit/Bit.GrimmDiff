@@ -4,7 +4,8 @@
         <SolidColorBrush x:Key="Background" Color="#080808" /><SolidColorBrush x:Key="Surface" Color="#101010" />
         <SolidColorBrush x:Key="SurfaceRaised" Color="#141414" /><SolidColorBrush x:Key="Primary" Color="#ECECEC" />
         <SolidColorBrush x:Key="Secondary" Color="#A0A0A0" /><SolidColorBrush x:Key="Border" Color="#303030" />
-        <SolidColorBrush x:Key="Active" Color="#00B83A" /><SolidColorBrush x:Key="Warning" Color="#C99526" />
+        <SolidColorBrush x:Key="Active" Color="#00B83A" /><SolidColorBrush x:Key="Positive" Color="#16B83D" />
+        <SolidColorBrush x:Key="Warning" Color="#C99526" />
         <SolidColorBrush x:Key="Critical" Color="#FF3B0A" /><SolidColorBrush x:Key="DiffAdded" Color="#65E879" />
         <SolidColorBrush x:Key="DiffAddedBackground" Color="#4D65E879" />
         <SolidColorBrush x:Key="DiffRemoved" Color="#FF7957" />

@@ -248,6 +248,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 OnPropertyChanged(nameof(LoginButtonText));
                 OnPropertyChanged(nameof(CancelButtonText));
                 OnPropertyChanged(nameof(AnalysisProgressText));
+                OnPropertyChanged(nameof(SelectedReviewStatusText));
                 OnPropertyChanged(nameof(AiDisclosureText));
                 OnPropertyChanged(nameof(CodexStatusText));
                 OnPropertyChanged(nameof(CodexAccountText));
@@ -380,6 +381,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 _ = ShowFileAsync(value);
                 OnPropertyChanged(nameof(SelectedAnalysisTitle));
                 OnPropertyChanged(nameof(SelectedAnalysisDescription));
+                OnPropertyChanged(nameof(HasSelectedReview));
+                OnPropertyChanged(nameof(SelectedReviewStatusText));
+                OnPropertyChanged(nameof(SelectedReviewHint));
+                OnPropertyChanged(nameof(HasSelectedReviewHint));
+                OnPropertyChanged(nameof(IsSelectedReviewGood));
+                OnPropertyChanged(nameof(IsSelectedReviewOk));
+                OnPropertyChanged(nameof(IsSelectedReviewWarning));
             }
         }
     }
@@ -388,6 +396,22 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public string SelectedAnalysisDescription =>
         SelectedFile?.GroupDescription ?? Groups.FirstOrDefault()?.Description ?? string.Empty;
+
+    public bool HasSelectedReview => SelectedFile?.Review is not null;
+
+    public string SelectedReviewStatusText => SelectedFile?.Review?.Status switch
+    {
+        DiffGroupReviewStatus.Good => SelectedLanguage == "Deutsch" ? "Review: Gut" : "Review: Good",
+        DiffGroupReviewStatus.Ok => SelectedLanguage == "Deutsch" ? "Review: OK" : "Review: OK",
+        DiffGroupReviewStatus.Warning => SelectedLanguage == "Deutsch" ? "Review: Warnung" : "Review: Warning",
+        _ => string.Empty
+    };
+
+    public string SelectedReviewHint => SelectedFile?.Review?.Hint ?? string.Empty;
+    public bool HasSelectedReviewHint => !string.IsNullOrWhiteSpace(SelectedReviewHint);
+    public bool IsSelectedReviewGood => SelectedFile?.Review?.Status == DiffGroupReviewStatus.Good;
+    public bool IsSelectedReviewOk => SelectedFile?.Review?.Status == DiffGroupReviewStatus.Ok;
+    public bool IsSelectedReviewWarning => SelectedFile?.Review?.Status == DiffGroupReviewStatus.Warning;
 
     public RecentRepositoryItem? SelectedRecent
     {
@@ -665,6 +689,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (!ReferenceEquals(SelectedFile, selectedFile)) SelectedFile = selectedFile;
             OnPropertyChanged(nameof(SelectedAnalysisTitle));
             OnPropertyChanged(nameof(SelectedAnalysisDescription));
+            OnPropertyChanged(nameof(HasSelectedReview));
+            OnPropertyChanged(nameof(SelectedReviewStatusText));
+            OnPropertyChanged(nameof(SelectedReviewHint));
+            OnPropertyChanged(nameof(HasSelectedReviewHint));
+            OnPropertyChanged(nameof(IsSelectedReviewGood));
+            OnPropertyChanged(nameof(IsSelectedReviewOk));
+            OnPropertyChanged(nameof(IsSelectedReviewWarning));
             OnPropertyChanged(nameof(ViewTitle));
             IsAnalysisStale = !analyzeWithAi;
             AnalysisSourceLabel = result.Source == DiffAnalysisSource.Codex

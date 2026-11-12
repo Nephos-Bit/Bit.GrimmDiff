@@ -100,13 +100,13 @@ Test("groups interface and implementation", () =>
 Test("Codex provider maps every hunk", () =>
 {
     var client = new FakeCodexCliClient([
-        """{"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["H0001","H0002"],"confidence":0.9}]}"""
+        """{"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["H0001","H0002"],"confidence":0.9,"reviewStatus":"good","reviewHint":null}]}"""
     ]);
     var result = new CodexCliDiffAnalysisProvider(client, new LocalHeuristicDiffAnalysisProvider())
         .AnalyzeAsync(new DiffAnalysisRequest(".", DiffScope.WorkingTree, diff, "en")).GetAwaiter().GetResult();
     if (result.Source != DiffAnalysisSource.Codex || result.Groups.Count != 1 || result.Groups[0].Hunks.Count != 2 ||
         !client.Schemas[0].Contains("\"enum\"") ||
-        !client.Schemas[0].Contains("H0002"))
+        !client.Schemas[0].Contains("H0002") || result.Groups[0].Review?.Status != DiffGroupReviewStatus.Good)
         throw new Exception("Expected validated Codex grouping with constrained ids.");
 });
 Test("Codex provider extracts JSON and normalizes hunk ids", () =>
@@ -114,18 +114,19 @@ Test("Codex provider extracts JSON and normalizes hunk ids", () =>
     var client = new FakeCodexCliClient([
         """
         diagnostic line
-        {"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["h1","2"],"confidence":0.9}]}
+        {"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["h1","2"],"confidence":0.9,"reviewStatus":"ok","reviewHint":"Add a boundary test for null input."}]}
         """
     ]);
     var result = new CodexCliDiffAnalysisProvider(client, new LocalHeuristicDiffAnalysisProvider())
         .AnalyzeAsync(new DiffAnalysisRequest(".", DiffScope.WorkingTree, diff, "en")).GetAwaiter().GetResult();
-    if (result.Source != DiffAnalysisSource.Codex || result.Groups[0].Hunks.Count != 2)
+    if (result.Source != DiffAnalysisSource.Codex || result.Groups[0].Hunks.Count != 2 ||
+        result.Groups[0].Review?.Hint != "Add a boundary test for null input.")
         throw new Exception("Expected tolerant final-message parsing.");
 });
 Test("invalid Codex assignment uses heuristic fallback", () =>
 {
     var client = new FakeCodexCliClient([
-        """{"groups":[{"title":"Invalid","description":"Duplicates a hunk.","hunkIds":["H0001","H0001"],"confidence":0.8}]}"""
+        """{"groups":[{"title":"Invalid","description":"Duplicates a hunk.","hunkIds":["H0001","H0001"],"confidence":0.8,"reviewStatus":"good","reviewHint":null}]}"""
     ]);
     var result = new CodexCliDiffAnalysisProvider(client, new LocalHeuristicDiffAnalysisProvider())
         .AnalyzeAsync(new DiffAnalysisRequest(".", DiffScope.WorkingTree, diff, "en")).GetAwaiter().GetResult();
@@ -135,14 +136,26 @@ Test("invalid Codex assignment uses heuristic fallback", () =>
 Test("large Codex analysis merges chunk groups", () =>
 {
     var client = new FakeCodexCliClient([
-        """{"groups":[{"title":"First","description":"Updates the first part.","hunkIds":["H0001"],"confidence":0.8}]}""",
-        """{"groups":[{"title":"Second","description":"Updates the second part.","hunkIds":["H0002"],"confidence":0.8}]}""",
-        """{"groups":[{"title":"Processor","description":"Updates the shared processor.","groupIds":["G0001","G0002"],"confidence":0.9}]}"""
+        """{"groups":[{"title":"First","description":"Updates the first part.","hunkIds":["H0001"],"confidence":0.8,"reviewStatus":"good","reviewHint":null}]}""",
+        """{"groups":[{"title":"Second","description":"Updates the second part.","hunkIds":["H0002"],"confidence":0.8,"reviewStatus":"ok","reviewHint":"Add a regression test."}]}""",
+        """{"groups":[{"title":"Processor","description":"Updates the shared processor.","groupIds":["G0001","G0002"],"confidence":0.9,"reviewStatus":"warning","reviewHint":"Validate processor input before use."}]}"""
     ]);
     var result = new CodexCliDiffAnalysisProvider(client, new LocalHeuristicDiffAnalysisProvider(), 250)
         .AnalyzeAsync(new DiffAnalysisRequest(".", DiffScope.WorkingTree, diff, "en")).GetAwaiter().GetResult();
     if (result.Source != DiffAnalysisSource.Codex || result.Groups.Count != 1 || result.Groups[0].Hunks.Count != 2 ||
-        client.Prompts.Count != 3) throw new Exception("Expected lossless multi-stage grouping.");
+        client.Prompts.Count != 3 || result.Groups[0].Review?.Status != DiffGroupReviewStatus.Warning ||
+        result.Groups[0].Review?.Hint != "Validate processor input before use.")
+        throw new Exception("Expected lossless multi-stage grouping.");
+});
+Test("Codex provider rejects review status without required hint", () =>
+{
+    var client = new FakeCodexCliClient([
+        """{"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["H0001","H0002"],"confidence":0.9,"reviewStatus":"warning","reviewHint":null}]}"""
+    ]);
+    var result = new CodexCliDiffAnalysisProvider(client, new LocalHeuristicDiffAnalysisProvider())
+        .AnalyzeAsync(new DiffAnalysisRequest(".", DiffScope.WorkingTree, diff, "en")).GetAwaiter().GetResult();
+    if (result.Source != DiffAnalysisSource.Heuristic || result.Groups.Any(group => group.Review is not null))
+        throw new Exception("Expected invalid review to use the unreviewed heuristic fallback.");
 });
 Test("Codex client enforces Luna and safe execution", () =>
 {
@@ -171,7 +184,7 @@ Test("protected diff files stay local", () =>
     const string mixed =
         "diff --git a/.env b/.env\n@@ -0,0 +1 @@\n+PASSWORD=secret\ndiff --git a/src/App.cs b/src/App.cs\n@@ -0,0 +1 @@\n+class App {}\n";
     var client = new FakeCodexCliClient([
-        """{"groups":[{"title":"App","description":"Adds the app.","hunkIds":["H0001"],"confidence":0.9}]}"""
+        """{"groups":[{"title":"App","description":"Adds the app.","hunkIds":["H0001"],"confidence":0.9,"reviewStatus":"good","reviewHint":null}]}"""
     ]);
     var result = new CodexCliDiffAnalysisProvider(client, new LocalHeuristicDiffAnalysisProvider())
         .AnalyzeAsync(new DiffAnalysisRequest("repo", DiffScope.WorkingTree, mixed, "en")).GetAwaiter().GetResult();

@@ -18,7 +18,8 @@ public static class ThemeService
         Set("Secondary", light ? "#606060" : "#A0A0A0");
         Set("Border", light ? "#B8B8B8" : "#303030");
         Set("Active", light ? "#007A29" : "#00B83A");
-        Set("Warning", light ? "#7A5700" : "#C99526");
+        Set("Positive", light ? "#087A29" : "#16B83D");
+        Set("Warning", light ? "#8A6400" : "#C99526");
         Set("Critical", light ? "#B72C08" : "#FF3B0A");
         Set("DiffAdded", light ? "#087A29" : "#65E879");
         Set("DiffRemoved", light ? "#B72C08" : "#FF7957");

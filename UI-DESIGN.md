@@ -70,7 +70,7 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
 
   --color-critical: #B72C08;
   --color-critical-surface: rgba(183, 44, 8, 0.16);
-  --color-warning: #7A5700;
+  --color-warning: #8A6400;
   --color-positive: #087A29;
   --color-active: #007A29;
 
