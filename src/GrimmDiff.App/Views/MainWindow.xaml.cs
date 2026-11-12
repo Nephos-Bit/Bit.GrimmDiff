@@ -51,8 +51,10 @@ public partial class MainWindow : Window
             StringFormat = "v{0}"
         });
 
-        void PositionVersion() =>
+        void PositionVersion()
+        {
             version.Margin = new Thickness(logo.ActualWidth + 8, 0, 0, 0);
+        }
 
         logo.SizeChanged += (_, _) => PositionVersion();
         PositionVersion();

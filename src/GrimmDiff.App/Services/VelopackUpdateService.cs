@@ -39,7 +39,8 @@ public sealed class VelopackUpdateService : IApplicationUpdateService
         }
     }
 
-    public async Task<ApplicationUpdateApplyResult> DownloadAndRestartAsync(CancellationToken cancellationToken = default)
+    public async Task<ApplicationUpdateApplyResult> DownloadAndRestartAsync(
+        CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);
         try

@@ -2,5 +2,10 @@ namespace GrimmDiff.Domain;
 
 public enum ChangeKind
 {
-    Added, Modified, Deleted, Renamed, Untracked, Conflicted
+    Added,
+    Modified,
+    Deleted,
+    Renamed,
+    Untracked,
+    Conflicted
 }

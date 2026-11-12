@@ -6,7 +6,10 @@ public sealed class DiffRenderDocument(string text, IReadOnlyList<DiffTextMarker
     public IReadOnlyList<DiffTextMarker> Markers { get; } = markers;
     public DiffPageCursor? NextPage { get; } = nextPage;
 
-    public static DiffRenderDocument FromPage(DiffRenderPage page) => new(page.Text, page.Markers, page.NextPage);
+    public static DiffRenderDocument FromPage(DiffRenderPage page)
+    {
+        return new DiffRenderDocument(page.Text, page.Markers, page.NextPage);
+    }
 
     public DiffRenderDocument Append(DiffRenderPage page)
     {

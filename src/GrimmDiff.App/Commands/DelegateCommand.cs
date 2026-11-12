@@ -10,7 +10,10 @@ public sealed class DelegateCommand<T>(Action<T> execute) : ICommand
         remove { }
     }
 
-    public bool CanExecute(object? parameter) => parameter is T;
+    public bool CanExecute(object? parameter)
+    {
+        return parameter is T;
+    }
 
     public void Execute(object? parameter)
     {

@@ -5,6 +5,8 @@ namespace GrimmDiff.Infrastructure;
 
 public sealed class GitCliRepositoryReader(GitCliRepositoryService service) : IRepositoryReader
 {
-    public Task<RepositorySnapshot> LoadAsync(string repositoryPath, CancellationToken cancellationToken = default) =>
-        service.LoadAsync(repositoryPath, cancellationToken);
+    public Task<RepositorySnapshot> LoadAsync(string repositoryPath, CancellationToken cancellationToken = default)
+    {
+        return service.LoadAsync(repositoryPath, cancellationToken);
+    }
 }

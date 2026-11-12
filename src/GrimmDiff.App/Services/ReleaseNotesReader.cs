@@ -42,8 +42,10 @@ public static partial class ReleaseNotesReader
             : null;
     }
 
-    private static string SectionBody(string content, Match section, int end) =>
-        content[(section.Index + section.Length)..end].Trim();
+    private static string SectionBody(string content, Match section, int end)
+    {
+        return content[(section.Index + section.Length)..end].Trim();
+    }
 
     private static bool HasValidBulletCount(string section)
     {

@@ -1,3 +1,4 @@
+using System.Windows;
 using Microsoft.Win32;
 
 namespace GrimmDiff.App;
@@ -17,14 +18,14 @@ public sealed class WpfUserDialogService : IUserDialogService
 
     public bool Confirm(string title, string message)
     {
-        return System.Windows.MessageBox.Show(message, title, System.Windows.MessageBoxButton.YesNo,
-                   System.Windows.MessageBoxImage.Information) == System.Windows.MessageBoxResult.Yes;
+        return MessageBox.Show(message, title, MessageBoxButton.YesNo,
+            MessageBoxImage.Information) == MessageBoxResult.Yes;
     }
 
     public void ShowInformation(string title, string message)
     {
-        System.Windows.MessageBox.Show(message, title, System.Windows.MessageBoxButton.OK,
-            System.Windows.MessageBoxImage.Information);
+        MessageBox.Show(message, title, MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     public void ShowReleaseNotes(string title, string notes)

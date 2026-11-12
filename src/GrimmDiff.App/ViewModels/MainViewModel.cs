@@ -1,10 +1,7 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using System.Timers;
 using System.Windows.Media;
 using GrimmDiff.Application;
@@ -22,9 +19,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly IUserDialogService _dialogs;
     private readonly IExternalNavigationService _navigation;
     private readonly PreferencesService _preferences;
-    private readonly LocalizedText _text;
-    private readonly IApplicationUpdateService _updates;
     private readonly Timer _refreshTimer = new(500) { AutoReset = false };
+    private readonly IApplicationUpdateService _updates;
     private readonly RepositoryWorkspaceService _workspace;
     private List<AiRepositoryApproval> _aiRepositoryApprovals = [];
     private bool _aiRiskNoticeAccepted;
@@ -38,8 +34,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _hasMoreDiff;
     private int _initialized, _refreshRunning, _refreshPending;
     private DateTimeOffset _lastAccountRefreshUtc = DateTimeOffset.MinValue;
-    private bool _loading, _isAnalyzing, _isAnalysisStale, _isRepositoryOperation;
     private string? _lastShownReleaseNotesVersion;
+    private bool _loading, _isAnalyzing, _isAnalysisStale, _isRepositoryOperation;
 
     private string _repositoryPath = string.Empty,
         _currentBranch = string.Empty,
@@ -61,7 +57,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _analysis = analysis;
         _codex = codex;
         _preferences = preferences;
-        _text = new LocalizedText(() => SelectedLanguage);
+        Text = new LocalizedText(() => SelectedLanguage);
         _dialogs = dialogs;
         _navigation = navigation;
         _changeMonitor = changeMonitor;
@@ -110,7 +106,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public IReadOnlyList<string> Languages { get; } = ["English", "Deutsch"];
     public IReadOnlyList<string> Themes { get; } = ["System", "Dark", "Light"];
     public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Verdana"];
-    public LocalizedText Text => _text;
+    public LocalizedText Text { get; }
+
     public AsyncCommand OpenRepositoryCommand { get; }
     public AsyncCommand CloneCommand { get; }
     public AsyncCommand ShowCurrentCommand { get; }
@@ -200,8 +197,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public string WeeklyQuotaText => _weeklyRemainingPercent is int remaining ? $"{remaining} %" : "–";
 
     public string WeeklyQuotaToolTip => _weeklyRemainingPercent is int remaining
-        ? SelectedLanguage == "Deutsch" ? $"Wöchentliches Restkontingent: {remaining} %" : $"Weekly remaining quota: {remaining}%"
-        : SelectedLanguage == "Deutsch" ? "Wöchentliches Restkontingent nicht verfügbar" : "Weekly remaining quota unavailable";
+        ? SelectedLanguage == "Deutsch"
+            ? $"Wöchentliches Restkontingent: {remaining} %"
+            : $"Weekly remaining quota: {remaining}%"
+        : SelectedLanguage == "Deutsch"
+            ? "Wöchentliches Restkontingent nicht verfügbar"
+            : "Weekly remaining quota unavailable";
 
     public bool IsAnalyzing
     {
@@ -484,7 +485,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         switch (result.Status)
         {
             case ApplicationUpdateStatus.NoUpdate when showNoUpdateMessage:
-                _dialogs.ShowInformation(UpdateTitle, UpdateMessage("GrimmDiff is up to date.", "GrimmDiff ist aktuell."));
+                _dialogs.ShowInformation(UpdateTitle,
+                    UpdateMessage("GrimmDiff is up to date.", "GrimmDiff ist aktuell."));
                 break;
             case ApplicationUpdateStatus.NotInstalled when showNoUpdateMessage:
                 _dialogs.ShowInformation(UpdateTitle, UpdateMessage(
@@ -1035,11 +1037,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _ = SavePreferencesAsync();
     }
 
-    private Task SavePreferencesAsync() => _preferences.SaveAsync(CurrentPreferences());
+    private Task SavePreferencesAsync()
+    {
+        return _preferences.SaveAsync(CurrentPreferences());
+    }
 
-    private AppPreferences CurrentPreferences() => new(RecentRepositories.Select(item => item.Path).ToList(),
-        SelectedTheme, SelectedLanguage, SelectedFont, _aiRepositoryApprovals, _aiRiskNoticeAccepted,
-        _lastShownReleaseNotesVersion);
+    private AppPreferences CurrentPreferences()
+    {
+        return new AppPreferences(RecentRepositories.Select(item => item.Path).ToList(),
+            SelectedTheme, SelectedLanguage, SelectedFont, _aiRepositoryApprovals, _aiRiskNoticeAccepted,
+            _lastShownReleaseNotesVersion);
+    }
 
     private static string RepositoryIdentity(string repositoryPath)
     {

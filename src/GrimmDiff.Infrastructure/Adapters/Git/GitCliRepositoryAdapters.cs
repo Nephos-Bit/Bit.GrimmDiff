@@ -1,5 +1,4 @@
 using GrimmDiff.Application;
-using GrimmDiff.Domain;
 
 namespace GrimmDiff.Infrastructure;
 

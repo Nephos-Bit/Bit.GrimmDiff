@@ -336,13 +336,16 @@ public sealed class CodexCliDiffAnalysisProvider : IDiffAnalysisProvider
         return new DiffGroupReview(reviewStatus, normalizedHint);
     }
 
-    private static string ReviewStatusValue(DiffGroupReviewStatus status) => status switch
+    private static string ReviewStatusValue(DiffGroupReviewStatus status)
     {
-        DiffGroupReviewStatus.Good => "good",
-        DiffGroupReviewStatus.Ok => "ok",
-        DiffGroupReviewStatus.Warning => "warning",
-        _ => throw new ArgumentOutOfRangeException(nameof(status))
-    };
+        return status switch
+        {
+            DiffGroupReviewStatus.Good => "good",
+            DiffGroupReviewStatus.Ok => "ok",
+            DiffGroupReviewStatus.Warning => "warning",
+            _ => throw new ArgumentOutOfRangeException(nameof(status))
+        };
+    }
 
     private static string CacheKey(DiffAnalysisRequest request)
     {

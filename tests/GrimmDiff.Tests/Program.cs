@@ -24,20 +24,20 @@ void Test(string name, Action action)
 Test("release notes parse bilingual sections", () =>
 {
     const string notes = """
-        # GrimmDiff 1.2.3
+                         # GrimmDiff 1.2.3
 
-        ## Deutsch
+                         ## Deutsch
 
-        - Neue Ansicht für Änderungen.
-        - Verbesserte Update-Hinweise.
-        - Wichtige Fehlerbehebungen.
+                         - Neue Ansicht für Änderungen.
+                         - Verbesserte Update-Hinweise.
+                         - Wichtige Fehlerbehebungen.
 
-        ## English
+                         ## English
 
-        - New view for changes.
-        - Improved update notices.
-        - Important bug fixes.
-        """;
+                         - New view for changes.
+                         - Improved update notices.
+                         - Important bug fixes.
+                         """;
     var parsed = ReleaseNotesReader.Parse(notes) ?? throw new Exception("Expected valid release notes.");
     if (parsed.Version != "1.2.3" || !parsed.ForLanguage("Deutsch").Contains("Neue Ansicht") ||
         !parsed.ForLanguage("English").Contains("New view")) throw new Exception("Expected localized notes.");
@@ -45,16 +45,16 @@ Test("release notes parse bilingual sections", () =>
 Test("release notes reject malformed content", () =>
 {
     const string notes = """
-        # GrimmDiff 1.2.3
+                         # GrimmDiff 1.2.3
 
-        ## Deutsch
+                         ## Deutsch
 
-        - Nur ein Punkt.
+                         - Nur ein Punkt.
 
-        ## English
+                         ## English
 
-        - Only one item.
-        """;
+                         - Only one item.
+                         """;
     if (ReleaseNotesReader.Parse(notes) is not null) throw new Exception("Expected malformed notes to be ignored.");
 });
 

@@ -21,6 +21,7 @@ public sealed class AnalysisGroupViewModel
     public bool IsReviewGood => Review?.Status == DiffGroupReviewStatus.Good;
     public bool IsReviewOk => Review?.Status == DiffGroupReviewStatus.Ok;
     public bool IsReviewWarning => Review?.Status == DiffGroupReviewStatus.Warning;
+
     public string ReviewAccessibilityLabel => Review?.Status switch
     {
         DiffGroupReviewStatus.Good => "AI review: good",

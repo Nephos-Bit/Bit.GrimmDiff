@@ -6,8 +6,14 @@ namespace GrimmDiff.Infrastructure;
 public sealed class GitCliDiffReader(GitCliRepositoryService service) : IRepositoryDiffReader
 {
     public Task<string> GetDiffAsync(string repositoryPath, DiffScope scope, string? path = null,
-        CancellationToken cancellationToken = default) => service.GetDiffAsync(repositoryPath, scope, path, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        return service.GetDiffAsync(repositoryPath, scope, path, cancellationToken);
+    }
 
     public Task<string> GetCommitDiffAsync(string repositoryPath, string commitId, string? path = null,
-        CancellationToken cancellationToken = default) => service.GetCommitDiffAsync(repositoryPath, commitId, path, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        return service.GetCommitDiffAsync(repositoryPath, commitId, path, cancellationToken);
+    }
 }
