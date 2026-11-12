@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $content = Get-Content -LiteralPath $Path -Raw
-if ($content -notmatch "\A# GrimmDiff $([regex]::Escape($Version))\s*$") {
+if ($content -notmatch "\A# GrimmDiff $([regex]::Escape($Version))\r?\n") {
     throw "Release notes must start with '# GrimmDiff $Version'."
 }
 

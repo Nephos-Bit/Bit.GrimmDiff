@@ -56,3 +56,22 @@ jobs:
         run: |
           & "$PWD\.tools\vpk.exe" upload github --repoUrl https://github.com/Nephos-Bit/Bit.GrimmDiff --outputDir "$PWD\artifacts\Releases" --channel win --publish
           if ($LASTEXITCODE -ne 0) { throw "Velopack upload failed." }
+      - name: Switch to the default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Prepare release notes for the next version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          ./scripts/Prepare-NextReleaseNotes.ps1 -Path "$PWD\ReleaseNotes.md" -ReleasedVersion ($tag.TrimStart('v'))
+      - name: Commit next release notes
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ReleaseNotes.md
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { exit 0 }
+          git commit -m "chore: prepare release notes for next version [skip ci]"
+          git push origin "HEAD:${{ github.event.repository.default_branch }}"
