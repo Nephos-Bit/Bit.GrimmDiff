@@ -26,4 +26,9 @@ public sealed class WpfUserDialogService : IUserDialogService
         System.Windows.MessageBox.Show(message, title, System.Windows.MessageBoxButton.OK,
             System.Windows.MessageBoxImage.Information);
     }
+
+    public void ShowReleaseNotes(string title, string notes)
+    {
+        ReleaseNotesDialog.Show(title, notes);
+    }
 }

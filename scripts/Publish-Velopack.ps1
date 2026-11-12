@@ -4,8 +4,7 @@ param(
     [string]$Version,
     [string]$Runtime = "win-x64",
     [string]$VpkPath = "vpk",
-    [string]$CodeSigningCertificateThumbprint,
-    [string]$ReleaseNotesPath
+    [string]$CodeSigningCertificateThumbprint
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,9 +41,6 @@ $packArguments = @(
     "--packDir", $publish, "--mainExe", "GrimmDiff.App.exe", "--packTitle", "GrimmDiff",
     "--icon", $icon, "--outputDir", $releases, "--channel", "win", "--runtime", $Runtime
 )
-if (-not [string]::IsNullOrWhiteSpace($ReleaseNotesPath)) {
-    $packArguments += @("--releaseNotes", $ReleaseNotesPath)
-}
 & $VpkPath @packArguments
 if ($LASTEXITCODE -ne 0) { throw "Velopack packaging failed." }
 

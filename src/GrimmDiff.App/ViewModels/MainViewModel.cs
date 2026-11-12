@@ -532,7 +532,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             notes.Version == _lastShownReleaseNotesVersion) return;
 
         var title = UpdateMessage($"What's new in version {notes.Version}", $"Neu in Version {notes.Version}");
-        _dialogs.ShowInformation(title, notes.ForLanguage(SelectedLanguage));
+        _dialogs.ShowReleaseNotes(title, notes.ForLanguage(SelectedLanguage));
         _lastShownReleaseNotesVersion = notes.Version;
         await SavePreferencesAsync();
     }

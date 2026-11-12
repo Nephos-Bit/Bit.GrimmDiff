@@ -50,7 +50,7 @@ jobs:
           $version = "${{ github.ref_name }}".TrimStart('v')
           $signing = @{}
           if ("${{ steps.signing.outputs.thumbprint }}") { $signing.CodeSigningCertificateThumbprint = "${{ steps.signing.outputs.thumbprint }}" }
-          ./scripts/Publish-Velopack.ps1 -Version $version -VpkPath "$PWD\.tools\vpk.exe" -ReleaseNotesPath "$PWD\ReleaseNotes.md" @signing
+          ./scripts/Publish-Velopack.ps1 -Version $version -VpkPath "$PWD\.tools\vpk.exe" @signing
       - name: Publish GitHub Release
         shell: pwsh
         run: |
