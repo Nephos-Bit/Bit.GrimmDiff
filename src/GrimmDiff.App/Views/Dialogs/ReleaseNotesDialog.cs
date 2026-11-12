@@ -59,7 +59,7 @@ public static class ReleaseNotesDialog
         {
             Content = "OK",
             IsDefault = true,
-            MinWidth = 96,
+            MinWidth = 72,
             HorizontalAlignment = HorizontalAlignment.Right,
             Margin = new Thickness(0)
         };

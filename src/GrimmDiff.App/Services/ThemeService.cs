@@ -17,6 +17,10 @@ public static class ThemeService
         Set("Primary", light ? "#171717" : "#ECECEC");
         Set("Secondary", light ? "#606060" : "#A0A0A0");
         Set("Border", light ? "#B8B8B8" : "#303030");
+        Set("ActionButtonBackground", light ? "#252525" : "#242424");
+        Set("ActionButtonHoverBackground", light ? "#303030" : "#2A2A2A");
+        Set("ActionButtonPressedBackground", light ? "#3A3A3A" : "#303030");
+        Set("ActionButtonForeground", "#ECECEC");
         Set("Active", light ? "#007A29" : "#00B83A");
         Set("Positive", light ? "#087A29" : "#16B83D");
         Set("Warning", light ? "#8A6400" : "#C99526");

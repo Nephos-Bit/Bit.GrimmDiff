@@ -21,7 +21,7 @@ public static class InputDialog
         panel.Children.Add(new TextBlock { Text = prompt, TextWrapping = TextWrapping.Wrap, MaxWidth = 470 });
         panel.Children.Add(input);
         var ok = new Button
-            { Content = "OK", IsDefault = true, Width = 80, HorizontalAlignment = HorizontalAlignment.Right };
+            { Content = "OK", IsDefault = true, Width = 72, HorizontalAlignment = HorizontalAlignment.Right };
         ok.Click += (_, _) => dialog.DialogResult = true;
         panel.Children.Add(ok);
         dialog.Content = panel;
