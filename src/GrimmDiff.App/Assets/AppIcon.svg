@@ -1,12 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <rect width="256" height="256" fill="#F6F6F6"/>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#F6F6F6"/>
   <!-- A 3 × 3 grid, turned 45°, whose occupied cells form an abstract G. -->
-  <g fill="#000000" stroke="#F6F6F6" stroke-width="1.5" stroke-linejoin="miter">
+  <g transform="translate(128 128) scale(1.25) translate(-108 -130)" fill="#000000" stroke="#F6F6F6" stroke-width="1.5" stroke-linejoin="round">
     <path d="M88 77 108 66 128 77 108 88Zm0 0 20 11v24l-20-11Zm40 0-20 11v24l20-11Z"/>
     <path d="M116 93 136 82 156 93 136 104Zm0 0 20 11v24l-20-11Zm40 0-20 11v24l20-11Z"/>
     <path d="M144 109 164 98 184 109 164 120Zm0 0 20 11v24l-20-11Zm40 0-20 11v24l20-11Z"/>
     <path d="M60 93 80 82 100 93 80 104Zm0 0 20 11v24L60 104Zm40 0-20 11v24l20-11Z"/>
     <path d="M32 109 52 98 72 109 52 120Zm0 0 20 11v24l-20-11Zm40 0-20 11v24l20-11Z"/>
+    <path d="M88 125 108 114 128 125 108 136Zm0 0 20 11v24l-20-11Zm40 0-20 11v24l20-11Z"/>
     <path d="M60 125 80 114 100 125 80 136Zm0 0 20 11v24L60 136Zm40 0-20 11v24l20-11Z"/>
     <path d="M88 141 108 130 128 141 108 152Zm0 0 20 11v24l-20-11Zm40 0-20 11v24l20-11Z"/>
     <path d="M116 157 136 146 156 157 136 168Zm0 0 20 11v24l-20-11Zm40 0-20 11v24l20-11Z"/>
