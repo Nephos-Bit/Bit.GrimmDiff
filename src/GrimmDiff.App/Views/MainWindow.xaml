@@ -1,5 +1,6 @@
 <Window x:Class="GrimmDiff.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:GrimmDiff.App" Icon="/Assets/AppIcon.ico" Width="1440" Height="900" Background="{DynamicResource Background}"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:GrimmDiff.App"
+        Icon="/Assets/AppIcon.ico" Width="1440" Height="900" Background="{DynamicResource Background}"
         Foreground="{DynamicResource Primary}">
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -10,22 +11,34 @@
                        HorizontalAlignment="Left" />
             <Menu Height="44" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent">
                 <MenuItem Header="Repository" Style="{StaticResource MenuBarItem}">
-                    <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}"/>
-                    <MenuItem Header="Clone" Command="{Binding CloneCommand}"/>
+                    <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}" />
+                    <MenuItem Header="Clone" Command="{Binding CloneCommand}" />
                 </MenuItem>
                 <MenuItem Header="AI" Style="{StaticResource MenuBarItem}">
-                    <MenuItem Header="AI risk notice / KI-Risikohinweis" Command="{Binding ShowAiRiskNoticeCommand}"/>
-                    <MenuItem Header="Revoke AI approval" Command="{Binding RevokeAiApprovalCommand}"/>
+                    <MenuItem Header="AI risk notice / KI-Risikohinweis" Command="{Binding ShowAiRiskNoticeCommand}" />
+                    <MenuItem Header="Revoke AI approval" Command="{Binding RevokeAiApprovalCommand}" />
                 </MenuItem>
                 <MenuItem Header="View" Style="{StaticResource MenuBarItem}">
-                    <MenuItem Header="Language"><MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}"/><MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}"/></MenuItem>
-                    <MenuItem Header="Theme"><MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}"/><MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}"/><MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}"/></MenuItem>
-                    <MenuItem Header="Font"><MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}"/><MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}"/></MenuItem>
+                    <MenuItem Header="Language">
+                        <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}" />
+                        <MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}" />
+                    </MenuItem>
+                    <MenuItem Header="Theme">
+                        <MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}" />
+                        <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}" />
+                        <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}" />
+                    </MenuItem>
+                    <MenuItem Header="Font">
+                        <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}" />
+                        <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}" />
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Help" Style="{StaticResource MenuBarItem}">
-                    <MenuItem Header="Check for updates" Command="{Binding CheckForUpdatesCommand}"/>
-                    <MenuItem Header="GitHub" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/Nephos-Bit/Bit.GrimmDiff"/>
-                </MenuItem>                </Menu>
+                    <MenuItem Header="Check for updates" Command="{Binding CheckForUpdatesCommand}" />
+                    <MenuItem Header="GitHub" Command="{Binding OpenUrlCommand}"
+                              CommandParameter="https://github.com/Nephos-Bit/Bit.GrimmDiff" />
+                </MenuItem>
+            </Menu>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <TextBlock Text="{Binding WeeklyQuotaText}" Foreground="{DynamicResource Secondary}" FontSize="12"
                            ToolTip="{Binding WeeklyQuotaToolTip}" VerticalAlignment="Center" Margin="0,0,16,0" />
@@ -51,12 +64,14 @@
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0">
                     <StackPanel VerticalAlignment="Top">
-                        <Button x:Name="BranchButton" Style="{StaticResource IconButton}" ToolTip="{Binding BranchToolTip}"
+                        <Button x:Name="BranchButton" Style="{StaticResource IconButton}"
+                                ToolTip="{Binding BranchToolTip}"
                                 AutomationProperties.Name="{Binding BranchToolTip}" IsEnabled="{Binding HasRepository}"
                                 Click="BranchButton_OnClick">
                             <Button.ContextMenu>
-                                <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
-                                             ItemsSource="{Binding Branches}">
+                                <ContextMenu
+                                    DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                                    ItemsSource="{Binding Branches}">
                                     <ContextMenu.ItemContainerStyle>
                                         <Style TargetType="MenuItem">
                                             <Setter Property="Header" Value="{Binding Name}" />
@@ -203,85 +218,97 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" /><RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                        <ListBox Grid.Row="0" ItemsSource="{Binding Groups}" BorderThickness="0"
-                                 Background="Transparent" ScrollViewer.CanContentScroll="True"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 VirtualizingPanel.IsVirtualizing="True"
-                                 VirtualizingPanel.VirtualizationMode="Recycling">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Expander IsExpanded="False" BorderBrush="{DynamicResource Border}"
-                                              BorderThickness="0,0,0,1" Padding="0,8"
-                                              HorizontalContentAlignment="Stretch">
-                                        <Expander.Header>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <Ellipse Width="8" Height="8" Margin="0,4,8,0"
-                                                         AutomationProperties.Name="{Binding ReviewAccessibilityLabel}">
-                                                    <Ellipse.Style>
-                                                        <Style TargetType="Ellipse">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding HasReview}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Visible" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding IsReviewGood}" Value="True">
-                                                                    <Setter Property="Fill" Value="{DynamicResource Positive}" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding IsReviewOk}" Value="True">
-                                                                    <Setter Property="Fill" Value="{DynamicResource Warning}" />
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding IsReviewWarning}" Value="True">
-                                                                    <Setter Property="Fill" Value="{DynamicResource Critical}" />
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Ellipse.Style>
-                                                </Ellipse>
-                                                <StackPanel Grid.Column="1">
-                                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap"
-                                                               FontSize="14" />
-                                                    <TextBlock Text="{Binding Description}"
-                                                               Foreground="{DynamicResource Secondary}" FontSize="12"
-                                                               TextWrapping="Wrap" Margin="0,4,0,0" />
-                                                </StackPanel>
-                                            </Grid>
-                                        </Expander.Header>
-                                        <ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2"
-                                                 BorderThickness="0" Background="Transparent"
-                                                 ScrollViewer.CanContentScroll="True"
-                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                 VirtualizingPanel.IsVirtualizing="True"
-                                                 VirtualizingPanel.VirtualizationMode="Recycling">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Button Style="{StaticResource FileLink}"
-                                                            Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}" HorizontalAlignment="Stretch">
-                                                        <TextBlock Text="{Binding Path}"
-                                                                   TextTrimming="CharacterEllipsis" />
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </Expander>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        <Border Grid.Row="1" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0"
-                                Margin="0,16,0,0" Padding="0,16,0,0">
-                            <StackPanel>
-                                <TextBlock Text="{Binding AnalysisSourceLabel}" Foreground="{DynamicResource Secondary}"
-                                           FontSize="11" />
-                                <TextBlock Text="{Binding AiStatusMessage}" Foreground="{DynamicResource Secondary}"
-                                           FontSize="11" Margin="0,4,0,0" />
-                                <TextBlock Text="{Binding AiDisclosureText}" Foreground="{DynamicResource CodeComment}"
-                                           FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
-                            </StackPanel>
-                        </Border>
+                            <ListBox Grid.Row="0" ItemsSource="{Binding Groups}" BorderThickness="0"
+                                     Background="Transparent" ScrollViewer.CanContentScroll="True"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander IsExpanded="False" BorderBrush="{DynamicResource Border}"
+                                                  BorderThickness="0,0,0,1" Padding="0,8"
+                                                  HorizontalContentAlignment="Stretch">
+                                            <Expander.Header>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Ellipse Width="8" Height="8" Margin="0,4,8,0"
+                                                             AutomationProperties.Name="{Binding ReviewAccessibilityLabel}">
+                                                        <Ellipse.Style>
+                                                            <Style TargetType="Ellipse">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding HasReview}"
+                                                                            Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsReviewGood}"
+                                                                            Value="True">
+                                                                        <Setter Property="Fill"
+                                                                                Value="{DynamicResource Positive}" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsReviewOk}"
+                                                                            Value="True">
+                                                                        <Setter Property="Fill"
+                                                                                Value="{DynamicResource Warning}" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsReviewWarning}"
+                                                                            Value="True">
+                                                                        <Setter Property="Fill"
+                                                                                Value="{DynamicResource Critical}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Ellipse.Style>
+                                                    </Ellipse>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding Title}" TextWrapping="Wrap"
+                                                                   FontSize="14" />
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   Foreground="{DynamicResource Secondary}"
+                                                                   FontSize="12"
+                                                                   TextWrapping="Wrap" Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Expander.Header>
+                                            <ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2"
+                                                     BorderThickness="0" Background="Transparent"
+                                                     ScrollViewer.CanContentScroll="True"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     VirtualizingPanel.IsVirtualizing="True"
+                                                     VirtualizingPanel.VirtualizationMode="Recycling">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Style="{StaticResource FileLink}"
+                                                                Command="{Binding DataContext.SelectFileCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                HorizontalAlignment="Stretch">
+                                                            <TextBlock Text="{Binding Path}"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <Border Grid.Row="1" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0"
+                                    Margin="0,16,0,0" Padding="0,16,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding AnalysisSourceLabel}"
+                                               Foreground="{DynamicResource Secondary}"
+                                               FontSize="11" />
+                                    <TextBlock Text="{Binding AiStatusMessage}"
+                                               Foreground="{DynamicResource Secondary}"
+                                               FontSize="11" Margin="0,4,0,0" />
+                                    <TextBlock Text="{Binding AiDisclosureText}"
+                                               Foreground="{DynamicResource CodeComment}"
+                                               FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                </StackPanel>
+                            </Border>
                         </Grid>
                     </Grid>
                 </Border>
@@ -327,19 +354,23 @@
                                                 <Setter Property="Foreground" Value="{DynamicResource Secondary}" />
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsSelectedReviewGood}" Value="True">
-                                                        <Setter Property="Foreground" Value="{DynamicResource Positive}" />
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource Positive}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsSelectedReviewOk}" Value="True">
                                                         <Setter Property="Foreground" Value="{DynamicResource Warning}" />
                                                     </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsSelectedReviewWarning}" Value="True">
-                                                        <Setter Property="Foreground" Value="{DynamicResource Critical}" />
+                                                    <DataTrigger Binding="{Binding IsSelectedReviewWarning}"
+                                                                 Value="True">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource Critical}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding SelectedReviewHint}" Foreground="{DynamicResource Secondary}"
+                                    <TextBlock Text="{Binding SelectedReviewHint}"
+                                               Foreground="{DynamicResource Secondary}"
                                                FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
