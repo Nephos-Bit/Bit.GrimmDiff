@@ -9,29 +9,23 @@
             <TextBlock Text="grimmdiff" FontSize="20" VerticalAlignment="Center"
                        HorizontalAlignment="Left" />
             <Menu Height="44" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent">
-                <MenuItem Header="Open repository" Style="{StaticResource MenuBarItem}"
-                          Command="{Binding OpenRepositoryCommand}"/>
-                <MenuItem Header="Clone" Style="{StaticResource MenuBarItem}" Command="{Binding CloneCommand}" />
-                <MenuItem Header="AI risk notice / KI-Risikohinweis" Style="{StaticResource MenuBarItem}"
-                          Command="{Binding ShowAiRiskNoticeCommand}" />
-                <MenuItem Header="Revoke AI approval" Style="{StaticResource MenuBarItem}"
-                          Command="{Binding RevokeAiApprovalCommand}" />
-                <MenuItem Header="Check for updates" Style="{StaticResource MenuBarItem}"
-                          Command="{Binding CheckForUpdatesCommand}" />
-                <MenuItem Header="Language" Style="{StaticResource MenuBarItem}">
-                    <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}" />
-                    <MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}" />
+                <MenuItem Header="Repository" Style="{StaticResource MenuBarItem}">
+                    <MenuItem Header="Open repository" Command="{Binding OpenRepositoryCommand}"/>
+                    <MenuItem Header="Clone" Command="{Binding CloneCommand}"/>
                 </MenuItem>
-                <MenuItem Header="Theme" Style="{StaticResource MenuBarItem}">
-                    <MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}" />
-                    <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}" />
-                    <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}" />
+                <MenuItem Header="AI" Style="{StaticResource MenuBarItem}">
+                    <MenuItem Header="AI risk notice / KI-Risikohinweis" Command="{Binding ShowAiRiskNoticeCommand}"/>
+                    <MenuItem Header="Revoke AI approval" Command="{Binding RevokeAiApprovalCommand}"/>
                 </MenuItem>
-                <MenuItem Header="Font" Style="{StaticResource MenuBarItem}">
-                    <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}" />
-                    <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}" />
+                <MenuItem Header="View" Style="{StaticResource MenuBarItem}">
+                    <MenuItem Header="Language"><MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}"/><MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}"/></MenuItem>
+                    <MenuItem Header="Theme"><MenuItem Header="System" IsCheckable="True" IsChecked="{Binding IsSystemTheme}"/><MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding IsDarkTheme}"/><MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding IsLightTheme}"/></MenuItem>
+                    <MenuItem Header="Font"><MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}"/><MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}"/></MenuItem>
                 </MenuItem>
-            </Menu>
+                <MenuItem Header="Help" Style="{StaticResource MenuBarItem}">
+                    <MenuItem Header="Check for updates" Command="{Binding CheckForUpdatesCommand}"/>
+                    <MenuItem Header="GitHub" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/Nephos-Bit/Bit.GrimmDiff"/>
+                </MenuItem>                </Menu>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <TextBlock Text="{Binding WeeklyQuotaText}" Foreground="{DynamicResource Secondary}" FontSize="12"
                            ToolTip="{Binding WeeklyQuotaToolTip}" VerticalAlignment="Center" Margin="0,0,16,0" />

@@ -90,6 +90,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public BulkObservableCollection<CommitHistoryItem> History { get; } = [];
     public BulkObservableCollection<AnalysisGroupViewModel> Groups { get; } = [];
     public BulkObservableCollection<BranchInfo> Branches { get; } = [];
+    public string ApplicationVersion => typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
     public DiffRenderDocument? DisplayedDiff
     {
