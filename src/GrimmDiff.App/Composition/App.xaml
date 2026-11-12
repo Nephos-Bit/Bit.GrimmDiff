@@ -19,7 +19,6 @@
         <SolidColorBrush x:Key="CodeString" Color="#75C68A" /><SolidColorBrush x:Key="CodeComment" Color="#6F6F6F" />
         <FontFamily x:Key="AppFontFamily">Cascadia Code</FontFamily>
         <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource Primary}" />
             <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
         </Style>
         <Style TargetType="Button">
