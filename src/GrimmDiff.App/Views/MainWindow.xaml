@@ -211,9 +211,14 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Expander IsExpanded="False" BorderBrush="{DynamicResource Border}"
-                                              BorderThickness="0,0,0,1" Padding="0,8">
+                                              BorderThickness="0,0,0,1" Padding="0,8"
+                                              HorizontalContentAlignment="Stretch">
                                         <Expander.Header>
-                                            <StackPanel Orientation="Horizontal">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
                                                 <Ellipse Width="8" Height="8" Margin="0,4,8,0"
                                                          AutomationProperties.Name="{Binding ReviewAccessibilityLabel}">
                                                     <Ellipse.Style>
@@ -236,14 +241,14 @@
                                                         </Style>
                                                     </Ellipse.Style>
                                                 </Ellipse>
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Title}" TextWrapping="Wrap"
                                                                FontSize="14" />
                                                     <TextBlock Text="{Binding Description}"
                                                                Foreground="{DynamicResource Secondary}" FontSize="12"
                                                                TextWrapping="Wrap" Margin="0,4,0,0" />
                                                 </StackPanel>
-                                            </StackPanel>
+                                            </Grid>
                                         </Expander.Header>
                                         <ListBox ItemsSource="{Binding Files}" MaxHeight="260" Margin="16,4,0,2"
                                                  BorderThickness="0" Background="Transparent"

@@ -38,7 +38,8 @@ Whenever a change adds, removes, renames, or repurposes a top-level directory or
 
 ### Release-Notizen
 
-- `ReleaseNotes.md` enthält die sichtbaren Änderungen des nächsten Releases im Bereich `Unreleased`.
-- Bei jeder nutzerrelevanten Änderung aktualisiert der Agent die deutschen und englischen Stichpunkte. Interne Refactorings und technische Commit-Namen gehören nicht in die Datei.
-- Vor einem Release gleicht der Agent die Notizen mit dem Git-Diff seit dem letzten SemVer-Tag ab, ersetzt `Unreleased` durch die Release-Version und hält pro Sprache drei bis sechs Stichpunkte ein.
+- `ReleaseNotes.md` trägt im Titel stets die Versionsnummer des nächsten Releases und enthält genau die Abschnitte `Deutsch` und `English` in dieser Reihenfolge.
+- Bei jeder nutzerrelevanten Änderung ergänzt der Agent jeweils einen gleichwertigen deutschen und englischen Stichpunkt. Interne Refactorings und technische Commit-Namen gehören nicht in die Datei.
+- Der Release-Workflow veröffentlicht die vorhandenen Notizen und legt danach automatisiert eine leere zweisprachige Datei für die nächste Patch-Version an. Der Agent ersetzt deshalb weder den Titel noch verwendet er einen Bereich `Unreleased`.
+- Vor einem Release gleicht der Agent die Notizen mit dem Git-Diff seit dem letzten SemVer-Tag ab und hält pro Sprache drei bis sechs Stichpunkte ein.
 
