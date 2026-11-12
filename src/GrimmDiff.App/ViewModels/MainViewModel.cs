@@ -22,6 +22,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly IUserDialogService _dialogs;
     private readonly IExternalNavigationService _navigation;
     private readonly PreferencesService _preferences;
+    private readonly LocalizedText _text;
+    private readonly IApplicationUpdateService _updates;
     private readonly Timer _refreshTimer = new(500) { AutoReset = false };
     private readonly RepositoryWorkspaceService _workspace;
     private List<AiRepositoryApproval> _aiRepositoryApprovals = [];
@@ -52,15 +54,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public MainViewModel(RepositoryWorkspaceService workspace, DiffAnalysisService analysis, CodexSessionService codex,
         PreferencesService preferences, IUserDialogService dialogs, IExternalNavigationService navigation,
-        IRepositoryChangeMonitor changeMonitor)
+        IRepositoryChangeMonitor changeMonitor, IApplicationUpdateService updates)
     {
         _workspace = workspace;
         _analysis = analysis;
         _codex = codex;
         _preferences = preferences;
+        _text = new LocalizedText(() => SelectedLanguage);
         _dialogs = dialogs;
         _navigation = navigation;
         _changeMonitor = changeMonitor;
+        _updates = updates;
         _refreshTimer.Elapsed += OnRefreshTimerElapsed;
         OpenRepositoryCommand = new AsyncCommand(OpenRepositoryAsync);
         CloneCommand = new AsyncCommand(CloneAsync);
@@ -78,6 +82,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         PullCommand = new AsyncCommand(PullAsync, CanRunRepositoryOperation);
         SwitchBranchCommand = new AsyncCommand<BranchInfo>(SwitchBranchAsync,
             branch => CanRunRepositoryOperation() && !branch.IsCurrent);
+        CheckForUpdatesCommand = new AsyncCommand(CheckForUpdatesManuallyAsync);
     }
 
     public BulkObservableCollection<RecentRepositoryItem> RecentRepositories { get; } = [];
@@ -103,7 +108,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public IReadOnlyList<string> Languages { get; } = ["English", "Deutsch"];
     public IReadOnlyList<string> Themes { get; } = ["System", "Dark", "Light"];
     public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Verdana"];
-    public LocalizedText Text => new(() => SelectedLanguage);
+    public LocalizedText Text => _text;
     public AsyncCommand OpenRepositoryCommand { get; }
     public AsyncCommand CloneCommand { get; }
     public AsyncCommand ShowCurrentCommand { get; }
@@ -115,6 +120,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public AsyncCommand RevokeAiApprovalCommand { get; }
     public AsyncCommand PullCommand { get; }
     public AsyncCommand<BranchInfo> SwitchBranchCommand { get; }
+    public AsyncCommand CheckForUpdatesCommand { get; }
     public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; }
     public DelegateCommand<string> OpenUrlCommand { get; }
 
@@ -432,7 +438,65 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         await CheckCodexAsync();
     }
 
+    public Task CheckForUpdatesOnStartupAsync()
+    {
+        return CheckForUpdatesAsync(false);
+    }
+
     #region Private
+
+    private Task CheckForUpdatesManuallyAsync()
+    {
+        return CheckForUpdatesAsync(true);
+    }
+
+    private async Task CheckForUpdatesAsync(bool showNoUpdateMessage)
+    {
+        var result = await _updates.CheckForUpdateAsync();
+        switch (result.Status)
+        {
+            case ApplicationUpdateStatus.NoUpdate when showNoUpdateMessage:
+                _dialogs.ShowInformation(UpdateTitle, UpdateMessage("GrimmDiff is up to date.", "GrimmDiff ist aktuell."));
+                break;
+            case ApplicationUpdateStatus.NotInstalled when showNoUpdateMessage:
+                _dialogs.ShowInformation(UpdateTitle, UpdateMessage(
+                    "Updates are available after installing GrimmDiff with Setup.exe.",
+                    "Updates stehen nach der Installation von GrimmDiff über Setup.exe zur Verfügung."));
+                break;
+            case ApplicationUpdateStatus.Failed when showNoUpdateMessage:
+                _dialogs.ShowInformation(UpdateTitle, UpdateMessage(
+                    "Updates could not be checked. Check your internet connection and try again.",
+                    "Updates konnten nicht geprüft werden. Prüfe die Internetverbindung und versuche es erneut."));
+                break;
+            case ApplicationUpdateStatus.UpdateAvailable:
+                await OfferUpdateAsync(result);
+                break;
+        }
+    }
+
+    private async Task OfferUpdateAsync(ApplicationUpdateCheckResult update)
+    {
+        var notes = string.IsNullOrWhiteSpace(update.ReleaseNotes)
+            ? string.Empty
+            : $"{Environment.NewLine}{Environment.NewLine}{update.ReleaseNotes}";
+        var message = UpdateMessage(
+            $"Version {update.Version} is available. Download, install, and restart GrimmDiff now?{notes}",
+            $"Version {update.Version} ist verfügbar. GrimmDiff jetzt herunterladen, installieren und neu starten?{notes}");
+        if (!_dialogs.Confirm(UpdateTitle, message)) return;
+
+        var applyResult = await _updates.DownloadAndRestartAsync();
+        if (applyResult == ApplicationUpdateApplyResult.Failed)
+            _dialogs.ShowInformation(UpdateTitle, UpdateMessage(
+                "The update could not be installed. Please try again later.",
+                "Das Update konnte nicht installiert werden. Bitte versuche es später erneut."));
+    }
+
+    private string UpdateTitle => SelectedLanguage == "Deutsch" ? "GrimmDiff-Update" : "GrimmDiff update";
+
+    private string UpdateMessage(string english, string german)
+    {
+        return SelectedLanguage == "Deutsch" ? german : english;
+    }
 
     private async Task OpenRepositoryAsync()
     {

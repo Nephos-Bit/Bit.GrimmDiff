@@ -14,4 +14,16 @@ public sealed class WpfUserDialogService : IUserDialogService
     {
         return InputDialog.Ask(title, prompt);
     }
+
+    public bool Confirm(string title, string message)
+    {
+        return System.Windows.MessageBox.Show(message, title, System.Windows.MessageBoxButton.YesNo,
+                   System.Windows.MessageBoxImage.Information) == System.Windows.MessageBoxResult.Yes;
+    }
+
+    public void ShowInformation(string title, string message)
+    {
+        System.Windows.MessageBox.Show(message, title, System.Windows.MessageBoxButton.OK,
+            System.Windows.MessageBoxImage.Information);
+    }
 }

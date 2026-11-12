@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     {
         ContentRendered -= OnContentRendered;
         await _viewModel.InitializeAsync();
+        await _viewModel.CheckForUpdatesOnStartupAsync();
     }
 
     private void BranchButton_OnClick(object sender, RoutedEventArgs e)

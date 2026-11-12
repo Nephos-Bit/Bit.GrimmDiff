@@ -16,6 +16,8 @@
                           Command="{Binding ShowAiRiskNoticeCommand}" />
                 <MenuItem Header="Revoke AI approval" Style="{StaticResource MenuBarItem}"
                           Command="{Binding RevokeAiApprovalCommand}" />
+                <MenuItem Header="Check for updates" Style="{StaticResource MenuBarItem}"
+                          Command="{Binding CheckForUpdatesCommand}" />
                 <MenuItem Header="Language" Style="{StaticResource MenuBarItem}">
                     <MenuItem Header="EN" IsCheckable="True" IsChecked="{Binding IsEnglish}" />
                     <MenuItem Header="DE" IsCheckable="True" IsChecked="{Binding IsGerman}" />

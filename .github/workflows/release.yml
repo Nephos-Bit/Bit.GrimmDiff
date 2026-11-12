@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      VPK_TOKEN: ${{ github.token }}
+      CODE_SIGNING_CERTIFICATE_BASE64: ${{ secrets.CODE_SIGNING_CERTIFICATE_BASE64 }}
+      CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.CODE_SIGNING_CERTIFICATE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+      - run: dotnet restore GrimmDiff.sln --locked-mode
+      - run: dotnet run --project tests/GrimmDiff.Tests --no-restore --configuration Release
+      - name: Install Velopack CLI
+        run: dotnet tool install --tool-path .tools vpk --version 1.2.161
+      - name: Create release notes
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $previous = git tag --sort=-version:refname | Where-Object { $_ -ne $tag } | Select-Object -First 1
+          if ($previous) {
+            git log "$previous..$tag" --format='- %s' | Set-Content release-notes.md -Encoding utf8
+          } else {
+            "- Initial Velopack release." | Set-Content release-notes.md -Encoding utf8
+          }
+      - name: Import optional code-signing certificate
+        id: signing
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CODE_SIGNING_CERTIFICATE_BASE64)) {
+            "thumbprint=" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+          $certificatePath = Join-Path $env:RUNNER_TEMP "GrimmDiff-signing.pfx"
+          [IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:CODE_SIGNING_CERTIFICATE_BASE64))
+          $password = ConvertTo-SecureString $env:CODE_SIGNING_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $certificate = Import-PfxCertificate -FilePath $certificatePath -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          "thumbprint=$($certificate.Thumbprint)" >> $env:GITHUB_OUTPUT
+      - name: Package Velopack release
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $signing = @{}
+          if ("${{ steps.signing.outputs.thumbprint }}") { $signing.CodeSigningCertificateThumbprint = "${{ steps.signing.outputs.thumbprint }}" }
+          ./scripts/Publish-Velopack.ps1 -Version $version -VpkPath "$PWD\.tools\vpk.exe" -ReleaseNotesPath "$PWD\release-notes.md" @signing
+      - name: Publish GitHub Release
+        shell: pwsh
+        run: |
+          & "$PWD\.tools\vpk.exe" upload github --repoUrl https://github.com/Nephos-Bit/Bit.GrimmDiff --outputDir "$PWD\artifacts\Releases" --channel win --publish
+          if ($LASTEXITCODE -ne 0) { throw "Velopack upload failed." }

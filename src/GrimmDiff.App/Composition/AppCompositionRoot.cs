@@ -20,6 +20,7 @@ public static class AppCompositionRoot
             new PreferencesService(new AppSettingsStore()),
             new WpfUserDialogService(),
             new ShellExternalNavigationService(),
-            new FileSystemRepositoryChangeMonitor());
+            new FileSystemRepositoryChangeMonitor(),
+            new VelopackUpdateService());
     }
 }

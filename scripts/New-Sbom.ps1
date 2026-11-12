@@ -12,7 +12,7 @@ $components = @(
     @{ type = "library"; name = "GrimmDiff.Application"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.application@1.0.0" },
     @{ type = "library"; name = "GrimmDiff.Domain"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.domain@1.0.0" },
     @{ type = "library"; name = "GrimmDiff.Infrastructure"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.infrastructure@1.0.0" },
-    @{ type = "framework"; name = ".NET"; version = "10.0"; purl = "pkg:generic/dotnet@10.0"; properties = @(@{ name = "grimmdiff:runtime"; value = $Runtime }) }
+    @{ type = "framework"; name = ".NET"; version = "11.0"; purl = "pkg:generic/dotnet@11.0"; properties = @(@{ name = "grimmdiff:runtime"; value = $Runtime }) }
 )
 $bom = [ordered]@{
     bomFormat = "CycloneDX"; specVersion = "1.5"; serialNumber = "urn:uuid:$([guid]::NewGuid())"; version = 1
