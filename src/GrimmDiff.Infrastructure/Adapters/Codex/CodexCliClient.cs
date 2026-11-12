@@ -115,6 +115,7 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         ["OPENAI_API_KEY", "CODEX_API_KEY", "CODEX_ACCESS_TOKEN"];
 
     private readonly ICodexProcessRunner _processRunner = processRunner ?? new SystemCodexProcessRunner();
+    private readonly bool _resolveSystemExecutable = processRunner is null;
 
     public async Task<CodexCliStatus> GetStatusAsync(CancellationToken cancellationToken = default)
     {
@@ -383,7 +384,12 @@ public sealed class CodexCliClient(ICodexProcessRunner? processRunner = null) : 
         }
     }
 
-    private static string ResolveExecutable()
+    private string ResolveExecutable()
+    {
+        return _resolveSystemExecutable ? ResolveSystemExecutable() : "codex";
+    }
+
+    private static string ResolveSystemExecutable()
     {
         if (OperatingSystem.IsWindows())
         {
