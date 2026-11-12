@@ -6,7 +6,8 @@ public sealed record AppPreferences(
     string Language = "English",
     string Font = "Cascadia Code",
     IReadOnlyList<AiRepositoryApproval>? AiRepositoryApprovals = null,
-    bool AiRiskNoticeAccepted = false)
+    bool AiRiskNoticeAccepted = false,
+    string? LastShownReleaseNotesVersion = null)
 {
     public IReadOnlyList<AiRepositoryApproval> Approvals => AiRepositoryApprovals ?? [];
     public static AppPreferences Empty { get; } = new([]);

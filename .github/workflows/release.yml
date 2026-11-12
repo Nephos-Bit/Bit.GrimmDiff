@@ -26,16 +26,11 @@ jobs:
       - run: dotnet run --project tests/GrimmDiff.Tests --no-restore --configuration Release
       - name: Install Velopack CLI
         run: dotnet tool install --tool-path .tools vpk --version 1.2.161
-      - name: Create release notes
+      - name: Validate release notes
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          $previous = git tag --sort=-version:refname | Where-Object { $_ -ne $tag } | Select-Object -First 1
-          if ($previous) {
-            git log "$previous..$tag" --format='- %s' | Set-Content release-notes.md -Encoding utf8
-          } else {
-            "- Initial Velopack release." | Set-Content release-notes.md -Encoding utf8
-          }
+          ./scripts/Test-ReleaseNotes.ps1 -Path "$PWD\ReleaseNotes.md" -Version ($tag.TrimStart('v'))
       - name: Import optional code-signing certificate
         id: signing
         shell: pwsh
@@ -55,7 +50,7 @@ jobs:
           $version = "${{ github.ref_name }}".TrimStart('v')
           $signing = @{}
           if ("${{ steps.signing.outputs.thumbprint }}") { $signing.CodeSigningCertificateThumbprint = "${{ steps.signing.outputs.thumbprint }}" }
-          ./scripts/Publish-Velopack.ps1 -Version $version -VpkPath "$PWD\.tools\vpk.exe" -ReleaseNotesPath "$PWD\release-notes.md" @signing
+          ./scripts/Publish-Velopack.ps1 -Version $version -VpkPath "$PWD\.tools\vpk.exe" -ReleaseNotesPath "$PWD\ReleaseNotes.md" @signing
       - name: Publish GitHub Release
         shell: pwsh
         run: |

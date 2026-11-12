@@ -39,6 +39,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private int _initialized, _refreshRunning, _refreshPending;
     private DateTimeOffset _lastAccountRefreshUtc = DateTimeOffset.MinValue;
     private bool _loading, _isAnalyzing, _isAnalysisStale, _isRepositoryOperation;
+    private string? _lastShownReleaseNotesVersion;
 
     private string _repositoryPath = string.Empty,
         _currentBranch = string.Empty,
@@ -422,6 +423,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _selectedFont = saved.Font is "Cascadia Code" or "Verdana" ? saved.Font : "Cascadia Code";
         _aiRepositoryApprovals = saved.Approvals.ToList();
         _aiRiskNoticeAccepted = saved.AiRiskNoticeAccepted;
+        _lastShownReleaseNotesVersion = saved.LastShownReleaseNotesVersion;
         ThemeService.Apply(_selectedTheme);
         ApplyFont(_selectedFont);
         RecentRepositories.ReplaceAll(saved.RecentRepositories.Select(item => new RecentRepositoryItem(item)));
@@ -434,6 +436,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             return;
         }
 
+        await ShowReleaseNotesIfNeededAsync();
         await Task.Delay(750);
         await CheckCodexAsync();
     }
@@ -476,12 +479,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private async Task OfferUpdateAsync(ApplicationUpdateCheckResult update)
     {
-        var notes = string.IsNullOrWhiteSpace(update.ReleaseNotes)
-            ? string.Empty
-            : $"{Environment.NewLine}{Environment.NewLine}{update.ReleaseNotes}";
         var message = UpdateMessage(
-            $"Version {update.Version} is available. Download, install, and restart GrimmDiff now?{notes}",
-            $"Version {update.Version} ist verfügbar. GrimmDiff jetzt herunterladen, installieren und neu starten?{notes}");
+            $"Version {update.Version} is available. Download, install, and restart GrimmDiff now?",
+            $"Version {update.Version} ist verfügbar. GrimmDiff jetzt herunterladen, installieren und neu starten?");
         if (!_dialogs.Confirm(UpdateTitle, message)) return;
 
         var applyResult = await _updates.DownloadAndRestartAsync();
@@ -496,6 +496,20 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private string UpdateMessage(string english, string german)
     {
         return SelectedLanguage == "Deutsch" ? german : english;
+    }
+
+    private async Task ShowReleaseNotesIfNeededAsync()
+    {
+        if (!_updates.IsInstalled) return;
+        var notes = ReleaseNotesReader.Read(Path.Combine(AppContext.BaseDirectory, "ReleaseNotes.md"));
+        var version = typeof(MainViewModel).Assembly.GetName().Version?.ToString(3);
+        if (notes is null || string.IsNullOrWhiteSpace(version) || notes.Version != version ||
+            notes.Version == _lastShownReleaseNotesVersion) return;
+
+        var title = UpdateMessage($"What's new in version {notes.Version}", $"Neu in Version {notes.Version}");
+        _dialogs.ShowInformation(title, notes.ForLanguage(SelectedLanguage));
+        _lastShownReleaseNotesVersion = notes.Version;
+        await SavePreferencesAsync();
     }
 
     private async Task OpenRepositoryAsync()
@@ -979,19 +993,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private void AddRecent(string path)
     {
-        var preferences =
-            _preferences.AddRecent(
-                new AppPreferences(RecentRepositories.Select(item => item.Path).ToList(), SelectedTheme,
-                    SelectedLanguage, SelectedFont), path);
+        var preferences = _preferences.AddRecent(CurrentPreferences(), path);
         RecentRepositories.ReplaceAll(preferences.RecentRepositories.Select(item => new RecentRepositoryItem(item)));
         SavePreferences();
     }
 
     private void SavePreferences()
     {
-        _ = _preferences.SaveAsync(new AppPreferences(RecentRepositories.Select(item => item.Path).ToList(),
-            SelectedTheme, SelectedLanguage, SelectedFont, _aiRepositoryApprovals, _aiRiskNoticeAccepted));
+        _ = SavePreferencesAsync();
     }
+
+    private Task SavePreferencesAsync() => _preferences.SaveAsync(CurrentPreferences());
+
+    private AppPreferences CurrentPreferences() => new(RecentRepositories.Select(item => item.Path).ToList(),
+        SelectedTheme, SelectedLanguage, SelectedFont, _aiRepositoryApprovals, _aiRiskNoticeAccepted,
+        _lastShownReleaseNotesVersion);
 
     private static string RepositoryIdentity(string repositoryPath)
     {

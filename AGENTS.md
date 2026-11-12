@@ -36,3 +36,9 @@ Whenever a change adds, removes, renames, or repurposes a top-level directory or
 - Jede C#-Datei enthält genau einen Top-Level-Typ. Mehrere Klassen, Records, Interfaces, Structs oder Enums in einer Datei sind unzulässig.
 - Private, eng gekoppelte Hilfstypen dürfen ausschließlich als geschachtelte Typen innerhalb ihres Besitzertyps verbleiben.
 
+### Release-Notizen
+
+- `ReleaseNotes.md` enthält die sichtbaren Änderungen des nächsten Releases im Bereich `Unreleased`.
+- Bei jeder nutzerrelevanten Änderung aktualisiert der Agent die deutschen und englischen Stichpunkte. Interne Refactorings und technische Commit-Namen gehören nicht in die Datei.
+- Vor einem Release gleicht der Agent die Notizen mit dem Git-Diff seit dem letzten SemVer-Tag ab, ersetzt `Unreleased` durch die Release-Version und hält pro Sprache drei bis sechs Stichpunkte ein.
+

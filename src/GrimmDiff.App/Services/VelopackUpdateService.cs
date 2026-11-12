@@ -10,6 +10,8 @@ public sealed class VelopackUpdateService : IApplicationUpdateService
     private readonly SemaphoreSlim _gate = new(1, 1);
     private UpdateInfo? _availableUpdate;
 
+    public bool IsInstalled => new UpdateManager(new GithubSource(RepositoryUri.ToString(), null, false)).IsInstalled;
+
     public async Task<ApplicationUpdateCheckResult> CheckForUpdateAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);
@@ -21,8 +23,7 @@ public sealed class VelopackUpdateService : IApplicationUpdateService
             return _availableUpdate is null
                 ? new ApplicationUpdateCheckResult(ApplicationUpdateStatus.NoUpdate)
                 : new ApplicationUpdateCheckResult(ApplicationUpdateStatus.UpdateAvailable,
-                    _availableUpdate.TargetFullRelease.Version.ToString(),
-                    _availableUpdate.TargetFullRelease.NotesMarkdown);
+                    _availableUpdate.TargetFullRelease.Version.ToString());
         }
         catch (NotInstalledException)
         {

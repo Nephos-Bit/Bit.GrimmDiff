@@ -21,6 +21,43 @@ void Test(string name, Action action)
     }
 }
 
+Test("release notes parse bilingual sections", () =>
+{
+    const string notes = """
+        # GrimmDiff 1.2.3
+
+        ## Deutsch
+
+        - Neue Ansicht für Änderungen.
+        - Verbesserte Update-Hinweise.
+        - Wichtige Fehlerbehebungen.
+
+        ## English
+
+        - New view for changes.
+        - Improved update notices.
+        - Important bug fixes.
+        """;
+    var parsed = ReleaseNotesReader.Parse(notes) ?? throw new Exception("Expected valid release notes.");
+    if (parsed.Version != "1.2.3" || !parsed.ForLanguage("Deutsch").Contains("Neue Ansicht") ||
+        !parsed.ForLanguage("English").Contains("New view")) throw new Exception("Expected localized notes.");
+});
+Test("release notes reject malformed content", () =>
+{
+    const string notes = """
+        # GrimmDiff 1.2.3
+
+        ## Deutsch
+
+        - Nur ein Punkt.
+
+        ## English
+
+        - Only one item.
+        """;
+    if (ReleaseNotesReader.Parse(notes) is not null) throw new Exception("Expected malformed notes to be ignored.");
+});
+
 const string diff =
     "diff --git a/src/Foo.cs b/src/Foo.cs\nindex 123..456 100644\n--- a/src/Foo.cs\n+++ b/src/Foo.cs\n@@ -4,2 +4,3 @@ class Foo\n-  void Run() {}\n+  // SharedProcessor process data\n+  void ProcessData() {}\ndiff --git a/src/Bar.cs b/src/Bar.cs\nindex 123..456 100644\n--- a/src/Bar.cs\n+++ b/src/Bar.cs\n@@ -1 +1 @@\n-// old\n+// SharedProcessor process data\n";
 Test("parser returns hunks", () =>
