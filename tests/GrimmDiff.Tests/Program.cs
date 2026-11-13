@@ -247,6 +247,15 @@ Test("diff renderer marks added removed and changed words", () =>
         !page.Markers.Any(marker => marker.Kind == DiffHighlightKind.AddedWord))
         throw new Exception("Expected word markers.");
 });
+Test("diff renderer maps real source line numbers to each diff line", () =>
+{
+    var hunk = new DiffHunk("src/Foo.cs", DiffScope.WorkingTree, "@@ -4,2 +7,3 @@",
+        "-old\n context\n+new", 4, 7);
+    var page = DiffRenderBuilder.CreatePage([hunk]);
+    if (page.LineNumbers.Count != 4 || page.LineNumbers[1] != new DiffLineNumbers(4, null) ||
+        page.LineNumbers[2] != new DiffLineNumbers(5, 7) || page.LineNumbers[3] != new DiffLineNumbers(null, 8))
+        throw new Exception("Expected source line numbers beside diff lines.");
+});
 Test("diff renderer handles unicode word changes", () =>
 {
     var hunk = new DiffHunk("src/Text.cs", DiffScope.WorkingTree, "@@ -1 +1 @@",
@@ -281,10 +290,12 @@ Test("diff renderer bounds an initial 20000 line page", () =>
 Test("render document preserves marker offsets when appending a page", () =>
 {
     var first = new DiffRenderPage("+one\n", [new DiffTextMarker(0, 4, DiffHighlightKind.AddedLine)],
-        new DiffPageCursor(0, 1));
-    var second = new DiffRenderPage("-two\n", [new DiffTextMarker(0, 4, DiffHighlightKind.RemovedLine)], null);
+        [new DiffLineNumbers(null, 1)], new DiffPageCursor(0, 1));
+    var second = new DiffRenderPage("-two\n", [new DiffTextMarker(0, 4, DiffHighlightKind.RemovedLine)],
+        [new DiffLineNumbers(2, null)], null);
     var document = DiffRenderDocument.FromPage(first).Append(second);
-    if (document.Text != "+one\n-two\n" || document.Markers.Last().Offset != 5 || document.NextPage is not null)
+    if (document.Text != "+one\n-two\n" || document.Markers.Last().Offset != 5 ||
+        document.LineNumbers.Last() != new DiffLineNumbers(2, null) || document.NextPage is not null)
         throw new Exception("Expected appended render document.");
 });
 Environment.ExitCode = failures.Count == 0 ? 0 : 1;

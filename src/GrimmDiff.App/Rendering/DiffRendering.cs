@@ -13,11 +13,12 @@ public static class DiffRenderBuilder
     public static DiffRenderPage CreatePage(IReadOnlyList<DiffHunk> hunks, DiffPageCursor? cursor = null,
         CancellationToken cancellationToken = default)
     {
-        if (hunks.Count == 0) return new DiffRenderPage(string.Empty, [], null);
+        if (hunks.Count == 0) return new DiffRenderPage(string.Empty, [], [], null);
         var position = cursor ?? new DiffPageCursor(0, -1);
         var text = new StringBuilder();
         var lines = new List<RenderLine>();
         var markers = new List<DiffTextMarker>();
+        var lineNumbers = new List<DiffLineNumbers>();
 
         while (position.HunkIndex < hunks.Count)
         {
@@ -34,6 +35,7 @@ public static class DiffRenderBuilder
             var offset = text.Length;
             text.Append(line).AppendLine();
             lines.Add(new RenderLine(line, offset, kind));
+            lineNumbers.Add(GetLineNumbers(hunk, content, lineIndex));
             if (kind is DiffHighlightKind.AddedLine or DiffHighlightKind.RemovedLine or DiffHighlightKind.Hunk)
                 markers.Add(new DiffTextMarker(offset, line.Length, kind.Value));
 
@@ -44,7 +46,7 @@ public static class DiffRenderBuilder
 
         AddWordMarkers(lines, markers, cancellationToken);
         var nextPage = position.HunkIndex < hunks.Count ? position : null;
-        return new DiffRenderPage(text.ToString(), markers, nextPage);
+        return new DiffRenderPage(text.ToString(), markers, lineNumbers, nextPage);
     }
 
     #region Private
@@ -57,6 +59,36 @@ public static class DiffRenderBuilder
         if (line.StartsWith('-') && !line.StartsWith("---", StringComparison.Ordinal))
             return DiffHighlightKind.RemovedLine;
         return null;
+    }
+
+    private static DiffLineNumbers GetLineNumbers(DiffHunk hunk, IReadOnlyList<string> content, int lineIndex)
+    {
+        if (lineIndex < 0) return new DiffLineNumbers(null, null);
+
+        var oldLine = hunk.OldStart;
+        var newLine = hunk.NewStart;
+        for (var index = 0; index < lineIndex; index++) AdvanceLineNumbers(content[index], ref oldLine, ref newLine);
+
+        return content[lineIndex] switch
+        {
+            var line when line.StartsWith('+') && !line.StartsWith("+++", StringComparison.Ordinal) =>
+                new DiffLineNumbers(null, newLine),
+            var line when line.StartsWith('-') && !line.StartsWith("---", StringComparison.Ordinal) =>
+                new DiffLineNumbers(oldLine, null),
+            var line when line.StartsWith('\\') => new DiffLineNumbers(null, null),
+            _ => new DiffLineNumbers(oldLine, newLine)
+        };
+    }
+
+    private static void AdvanceLineNumbers(string line, ref int oldLine, ref int newLine)
+    {
+        if (line.StartsWith('+') && !line.StartsWith("+++", StringComparison.Ordinal)) newLine++;
+        else if (line.StartsWith('-') && !line.StartsWith("---", StringComparison.Ordinal)) oldLine++;
+        else if (!line.StartsWith('\\'))
+        {
+            oldLine++;
+            newLine++;
+        }
     }
 
     private static void AddWordMarkers(IReadOnlyList<RenderLine> lines, ICollection<DiffTextMarker> markers,

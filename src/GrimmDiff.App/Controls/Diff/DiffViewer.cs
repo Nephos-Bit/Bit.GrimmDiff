@@ -17,9 +17,11 @@ public sealed class DiffViewer : TextEditor
     private readonly Queue<DiffRenderDocument> _documentOrder = [];
     private readonly Dictionary<DiffRenderDocument, TextDocument> _documents = new(ReferenceEqualityComparer.Instance);
     private readonly DiffLineBackgroundRenderer _lineBackgroundRenderer = new();
+    private readonly DiffLineNumberMargin _lineNumberMargin;
 
     public DiffViewer()
     {
+        _lineNumberMargin = new DiffLineNumberMargin(this);
         IsReadOnly = true;
         ShowLineNumbers = false;
         WordWrap = false;
@@ -30,6 +32,7 @@ public sealed class DiffViewer : TextEditor
         Options.EnableTextDragDrop = false;
         TextArea.TextView.LineTransformers.Add(_colorizer);
         TextArea.TextView.BackgroundRenderers.Add(_lineBackgroundRenderer);
+        TextArea.LeftMargins.Insert(0, _lineNumberMargin);
     }
 
     public object? RenderDocument
@@ -53,6 +56,7 @@ public sealed class DiffViewer : TextEditor
             Document = new TextDocument();
             _colorizer.SetMarkers([]);
             _lineBackgroundRenderer.SetMarkers([]);
+            _lineNumberMargin.SetLineNumbers([]);
             return;
         }
 
@@ -71,6 +75,7 @@ public sealed class DiffViewer : TextEditor
         Document = document;
         _colorizer.SetMarkers(renderDocument.Markers);
         _lineBackgroundRenderer.SetMarkers(renderDocument.Markers);
+        _lineNumberMargin.SetLineNumbers(renderDocument.LineNumbers);
         TextArea.TextView.Redraw();
     }
 
