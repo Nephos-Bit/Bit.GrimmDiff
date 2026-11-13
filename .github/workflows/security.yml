@@ -14,7 +14,9 @@ jobs:
         with:
           dotnet-version: 11.0.x
       - run: dotnet restore GrimmDiff.sln --locked-mode
-      - run: dotnet run --project tests/GrimmDiff.Tests --no-restore --configuration Release
+      - run: dotnet run --project tests/GrimmDiff.Logic.Tests --no-restore --configuration Release
+      - run: dotnet run --project tests/GrimmDiff.Data.Tests --no-restore --configuration Release
+      - run: dotnet run --project tests/GrimmDiff.Gui.Tests --no-restore --configuration Release
       - shell: pwsh
         run: ./scripts/Test-DependencyVulnerabilities.ps1
       - shell: pwsh

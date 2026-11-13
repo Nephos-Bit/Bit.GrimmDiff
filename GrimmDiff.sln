@@ -1,16 +1,24 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.0.0
+VisualStudioVersion = 18.12.12405.243 stable
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Domain", "src\GrimmDiff.Domain\GrimmDiff.Domain.csproj", "{8D82C1EA-6ECA-48D6-AD77-62F2C71E9FA1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Gui.Abstracts", "src\GrimmDiff.Gui.Abstracts\GrimmDiff.Gui.Abstracts.csproj", "{A101A101-A101-4101-8101-A101A101A101}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Application", "src\GrimmDiff.Application\GrimmDiff.Application.csproj", "{62BEEF6A-5839-43D4-8A32-EC1EAC40D104}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Gui", "src\GrimmDiff.Gui\GrimmDiff.Gui.csproj", "{A102A102-A102-4102-8102-A102A102A102}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Infrastructure", "src\GrimmDiff.Infrastructure\GrimmDiff.Infrastructure.csproj", "{59B2D6C2-0032-438D-B631-3FAF9FC3B852}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Logic.Abstracts", "src\GrimmDiff.Logic.Abstracts\GrimmDiff.Logic.Abstracts.csproj", "{A103A103-A103-4103-8103-A103A103A103}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.App", "src\GrimmDiff.App\GrimmDiff.App.csproj", "{E15A0651-9C16-4069-9B0C-A4AAE8D6878A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Logic", "src\GrimmDiff.Logic\GrimmDiff.Logic.csproj", "{A104A104-A104-4104-8104-A104A104A104}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Tests", "tests\GrimmDiff.Tests\GrimmDiff.Tests.csproj", "{C9B508C5-FF01-4CBF-9095-BCED9A39A14B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Data.Abstracts", "src\GrimmDiff.Data.Abstracts\GrimmDiff.Data.Abstracts.csproj", "{A105A105-A105-4105-8105-A105A105A105}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Data", "src\GrimmDiff.Data\GrimmDiff.Data.csproj", "{A106A106-A106-4106-8106-A106A106A106}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Gui.Tests", "tests\GrimmDiff.Gui.Tests\GrimmDiff.Gui.Tests.csproj", "{A107A107-A107-4107-8107-A107A107A107}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Logic.Tests", "tests\GrimmDiff.Logic.Tests\GrimmDiff.Logic.Tests.csproj", "{A108A108-A108-4108-8108-A108A108A108}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrimmDiff.Data.Tests", "tests\GrimmDiff.Data.Tests\GrimmDiff.Data.Tests.csproj", "{A109A109-A109-4109-8109-A109A109A109}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,25 +26,44 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8D82C1EA-6ECA-48D6-AD77-62F2C71E9FA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8D82C1EA-6ECA-48D6-AD77-62F2C71E9FA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8D82C1EA-6ECA-48D6-AD77-62F2C71E9FA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8D82C1EA-6ECA-48D6-AD77-62F2C71E9FA1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62BEEF6A-5839-43D4-8A32-EC1EAC40D104}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62BEEF6A-5839-43D4-8A32-EC1EAC40D104}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62BEEF6A-5839-43D4-8A32-EC1EAC40D104}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62BEEF6A-5839-43D4-8A32-EC1EAC40D104}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59B2D6C2-0032-438D-B631-3FAF9FC3B852}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59B2D6C2-0032-438D-B631-3FAF9FC3B852}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59B2D6C2-0032-438D-B631-3FAF9FC3B852}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59B2D6C2-0032-438D-B631-3FAF9FC3B852}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E15A0651-9C16-4069-9B0C-A4AAE8D6878A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E15A0651-9C16-4069-9B0C-A4AAE8D6878A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E15A0651-9C16-4069-9B0C-A4AAE8D6878A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E15A0651-9C16-4069-9B0C-A4AAE8D6878A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C9B508C5-FF01-4CBF-9095-BCED9A39A14B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C9B508C5-FF01-4CBF-9095-BCED9A39A14B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C9B508C5-FF01-4CBF-9095-BCED9A39A14B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C9B508C5-FF01-4CBF-9095-BCED9A39A14B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A101A101-A101-4101-8101-A101A101A101}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A101A101-A101-4101-8101-A101A101A101}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A101A101-A101-4101-8101-A101A101A101}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A101A101-A101-4101-8101-A101A101A101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A102A102-A102-4102-8102-A102A102A102}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A102A102-A102-4102-8102-A102A102A102}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A102A102-A102-4102-8102-A102A102A102}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A102A102-A102-4102-8102-A102A102A102}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A103A103-A103-4103-8103-A103A103A103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A103A103-A103-4103-8103-A103A103A103}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A103A103-A103-4103-8103-A103A103A103}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A103A103-A103-4103-8103-A103A103A103}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A104A104-A104-4104-8104-A104A104A104}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A104A104-A104-4104-8104-A104A104A104}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A104A104-A104-4104-8104-A104A104A104}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A104A104-A104-4104-8104-A104A104A104}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A105A105-A105-4105-8105-A105A105A105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A105A105-A105-4105-8105-A105A105A105}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A105A105-A105-4105-8105-A105A105A105}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A105A105-A105-4105-8105-A105A105A105}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A106A106-A106-4106-8106-A106A106A106}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A106A106-A106-4106-8106-A106A106A106}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A106A106-A106-4106-8106-A106A106A106}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A106A106-A106-4106-8106-A106A106A106}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A107A107-A107-4107-8107-A107A107A107}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A107A107-A107-4107-8107-A107A107A107}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A107A107-A107-4107-8107-A107A107A107}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A107A107-A107-4107-8107-A107A107A107}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A108A108-A108-4108-8108-A108A108A108}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A108A108-A108-4108-8108-A108A108A108}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A108A108-A108-4108-8108-A108A108A108}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A108A108-A108-4108-8108-A108A108A108}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A109A109-A109-4109-8109-A109A109A109}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A109A109-A109-4109-8109-A109A109A109}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A109A109-A109-4109-8109-A109A109A109}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A109A109-A109-4109-8109-A109A109A109}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

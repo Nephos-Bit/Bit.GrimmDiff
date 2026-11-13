@@ -11,12 +11,12 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $publish = Join-Path $root "artifacts\velopack-publish-$Runtime"
 $releases = Join-Path $root "artifacts\Releases"
-$application = Join-Path $publish "GrimmDiff.App.exe"
-$icon = Join-Path $root "src\GrimmDiff.App\Assets\AppIcon.ico"
+$application = Join-Path $publish "GrimmDiff.exe"
+$icon = Join-Path $root "src\GrimmDiff.Gui\Assets\AppIcon.ico"
 $repository = "https://github.com/Nephos-Bit/Bit.GrimmDiff"
 
 Remove-Item -LiteralPath $publish, $releases -Recurse -Force -ErrorAction SilentlyContinue
-dotnet publish (Join-Path $root "src\GrimmDiff.App\GrimmDiff.App.csproj") -c Release -r $Runtime --self-contained true -p:PublishSingleFile=false -p:Version=$Version -p:ContinuousIntegrationBuild=true -o $publish
+dotnet publish (Join-Path $root "src\GrimmDiff.Gui\GrimmDiff.Gui.csproj") -c Release -r $Runtime --self-contained true -p:PublishSingleFile=false -p:Version=$Version -p:ContinuousIntegrationBuild=true -o $publish
 
 function Sign-File([string]$Path, [string]$Thumbprint) {
     $certificate = Get-ChildItem "Cert:\CurrentUser\My\$Thumbprint" -ErrorAction Stop
@@ -38,7 +38,7 @@ try {
 
 $packArguments = @(
     "pack", "--packId", "NephosBit.GrimmDiff", "--packVersion", $Version,
-    "--packDir", $publish, "--mainExe", "GrimmDiff.App.exe", "--packTitle", "GrimmDiff",
+    "--packDir", $publish, "--mainExe", "GrimmDiff.exe", "--packTitle", "GrimmDiff",
     "--icon", $icon, "--outputDir", $releases, "--channel", "win", "--runtime", $Runtime
 )
 & $VpkPath @packArguments

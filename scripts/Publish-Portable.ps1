@@ -14,9 +14,9 @@ $sbom = Join-Path $root "artifacts\GrimmDiff-$Runtime.sbom.cdx.json"
 
 Remove-Item -LiteralPath $publish -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath $archive, $checksum, $sbom -Force -ErrorAction SilentlyContinue
-dotnet publish (Join-Path $root "src\GrimmDiff.App\GrimmDiff.App.csproj") -c $Configuration -r $Runtime --self-contained true -p:PublishSingleFile=true -p:ContinuousIntegrationBuild=true -o $publish
+dotnet publish (Join-Path $root "src\GrimmDiff.Gui\GrimmDiff.Gui.csproj") -c $Configuration -r $Runtime --self-contained true -p:PublishSingleFile=true -p:ContinuousIntegrationBuild=true -o $publish
 
-$application = Join-Path $publish "GrimmDiff.App.exe"
+$application = Join-Path $publish "GrimmDiff.exe"
 $isSigned = -not [string]::IsNullOrWhiteSpace($CodeSigningCertificateThumbprint)
 if ($isSigned) {
     $certificate = Get-ChildItem "Cert:\CurrentUser\My\$CodeSigningCertificateThumbprint" -ErrorAction Stop

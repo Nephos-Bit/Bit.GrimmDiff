@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\GrimmDiff.Logic.Abstracts\GrimmDiff.Logic.Abstracts.csproj" />
+    <ProjectReference Include="..\GrimmDiff.Data.Abstracts\GrimmDiff.Data.Abstracts.csproj" />
+  </ItemGroup>
+</Project>

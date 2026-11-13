@@ -11,13 +11,13 @@ GitHub landing page; use this file and the relevant source files instead.
 
 ### Find the relevant code and tests
 
-- `src/GrimmDiff.Domain`: reine Git- und Diff-Domänenmodelle (`Models`), Richtlinien (`Policies`) sowie Parser (`Parsers`); keine UI-, Use-Case- oder Infrastrukturabhängigkeiten.
-- `src/GrimmDiff.Application/Ports`: kleine, verbraucherorientierte Schnittstellen für Repository-, Analyse-, Codex- und Einstellungszugriffe.
-- `src/GrimmDiff.Application/Models`: Application-spezifische Transport- und Statusmodelle.
-- `src/GrimmDiff.Application/UseCases`: Repository-, Diff-Analyse-, Codex-Sitzungs- und Einstellungs-Use-Cases.
-- `src/GrimmDiff.Infrastructure`: Implementierungen der Application-Ports; `Adapters/Git` und `Adapters/Codex` kapseln die CLIs, `Processors/DiffAnalysis` enthält die lokale Diff-Heuristik.
-- `src/GrimmDiff.App`: WPF-Anwendung mit `Composition`, `Configuration`, `Commands`, `Controls`, `Models`, `Rendering`, `Services`, `ViewModels` und `Views`.
-- `tests/GrimmDiff.Tests`: ausführbare, paketfreie Unit-Tests für Parser, Analyseprovider, Codex-Adapter und Application-Use-Cases.
+- `src/GrimmDiff.Logic.Abstracts`: fachliche `Models`, Parser, Richtlinien und Ports ohne Infrastruktur- oder UI-Abhängigkeiten.
+- `src/GrimmDiff.Logic`: Use-Case- und Analyse-Services auf Basis der Logic-Abstraktionen.
+- `src/GrimmDiff.Data.Abstracts`: öffentliche Codex-Prozessmodelle und -Ports.
+- `src/GrimmDiff.Data`: Git-, Codex- und Präferenzadapter.
+- `src/GrimmDiff.Gui.Abstracts`: UI-Models und UI-Serviceverträge.
+- `src/GrimmDiff.Gui`: WPF-Anwendung mit MVVM, DI-Start in `App.xaml.cs`, Controls, Renderern, Services, ViewModels und Views.
+- `tests/GrimmDiff.Logic.Tests`, `tests/GrimmDiff.Data.Tests`, `tests/GrimmDiff.Gui.Tests`: ausführbare, paketfreie Tests der jeweiligen Schicht.
 - `scripts`: Auslieferungs- und lokale Wartungsskripte.
 - `docs/compliance` und `docs/security`: versionierte CRA-Nachweise, Threat Model, sichere Nutzungs- und Incident-Response-Verfahren.
 - `.github/workflows`: CI-Sicherheitsprüfungen für Tests, Dependency-Scan und SBOM-Erzeugung.

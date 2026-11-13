@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net11.0-windows</TargetFramework><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><EnableWindowsTargeting>true</EnableWindowsTargeting><ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon><AssemblyName>GrimmDiff</AssemblyName><StartupObject>GrimmDiff.Gui.App</StartupObject><EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition></PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\GrimmDiff.Gui.Abstracts\GrimmDiff.Gui.Abstracts.csproj" /><ProjectReference Include="..\GrimmDiff.Logic.Abstracts\GrimmDiff.Logic.Abstracts.csproj" /><ProjectReference Include="..\GrimmDiff.Logic\GrimmDiff.Logic.csproj" /><ProjectReference Include="..\GrimmDiff.Data\GrimmDiff.Data.csproj" /></ItemGroup>
+  <ItemGroup><PackageReference Include="AvalonEdit" Version="6.3.1.120" /><PackageReference Include="DiffPlex" Version="1.9.0" /><PackageReference Include="Velopack" Version="1.2.161" /><PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" /></ItemGroup>
+  <ItemGroup><Resource Include="Assets\AppIcon.ico" /></ItemGroup>
+  <ItemGroup><None Include="..\..\ReleaseNotes.md" Link="ReleaseNotes.md" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+</Project>

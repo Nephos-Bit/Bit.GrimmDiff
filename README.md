@@ -51,13 +51,15 @@ Install the .NET 11 SDK, then run:
 ```powershell
 git clone https://github.com/Nephos-Bit/Bit.GrimmDiff.git
 cd Bit.GrimmDiff
-dotnet run --project src/GrimmDiff.App
+dotnet run --project src/GrimmDiff.Gui
 ```
 
 Run the test suite with:
 
 ```powershell
-dotnet run --project tests/GrimmDiff.Tests
+dotnet run --project tests/GrimmDiff.Logic.Tests
+dotnet run --project tests/GrimmDiff.Data.Tests
+dotnet run --project tests/GrimmDiff.Gui.Tests
 ```
 
 To create a portable self-contained Windows archive:

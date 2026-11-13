@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net11.0-windows</TargetFramework><UseWPF>true</UseWPF><EnableWindowsTargeting>true</EnableWindowsTargeting></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GrimmDiff.Logic.Abstracts\GrimmDiff.Logic.Abstracts.csproj" />
+    <ProjectReference Include="..\..\src\GrimmDiff.Logic\GrimmDiff.Logic.csproj" />
+    <ProjectReference Include="..\..\src\GrimmDiff.Data.Abstracts\GrimmDiff.Data.Abstracts.csproj" />
+    <ProjectReference Include="..\..\src\GrimmDiff.Data\GrimmDiff.Data.csproj" />
+    <ProjectReference Include="..\..\src\GrimmDiff.Gui\GrimmDiff.Gui.csproj" />
+  </ItemGroup>
+</Project>

@@ -8,10 +8,12 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $components = @(
     @{ type = "application"; name = "GrimmDiff"; version = "1.0.0"; purl = "pkg:generic/grimmdiff@1.0.0" },
-    @{ type = "library"; name = "GrimmDiff.App"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.app@1.0.0" },
-    @{ type = "library"; name = "GrimmDiff.Application"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.application@1.0.0" },
-    @{ type = "library"; name = "GrimmDiff.Domain"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.domain@1.0.0" },
-    @{ type = "library"; name = "GrimmDiff.Infrastructure"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.infrastructure@1.0.0" },
+    @{ type = "application"; name = "GrimmDiff.Gui"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.gui@1.0.0" },
+    @{ type = "library"; name = "GrimmDiff.Gui.Abstracts"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.gui.abstracts@1.0.0" },
+    @{ type = "library"; name = "GrimmDiff.Logic"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.logic@1.0.0" },
+    @{ type = "library"; name = "GrimmDiff.Logic.Abstracts"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.logic.abstracts@1.0.0" },
+    @{ type = "library"; name = "GrimmDiff.Data"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.data@1.0.0" },
+    @{ type = "library"; name = "GrimmDiff.Data.Abstracts"; version = "1.0.0"; purl = "pkg:generic/grimmdiff.data.abstracts@1.0.0" },
     @{ type = "framework"; name = ".NET"; version = "11.0"; purl = "pkg:generic/dotnet@11.0"; properties = @(@{ name = "grimmdiff:runtime"; value = $Runtime }) }
 )
 $bom = [ordered]@{
