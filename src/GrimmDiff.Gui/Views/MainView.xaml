@@ -33,6 +33,7 @@
                     </MenuItem>
                     <MenuItem Header="Font">
                         <MenuItem Header="Cascadia Code" IsCheckable="True" IsChecked="{Binding IsCascadiaCode}" />
+                        <MenuItem Header="Inter" IsCheckable="True" IsChecked="{Binding IsInter}" />
                         <MenuItem Header="Verdana" IsCheckable="True" IsChecked="{Binding IsVerdana}" />
                     </MenuItem>
                 </MenuItem>

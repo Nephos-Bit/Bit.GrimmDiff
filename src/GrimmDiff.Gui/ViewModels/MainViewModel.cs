@@ -112,7 +112,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public IReadOnlyList<string> Languages { get; } = ["English", "Deutsch"];
     public IReadOnlyList<string> Themes { get; } = ["System", "Dark", "Light"];
-    public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Verdana"];
+    public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Inter", "Verdana"];
     public LocalizedTextService Text { get; }
 
     public AsyncCommand OpenRepositoryCommand { get; }
@@ -325,6 +325,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (Set(ref _selectedFont, value))
             {
                 OnPropertyChanged(nameof(IsCascadiaCode));
+                OnPropertyChanged(nameof(IsInter));
                 OnPropertyChanged(nameof(IsVerdana));
                 ApplyFont(value);
                 SavePreferences();
@@ -383,6 +384,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         set
         {
             if (value) SelectedFont = "Cascadia Code";
+        }
+    }
+
+    public bool IsInter
+    {
+        get => SelectedFont == "Inter";
+        set
+        {
+            if (value) SelectedFont = "Inter";
         }
     }
 
@@ -481,7 +491,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         var saved = await _preferences.LoadAsync();
         _selectedLanguage = saved.Language;
         _selectedTheme = saved.Theme;
-        _selectedFont = saved.Font is "Cascadia Code" or "Verdana" ? saved.Font : "Cascadia Code";
+        _selectedFont = saved.Font is "Cascadia Code" or "Inter" or "Verdana" ? saved.Font : "Cascadia Code";
         _aiRepositoryApprovals = saved.Approvals.ToList();
         _aiRiskNoticeAccepted = saved.AiRiskNoticeAccepted;
         _lastShownReleaseNotesVersion = saved.LastShownReleaseNotesVersion;
