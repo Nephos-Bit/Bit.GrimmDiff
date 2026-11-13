@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Timers;
+using System.Windows;
 using System.Windows.Media;
 using GrimmDiff.Logic;
 using GrimmDiff.Logic.Abstracts;
@@ -38,6 +39,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _loading, _isAnalyzing, _isAnalysisStale, _isRepositoryOperation;
     private bool _isBranchMenuOpen;
     private bool _isRepositoryPanelExpanded = true;
+    private GridLength _repositoryPanelColumnWidth = new(300);
+    private GridLength _repositoryPanelExpandedWidth = new(300);
 
     private string _repositoryPath = string.Empty,
         _currentBranch = string.Empty,
@@ -154,7 +157,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public bool IsRepositoryPanelExpanded
     {
         get => _isRepositoryPanelExpanded;
-        set => Set(ref _isRepositoryPanelExpanded, value);
+        set
+        {
+            if (!Set(ref _isRepositoryPanelExpanded, value)) return;
+            RepositoryPanelColumnWidth = value ? _repositoryPanelExpandedWidth : new GridLength(0);
+        }
+    }
+
+    public GridLength RepositoryPanelColumnWidth
+    {
+        get => _repositoryPanelColumnWidth;
+        set
+        {
+            if (!Set(ref _repositoryPanelColumnWidth, value)) return;
+            if (value.Value > 0) _repositoryPanelExpandedWidth = value;
+        }
     }
 
     public string RepositoryName => string.IsNullOrWhiteSpace(RepositoryPath)
