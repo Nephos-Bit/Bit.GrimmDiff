@@ -37,6 +37,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private string? _lastShownReleaseNotesVersion;
     private bool _loading, _isAnalyzing, _isAnalysisStale, _isRepositoryOperation;
     private bool _isBranchMenuOpen;
+    private bool _isRepositoryPanelExpanded = true;
 
     private string _repositoryPath = string.Empty,
         _currentBranch = string.Empty,
@@ -82,6 +83,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             branch => CanRunRepositoryOperation() && !branch.IsCurrent);
         CheckForUpdatesCommand = new AsyncCommand(CheckForUpdatesManuallyAsync);
         OpenBranchMenuCommand = new DelegateCommand<object>(_ => IsBranchMenuOpen = true);
+        ToggleRepositoryPanelCommand = new DelegateCommand<object>(_ => IsRepositoryPanelExpanded = !IsRepositoryPanelExpanded);
     }
 
     public BulkObservableCollectionModel<RecentRepositoryItemModel> RecentRepositories { get; } = [];
@@ -123,6 +125,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public AsyncCommandOfT<BranchInfoModel> SwitchBranchCommand { get; }
     public AsyncCommand CheckForUpdatesCommand { get; }
     public DelegateCommand<object> OpenBranchMenuCommand { get; }
+    public DelegateCommand<object> ToggleRepositoryPanelCommand { get; }
     public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; }
     public DelegateCommand<string> OpenUrlCommand { get; }
 
@@ -146,6 +149,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         get => _isBranchMenuOpen;
         set => Set(ref _isBranchMenuOpen, value);
+    }
+
+    public bool IsRepositoryPanelExpanded
+    {
+        get => _isRepositoryPanelExpanded;
+        set => Set(ref _isRepositoryPanelExpanded, value);
     }
 
     public string RepositoryName => string.IsNullOrWhiteSpace(RepositoryPath)

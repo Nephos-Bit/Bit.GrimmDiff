@@ -61,8 +61,32 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="44" /><ColumnDefinition Width="300" MinWidth="220" />
-                    <ColumnDefinition Width="6" /><ColumnDefinition Width="440" MinWidth="280" />
+                    <ColumnDefinition Width="44" />
+                    <ColumnDefinition MinWidth="0">
+                        <ColumnDefinition.Style>
+                            <Style TargetType="ColumnDefinition">
+                                <Setter Property="Width" Value="300" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRepositoryPanelExpanded}" Value="False">
+                                        <Setter Property="Width" Value="0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ColumnDefinition.Style>
+                    </ColumnDefinition>
+                    <ColumnDefinition>
+                        <ColumnDefinition.Style>
+                            <Style TargetType="ColumnDefinition">
+                                <Setter Property="Width" Value="6" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRepositoryPanelExpanded}" Value="False">
+                                        <Setter Property="Width" Value="0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ColumnDefinition.Style>
+                    </ColumnDefinition>
+                    <ColumnDefinition Width="440" MinWidth="280" />
                     <ColumnDefinition Width="*" MinWidth="320" />
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0">
@@ -104,6 +128,41 @@
                                   Data="M12,3 L12,18 M6,12 L12,18 L18,12 M4,21 L20,21"
                                   Stroke="{DynamicResource Primary}" StrokeThickness="1.5" Fill="Transparent"
                                   StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
+                        </Button>
+                        <Button Style="{StaticResource IconButton}" Command="{Binding ToggleRepositoryPanelCommand}"
+                                ToolTip="Repository information" AutomationProperties.Name="Repository information">
+                            <Grid>
+                                <Path Width="16" Height="16" Stretch="Uniform"
+                                      Data="M15,4 L7,12 L15,20" Stroke="{DynamicResource Primary}"
+                                      StrokeThickness="1.5" Fill="Transparent" StrokeStartLineCap="Square"
+                                      StrokeEndLineCap="Square">
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRepositoryPanelExpanded}" Value="False">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
+                                <Path Width="16" Height="16" Stretch="Uniform"
+                                      Data="M9,4 L17,12 L9,20" Stroke="{DynamicResource Primary}"
+                                      StrokeThickness="1.5" Fill="Transparent" StrokeStartLineCap="Square"
+                                      StrokeEndLineCap="Square">
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRepositoryPanelExpanded}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
+                            </Grid>
                         </Button>
                     </StackPanel>
                 </Border>
@@ -166,7 +225,18 @@
                 </Border>
                 <GridSplitter Grid.Column="2" Width="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                               ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
-                              Background="{DynamicResource Border}" ShowsPreview="True" Cursor="SizeWE" />
+                              Background="{DynamicResource Border}" ShowsPreview="True" Cursor="SizeWE">
+                    <GridSplitter.Style>
+                        <Style TargetType="GridSplitter">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRepositoryPanelExpanded}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </GridSplitter.Style>
+                </GridSplitter>
                 <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>

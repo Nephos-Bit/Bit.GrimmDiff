@@ -21,12 +21,13 @@ internal sealed class DiffLineNumberMarginControl : AbstractMargin
     public void SetLineNumbers(IReadOnlyList<DiffLineNumbersModel> lineNumbers)
     {
         _lineNumbers = lineNumbers;
+        InvalidateMeasure();
         InvalidateVisual();
     }
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        return new Size(76, 0);
+        return new Size(CreateNumberText().WidthIncludingTrailingWhitespace + 4, 0);
     }
 
     protected override void OnRender(DrawingContext drawingContext)
@@ -49,5 +50,21 @@ internal sealed class DiffLineNumberMarginControl : AbstractMargin
                     TextView.VerticalOffset;
             drawingContext.DrawText(text, new Point(0, y));
         }
+    }
+
+    private FormattedText CreateNumberText()
+    {
+        var largestLineNumber = _lineNumbers
+            .SelectMany(numbers => new[] { numbers.OldLine, numbers.NewLine })
+            .Where(number => number.HasValue)
+            .Select(number => number!.Value)
+            .DefaultIfEmpty()
+            .Max();
+        var digits = Math.Max(5, largestLineNumber.ToString(CultureInfo.CurrentCulture).Length);
+        var placeholder = new string('0', digits);
+        var brush = System.Windows.Application.Current.Resources["Secondary"] as Brush ?? Brushes.Gray;
+        return new FormattedText($"{placeholder} {placeholder}", CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight, new Typeface(_editor.FontFamily, _editor.FontStyle, _editor.FontWeight,
+                _editor.FontStretch), _editor.FontSize, brush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
     }
 }
