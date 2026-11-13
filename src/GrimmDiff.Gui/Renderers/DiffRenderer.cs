@@ -16,9 +16,8 @@ public static class DiffRenderer
         if (hunks.Count == 0) return new DiffRenderPageModel(string.Empty, [], [], null);
         var position = cursor ?? new DiffPageCursorModel(0, -1);
         var text = new StringBuilder();
-        var lines = new List<RenderLine>();
-        var markers = new List<DiffTextMarkerModel>();
-        var lineNumbers = new List<DiffLineNumbersModel>();
+        var pendingLines = new List<PendingLine>();
+        var pendingCharacters = 0;
 
         while (position.HunkIndex < hunks.Count)
         {
@@ -26,22 +25,34 @@ public static class DiffRenderer
             var hunk = hunks[position.HunkIndex];
             var content = hunk.Content.Split('\n');
             var lineIndex = position.ContentLineIndex;
-            var line = lineIndex < 0 ? hunk.Header : content[lineIndex];
-            var kind = Classify(line, lineIndex < 0);
-            var additionalLength = line.Length + Environment.NewLine.Length;
-            if (lines.Count > 0 && (lines.Count >= MaximumPageLines ||
-                                    text.Length + additionalLength > MaximumPageCharacters)) break;
+            var sourceLine = lineIndex < 0 ? hunk.Header : content[lineIndex];
+            var isHeader = lineIndex < 0;
+            var additionalLength = sourceLine.Length + Environment.NewLine.Length;
+            if (pendingLines.Count > 0 && (pendingLines.Count >= MaximumPageLines ||
+                                    pendingCharacters + additionalLength > MaximumPageCharacters)) break;
 
-            var offset = text.Length;
-            text.Append(line).AppendLine();
-            lines.Add(new RenderLine(line, offset, kind));
-            lineNumbers.Add(GetLineNumbers(hunk, content, lineIndex));
-            if (kind is DiffHighlightKindModel.AddedLine or DiffHighlightKindModel.RemovedLine or DiffHighlightKindModel.Hunk)
-                markers.Add(new DiffTextMarkerModel(offset, line.Length, kind.Value));
+            pendingLines.Add(new PendingLine(sourceLine, isHeader, GetLineNumbers(hunk, content, lineIndex)));
+            pendingCharacters += additionalLength;
 
             if (lineIndex < 0) position = position with { ContentLineIndex = 0 };
             else if (lineIndex + 1 < content.Length) position = position with { ContentLineIndex = lineIndex + 1 };
             else position = new DiffPageCursorModel(position.HunkIndex + 1, -1);
+        }
+
+        var commonIndentation = GetCommonIndentation(pendingLines);
+        var lines = new List<RenderLine>(pendingLines.Count);
+        var markers = new List<DiffTextMarkerModel>();
+        var lineNumbers = new List<DiffLineNumbersModel>(pendingLines.Count);
+        foreach (var pendingLine in pendingLines)
+        {
+            var line = AlignLeft(pendingLine.Text, pendingLine.IsHeader, commonIndentation);
+            var kind = Classify(line, pendingLine.IsHeader);
+            var offset = text.Length;
+            text.Append(line).AppendLine();
+            lines.Add(new RenderLine(line, offset, kind));
+            lineNumbers.Add(pendingLine.LineNumbers);
+            if (kind is DiffHighlightKindModel.AddedLine or DiffHighlightKindModel.RemovedLine or DiffHighlightKindModel.Hunk)
+                markers.Add(new DiffTextMarkerModel(offset, line.Length, kind.Value));
         }
 
         AddWordMarkers(lines, markers, cancellationToken);
@@ -59,6 +70,35 @@ public static class DiffRenderer
         if (line.StartsWith('-') && !line.StartsWith("---", StringComparison.Ordinal))
             return DiffHighlightKindModel.RemovedLine;
         return null;
+    }
+
+    private static int GetCommonIndentation(IReadOnlyList<PendingLine> lines)
+    {
+        var indentation = int.MaxValue;
+        foreach (var line in lines)
+        {
+            if (line.IsHeader || line.Text.StartsWith('\\')) continue;
+            var start = HasDiffPrefix(line.Text) ? 1 : 0;
+            var length = line.Text.Length - start;
+            if (length == 0 || string.IsNullOrWhiteSpace(line.Text[start..])) continue;
+            var count = line.Text[start..].TakeWhile(char.IsWhiteSpace).Count();
+            indentation = Math.Min(indentation, count);
+        }
+
+        return indentation == int.MaxValue ? 0 : indentation;
+    }
+
+    private static string AlignLeft(string line, bool isHeader, int commonIndentation)
+    {
+        if (isHeader || commonIndentation == 0) return line;
+        var start = HasDiffPrefix(line) ? 1 : 0;
+        var removable = line[start..].TakeWhile(char.IsWhiteSpace).Take(commonIndentation).Count();
+        return line.Remove(start, removable);
+    }
+
+    private static bool HasDiffPrefix(string line)
+    {
+        return line.StartsWith('+') || line.StartsWith('-') || line.StartsWith(' ');
     }
 
     private static DiffLineNumbersModel GetLineNumbers(DiffHunkModel hunk, IReadOnlyList<string> content, int lineIndex)
@@ -142,6 +182,7 @@ public static class DiffRenderer
     }
 
     private sealed record RenderLine(string Text, int Offset, DiffHighlightKindModel? Kind);
+    private sealed record PendingLine(string Text, bool IsHeader, DiffLineNumbersModel LineNumbers);
 
     #endregion
 }

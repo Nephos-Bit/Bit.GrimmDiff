@@ -257,6 +257,14 @@ Test("diff renderer maps real source line numbers to each diff line", () =>
         page.LineNumbers[2] != new DiffLineNumbersModel(5, 7) || page.LineNumbers[3] != new DiffLineNumbersModel(null, 8))
         throw new Exception("Expected source line numbers beside diff lines.");
 });
+Test("diff renderer left-aligns indented source lines", () =>
+{
+    var hunk = new DiffHunkModel("src/Foo.cs", DiffScopeModel.WorkingTree, "@@ -1,2 +1,2 @@",
+        "-        oldValue\n+      newValue\n     unchangedValue", 1, 1);
+    var page = DiffRenderer.CreatePage([hunk]);
+    if (page.Text.Replace(Environment.NewLine, "\n") != "@@ -1,2 +1,2 @@\n-    oldValue\n+  newValue\n unchangedValue\n")
+        throw new Exception("Expected diff content to keep relative indentation while shifting it left.");
+});
 Test("diff renderer handles unicode word changes", () =>
 {
     var hunk = new DiffHunkModel("src/Text.cs", DiffScopeModel.WorkingTree, "@@ -1 +1 @@",
