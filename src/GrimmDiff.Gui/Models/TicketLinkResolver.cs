@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Net;
 using GrimmDiff.Logic.Abstracts;
 
 namespace GrimmDiff.Gui;
@@ -51,13 +52,14 @@ public static partial class TicketLinkResolver
                                                HasPathSegments(uri, 2, int.MaxValue),
             TicketLinkProviderModel.AzureDevOps => uri.Host.Equals("dev.azure.com", StringComparison.OrdinalIgnoreCase) &&
                                                      HasPathSegments(uri, 2, 2),
+            TicketLinkProviderModel.Custom => IsCustomHost(uri),
             _ => false
         };
     }
 
-    public static bool IsValidPattern(string? pattern)
+    public static bool IsValidPattern(TicketLinkProviderModel provider, string? pattern)
     {
-        if (string.IsNullOrWhiteSpace(pattern)) return true;
+        if (string.IsNullOrWhiteSpace(pattern)) return provider != TicketLinkProviderModel.Custom;
         try
         {
             var regex = new Regex(pattern, RegexOptions.CultureInvariant, CustomPatternTimeout);
@@ -78,6 +80,7 @@ public static partial class TicketLinkResolver
             TicketLinkProviderModel.GitHub => $"{baseUrl}/issues/{Uri.EscapeDataString(match.Groups["id"].Value)}",
             TicketLinkProviderModel.GitLab => $"{baseUrl}/-/issues/{Uri.EscapeDataString(match.Groups["id"].Value)}",
             TicketLinkProviderModel.AzureDevOps => $"{baseUrl}/_workitems/edit/{Uri.EscapeDataString(match.Groups["id"].Value)}",
+            TicketLinkProviderModel.Custom => $"{baseUrl}/{Uri.EscapeDataString(match.Groups["id"].Value)}",
             _ => throw new InvalidOperationException("A disabled ticket provider cannot create URLs.")
         };
     }
@@ -86,6 +89,11 @@ public static partial class TicketLinkResolver
     {
         if (string.IsNullOrWhiteSpace(settings.Pattern))
         {
+            if (settings.Provider == TicketLinkProviderModel.Custom)
+            {
+                pattern = EmptyPattern();
+                return false;
+            }
             pattern = DefaultPattern(settings.Provider);
             return true;
         }
@@ -134,5 +142,10 @@ public static partial class TicketLinkResolver
     {
         var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         return segments.Length >= minimum && segments.Length <= maximum;
+    }
+
+    private static bool IsCustomHost(Uri uri)
+    {
+        return !IPAddress.TryParse(uri.Host, out _) && !uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
     }
 }

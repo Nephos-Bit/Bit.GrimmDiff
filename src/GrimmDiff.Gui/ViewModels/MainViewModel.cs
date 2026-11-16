@@ -312,7 +312,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     }
 
     public string TicketLinkConfigurationHint => !HasValidTicketLinkBaseUrl
-        ? "Nur offizielle Anbieter-Hosts ohne Zugangsdaten, Port, Parameter oder Fragment sind zulässig."
+        ? SelectedTicketLinkProvider == TicketLinkProviderModel.Custom
+            ? "Custom benötigt eine HTTPS-URL ohne Zugangsdaten, abweichenden Port, Parameter oder Fragment."
+            : "Nur offizielle Anbieter-Hosts ohne Zugangsdaten, Port, Parameter oder Fragment sind zulässig."
         : !HasValidTicketLinkPattern
             ? "Das Muster muss eine benannte Gruppe (?<id>...) enthalten und ein gültiger regulärer Ausdruck sein."
         : SelectedTicketLinkProvider switch
@@ -322,13 +324,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             TicketLinkProviderModel.GitHub => "Basis-URL des GitHub-Projekts, z. B. https://github.com/org/repository",
             TicketLinkProviderModel.GitLab => "Basis-URL des GitLab-Projekts, z. B. https://gitlab.com/gruppe/projekt",
             TicketLinkProviderModel.AzureDevOps => "Basis-URL des Azure-DevOps-Projekts, z. B. https://dev.azure.com/organisation/projekt",
+            TicketLinkProviderModel.Custom => "Frei wählbare HTTPS-Basis-URL, auch mit internem Hostnamen; die erkannte id wird daran angehängt.",
             _ => string.Empty
         };
 
     public bool HasValidTicketLinkBaseUrl => SelectedTicketLinkProvider == TicketLinkProviderModel.Disabled ||
                                              TicketLinkResolver.IsValidBaseUrl(SelectedTicketLinkProvider, TicketLinkBaseUrl);
 
-    public bool HasValidTicketLinkPattern => TicketLinkResolver.IsValidPattern(TicketLinkPattern);
+    public bool HasValidTicketLinkPattern => TicketLinkResolver.IsValidPattern(SelectedTicketLinkProvider, TicketLinkPattern);
 
     public bool IsAnalyzing
     {

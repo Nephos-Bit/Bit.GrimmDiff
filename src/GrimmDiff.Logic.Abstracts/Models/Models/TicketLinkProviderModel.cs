@@ -6,5 +6,6 @@ public enum TicketLinkProviderModel
     Jira,
     GitHub,
     GitLab,
-    AzureDevOps
+    AzureDevOps,
+    Custom
 }

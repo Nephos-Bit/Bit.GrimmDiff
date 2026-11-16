@@ -100,8 +100,25 @@ Test("ticket links support safe custom patterns", () =>
     if (linked?.Url != "https://company.atlassian.net/browse/FEATURE-17")
         throw new Exception("Expected custom ticket pattern to use its id capture.");
     var invalid = TicketLinkResolver.Split("Implements FEATURE-17", settings with { Pattern = "FEATURE-\\d+" });
-    if (invalid[0] is not PlainCommitSubjectPartModel || TicketLinkResolver.IsValidPattern("FEATURE-\\d+"))
+    if (invalid[0] is not PlainCommitSubjectPartModel || TicketLinkResolver.IsValidPattern(TicketLinkProviderModel.Jira, "FEATURE-\\d+"))
         throw new Exception("Expected a custom pattern without id capture to stay plain.");
+    var bracketed = TicketLinkResolver.Split("Implements [abc-123]", settings with
+    {
+        Pattern = "\\[(?<id>[A-Za-z]+-\\d+)\\]"
+    }).OfType<TicketCommitSubjectPartModel>().SingleOrDefault();
+    if (bracketed?.Url != "https://company.atlassian.net/browse/abc-123")
+        throw new Exception("Expected bracketed ticket pattern to use its id capture.");
+});
+Test("custom ticket links allow a configured internal host", () =>
+{
+    var custom = new TicketLinkSettingsModel(TicketLinkProviderModel.Custom, "https://jira/browse",
+        "\\[(?<id>[A-Za-z]+-\\d+)\\]");
+    var linked = TicketLinkResolver.Split("Fixes [ABC-123]", custom).OfType<TicketCommitSubjectPartModel>().SingleOrDefault();
+    if (linked?.Url != "https://jira/browse/ABC-123")
+        throw new Exception("Expected custom provider to append the captured id.");
+    if (TicketLinkResolver.IsValidBaseUrl(TicketLinkProviderModel.Custom, "https://localhost/tickets") ||
+        TicketLinkResolver.IsValidPattern(TicketLinkProviderModel.Custom, null))
+        throw new Exception("Expected custom provider to reject local hosts and missing patterns.");
 });
 Test("settings pages use the shared base type", () =>
 {
