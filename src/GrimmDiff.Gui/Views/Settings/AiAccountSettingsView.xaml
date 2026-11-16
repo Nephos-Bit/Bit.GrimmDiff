@@ -1,12 +1,12 @@
 <UserControl x:Class="GrimmDiff.Gui.AiAccountSettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Margin="48">
-        <TextBlock Text="KI-KONTO" FontSize="20" Margin="0,0,0,24" />
-        <TextBlock Text="STATUS" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <TextBlock Text="{Binding Text[Account]}" FontSize="20" Margin="0,0,0,24" />
+        <TextBlock Text="{Binding Text[Status]}" Foreground="{DynamicResource Secondary}" FontSize="12" />
         <TextBlock Text="{Binding StatusText}" Margin="0,8,0,4" />
         <TextBlock Text="{Binding AccountText}" Foreground="{DynamicResource Secondary}" Margin="0,0,0,16" />
-        <Button Content="Mit ChatGPT anmelden" Command="{Binding LoginCommand}" HorizontalAlignment="Left" Margin="0,0,0,24" />
-        <TextBlock Text="WÖCHENTLICHES RESTKONTINGENT" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <Button Content="{Binding Text[SignInWithChatGpt]}" Command="{Binding LoginCommand}" HorizontalAlignment="Left" Margin="0,0,0,24" />
+        <TextBlock Text="{Binding Text[WeeklyRemainingQuota]}" Foreground="{DynamicResource Secondary}" FontSize="12" />
         <TextBlock Text="{Binding WeeklyQuotaText}" ToolTip="{Binding WeeklyQuotaToolTip}" Margin="0,8,0,0" FontSize="20" />
     </StackPanel>
 </UserControl>

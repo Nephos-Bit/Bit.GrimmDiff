@@ -12,7 +12,7 @@ public static class ThemeService
                                          Registry.GetValue(
                                              @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
                                              "AppsUseLightTheme", 0) is int value && value != 0);
-        Set("Background", light ? "#F6F6F6" : "#080808");
+        Set("Background", light ? "#F6F6F6" : "#1D1D1D");
         Set("Surface", light ? "#FFFFFF" : "#101010");
         Set("SurfaceRaised", light ? "#EBEBEB" : "#141414");
         Set("Primary", light ? "#171717" : "#ECECEC");

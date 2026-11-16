@@ -18,7 +18,7 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
 ```css
 :root,
 [data-theme="dark"] {
-  --color-background: #080808;
+  --color-background: #1D1D1D;
   --color-surface: #101010;
   --color-surface-raised: #141414;
   --color-text-primary: #ECECEC;

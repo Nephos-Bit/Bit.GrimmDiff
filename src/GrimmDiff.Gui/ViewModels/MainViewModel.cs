@@ -313,18 +313,24 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public string TicketLinkConfigurationHint => !HasValidTicketLinkBaseUrl
         ? SelectedTicketLinkProvider == TicketLinkProviderModel.Custom
-            ? "Custom benötigt eine HTTPS-URL ohne Zugangsdaten, abweichenden Port, Parameter oder Fragment."
-            : "Nur offizielle Anbieter-Hosts ohne Zugangsdaten, Port, Parameter oder Fragment sind zulässig."
+            ? SelectedLanguage == "Deutsch"
+                ? "Custom benötigt eine HTTPS-URL ohne Zugangsdaten, abweichenden Port, Parameter oder Fragment."
+                : "Custom requires an HTTPS URL without credentials, a non-standard port, query parameters, or a fragment."
+            : SelectedLanguage == "Deutsch"
+                ? "Nur offizielle Anbieter-Hosts ohne Zugangsdaten, Port, Parameter oder Fragment sind zulässig."
+                : "Only official provider hosts without credentials, a port, query parameters, or a fragment are allowed."
         : !HasValidTicketLinkPattern
-            ? "Das Muster muss eine benannte Gruppe (?<id>...) enthalten und ein gültiger regulärer Ausdruck sein."
+            ? SelectedLanguage == "Deutsch"
+                ? "Das Muster muss eine benannte Gruppe (?<id>...) enthalten und ein gültiger regulärer Ausdruck sein."
+                : "The pattern must contain a named (?<id>...) group and be a valid regular expression."
         : SelectedTicketLinkProvider switch
         {
-            TicketLinkProviderModel.Disabled => "Ticket-Verlinkung ist deaktiviert.",
-            TicketLinkProviderModel.Jira => "Basis-URL der Jira-Instanz, z. B. https://firma.atlassian.net",
-            TicketLinkProviderModel.GitHub => "Basis-URL des GitHub-Projekts, z. B. https://github.com/org/repository",
-            TicketLinkProviderModel.GitLab => "Basis-URL des GitLab-Projekts, z. B. https://gitlab.com/gruppe/projekt",
-            TicketLinkProviderModel.AzureDevOps => "Basis-URL des Azure-DevOps-Projekts, z. B. https://dev.azure.com/organisation/projekt",
-            TicketLinkProviderModel.Custom => "Frei wählbare HTTPS-Basis-URL, auch mit internem Hostnamen; die erkannte id wird daran angehängt.",
+            TicketLinkProviderModel.Disabled => SelectedLanguage == "Deutsch" ? "Ticket-Verlinkung ist deaktiviert." : "Ticket linking is disabled.",
+            TicketLinkProviderModel.Jira => SelectedLanguage == "Deutsch" ? "Basis-URL der Jira-Instanz, z. B. https://firma.atlassian.net" : "Base URL of the Jira instance, for example https://company.atlassian.net",
+            TicketLinkProviderModel.GitHub => SelectedLanguage == "Deutsch" ? "Basis-URL des GitHub-Projekts, z. B. https://github.com/org/repository" : "Base URL of the GitHub project, for example https://github.com/org/repository",
+            TicketLinkProviderModel.GitLab => SelectedLanguage == "Deutsch" ? "Basis-URL des GitLab-Projekts, z. B. https://gitlab.com/gruppe/projekt" : "Base URL of the GitLab project, for example https://gitlab.com/group/project",
+            TicketLinkProviderModel.AzureDevOps => SelectedLanguage == "Deutsch" ? "Basis-URL des Azure-DevOps-Projekts, z. B. https://dev.azure.com/organisation/projekt" : "Base URL of the Azure DevOps project, for example https://dev.azure.com/organization/project",
+            TicketLinkProviderModel.Custom => SelectedLanguage == "Deutsch" ? "Frei wählbare HTTPS-Basis-URL, auch mit internem Hostnamen; die erkannte id wird daran angehängt." : "Custom HTTPS base URL, including an internal host name; the detected id is appended to it.",
             _ => string.Empty
         };
 
@@ -385,6 +391,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 OnPropertyChanged(nameof(CodexAccountText));
                 OnPropertyChanged(nameof(WeeklyQuotaText));
                 OnPropertyChanged(nameof(WeeklyQuotaToolTip));
+                OnPropertyChanged(nameof(TicketLinkConfigurationHint));
                 OnPropertyChanged(nameof(BranchToolTip));
                 OnPropertyChanged(nameof(PullToolTip));
                 SavePreferences();

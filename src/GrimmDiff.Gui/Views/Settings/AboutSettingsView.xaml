@@ -1,10 +1,10 @@
 <UserControl x:Class="GrimmDiff.Gui.AboutSettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Margin="48">
-        <TextBlock Text="UPDATES &amp; INFO" FontSize="20" Margin="0,0,0,24" />
-        <TextBlock Text="VERSION" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <TextBlock Text="{Binding Text[UpdatesAndInfo]}" FontSize="20" Margin="0,0,0,24" />
+        <TextBlock Text="{Binding Text[Version]}" Foreground="{DynamicResource Secondary}" FontSize="12" />
         <TextBlock Text="{Binding ApplicationVersion, StringFormat=v{0}}" Margin="0,8,0,24" />
-        <Button Content="Nach Updates suchen" Command="{Binding CheckForUpdatesCommand}" HorizontalAlignment="Left" Margin="0,0,0,16" />
-        <Button Content="Projekt auf GitHub" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/Nephos-Bit/Bit.GrimmDiff" HorizontalAlignment="Left" />
+        <Button Content="{Binding Text[CheckForUpdates]}" Command="{Binding CheckForUpdatesCommand}" HorizontalAlignment="Left" Margin="0,0,0,16" />
+        <Button Content="{Binding Text[ProjectOnGitHub]}" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/Nephos-Bit/Bit.GrimmDiff" HorizontalAlignment="Left" />
     </StackPanel>
 </UserControl>

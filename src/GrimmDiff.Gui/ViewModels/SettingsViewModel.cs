@@ -13,11 +13,12 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             new AppearanceSettingsViewModel(main),
             new AiAccountSettingsViewModel(main),
             new AiPrivacySettingsViewModel(main),
+            new AiPromptSettingsViewModel(main),
             new TicketLinksSettingsViewModel(main),
             new AboutSettingsViewModel(main)
         };
         Groups = pages.GroupBy(page => page.Group)
-            .Select(group => new SettingsGroupViewModel(group.Key, group.OrderBy(page => page.Order).ToList()))
+            .Select(group => new SettingsGroupViewModel(group.OrderBy(page => page.Order).ToList()))
             .ToList();
         _selectedPage = pages[0];
         _selectedPage.IsSelected = true;

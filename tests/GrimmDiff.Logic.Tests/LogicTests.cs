@@ -124,7 +124,7 @@ Test("settings pages use the shared base type", () =>
 {
     var pageTypes = new[]
     {
-        typeof(AppearanceSettingsViewModel), typeof(AiAccountSettingsViewModel), typeof(AiPrivacySettingsViewModel),
+        typeof(AppearanceSettingsViewModel), typeof(AiAccountSettingsViewModel), typeof(AiPrivacySettingsViewModel), typeof(AiPromptSettingsViewModel),
         typeof(TicketLinksSettingsViewModel), typeof(AboutSettingsViewModel)
     };
     if (pageTypes.Any(type => !type.IsSubclassOf(typeof(SettingsPageViewModelBase))))

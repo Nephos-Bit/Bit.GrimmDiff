@@ -3,7 +3,7 @@ using GrimmDiff.Logic.Abstracts;
 namespace GrimmDiff.Gui;
 
 public sealed class TicketLinksSettingsViewModel(MainViewModel main) :
-    SettingsPageViewModelBase(main, "ticket-links", "Integrationen", "Ticket-Verlinkung", 0)
+    SettingsPageViewModelBase(main, "ticket-links", "Integrations", "TicketLinks", 0)
 {
     public IReadOnlyList<TicketLinkProviderModel> Providers => Main.TicketLinkProviders;
     public string ConfigurationHint => Main.TicketLinkConfigurationHint;

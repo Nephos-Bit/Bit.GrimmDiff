@@ -1,7 +1,7 @@
 namespace GrimmDiff.Gui;
 
 public sealed class AppearanceSettingsViewModel(MainViewModel main) :
-    SettingsPageViewModelBase(main, "appearance", "Allgemein", "Darstellung", 0)
+    SettingsPageViewModelBase(main, "appearance", "General", "Appearance", 0)
 {
     public IReadOnlyList<string> Languages => Main.Languages;
     public IReadOnlyList<string> Themes => Main.Themes;

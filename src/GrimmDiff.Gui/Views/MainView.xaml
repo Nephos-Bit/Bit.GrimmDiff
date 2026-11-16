@@ -19,6 +19,9 @@
                         <Ellipse Width="8" Height="8" Fill="{Binding CodexStatusBrush}" VerticalAlignment="Center"
                                  Margin="0,0,8,0" />
                         <TextBlock Text="{Binding CodexAccountText}" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding WeeklyQuotaText}" ToolTip="{Binding WeeklyQuotaToolTip}"
+                                   Foreground="{DynamicResource Secondary}" FontSize="12" VerticalAlignment="Center"
+                                   Margin="8,0,0,0" />
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource IconButton}" Command="{Binding OpenSettingsCommand}"

@@ -1,7 +1,7 @@
 namespace GrimmDiff.Gui;
 
 public sealed class AiAccountSettingsViewModel(MainViewModel main) :
-    SettingsPageViewModelBase(main, "ai-account", "KI", "Konto", 0)
+    SettingsPageViewModelBase(main, "ai-account", "Ai", "Account", 0)
 {
     public string StatusText => Main.CodexStatusText;
     public string AccountText => Main.CodexAccountText;
