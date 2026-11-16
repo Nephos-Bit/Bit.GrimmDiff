@@ -1,0 +1,11 @@
+<UserControl x:Class="GrimmDiff.Gui.AiPrivacySettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="48">
+        <TextBlock Text="DATENSCHUTZ &amp; FREIGABEN" FontSize="20" Margin="0,0,0,24" />
+        <TextBlock Text="KI-RISIKOHINWEIS" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <Button Content="Risikohinweis anzeigen" Command="{Binding ShowRiskNoticeCommand}" HorizontalAlignment="Left" Margin="0,8,0,24" />
+        <TextBlock Text="REPOSITORY-FREIGABE" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <TextBlock Text="Die Freigabe gilt nur für das aktuell geöffnete Repository." Foreground="{DynamicResource Secondary}" Margin="0,8,0,8" />
+        <Button Content="KI-Freigabe widerrufen" Command="{Binding RevokeApprovalCommand}" HorizontalAlignment="Left" Foreground="{DynamicResource Critical}" />
+    </StackPanel>
+</UserControl>

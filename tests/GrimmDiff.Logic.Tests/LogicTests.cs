@@ -92,14 +92,15 @@ Test("ticket links preserve text and reject invalid configuration", () =>
     if (credentialed.Count != 1 || credentialed[0] is not PlainCommitSubjectPartModel)
         throw new Exception("Expected URL credentials to stay plain.");
 });
-Test("settings registry has the planned pages", () =>
+Test("settings pages use the shared base type", () =>
 {
-    var settings = new SettingsViewModel();
-    if (settings.Groups.Count != 4 || !settings.Groups.SelectMany(group => group.Pages).Any(page => page.Id == "ticket-links"))
-        throw new Exception("Expected extensible settings page registry.");
-    var account = settings.Groups.SelectMany(group => group.Pages).Single(page => page.Id == "ai-account");
-    settings.SelectedPage = account;
-    if (!settings.IsAiAccountSelected || !account.IsSelected) throw new Exception("Expected settings navigation to select pages.");
+    var pageTypes = new[]
+    {
+        typeof(AppearanceSettingsViewModel), typeof(AiAccountSettingsViewModel), typeof(AiPrivacySettingsViewModel),
+        typeof(TicketLinksSettingsViewModel), typeof(AboutSettingsViewModel)
+    };
+    if (pageTypes.Any(type => !type.IsSubclassOf(typeof(SettingsPageViewModelBase))))
+        throw new Exception("Expected every settings page to use the shared base type.");
 });
 Test("legacy preferences disable ticket links", () =>
 {

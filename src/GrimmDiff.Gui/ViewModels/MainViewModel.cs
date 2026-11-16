@@ -89,19 +89,20 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         CheckForUpdatesCommand = new AsyncCommand(CheckForUpdatesManuallyAsync);
         OpenBranchMenuCommand = new DelegateCommand<object>(_ => IsBranchMenuOpen = true);
         ToggleRepositoryPanelCommand = new DelegateCommand<object>(_ => IsRepositoryPanelExpanded = !IsRepositoryPanelExpanded);
+        BackToWorkspaceCommand = new DelegateCommand<object>(_ => IsSettingsOpen = false);
+        Settings = new SettingsViewModel(this);
         OpenSettingsCommand = new DelegateCommand<object>(_ =>
         {
             Settings.OpenDefault();
             IsSettingsOpen = true;
         });
-        BackToWorkspaceCommand = new DelegateCommand<object>(_ => IsSettingsOpen = false);
     }
 
     public BulkObservableCollectionModel<RecentRepositoryItemModel> RecentRepositories { get; } = [];
     public BulkObservableCollectionModel<CommitHistoryItemModel> History { get; } = [];
     public BulkObservableCollectionModel<AnalysisGroupViewModel> Groups { get; } = [];
     public BulkObservableCollectionModel<BranchInfoModel> Branches { get; } = [];
-    public SettingsViewModel Settings { get; } = new();
+    public SettingsViewModel Settings { get; }
     public string ApplicationVersion => typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
     public DiffRenderDocumentModel? DisplayedDiff

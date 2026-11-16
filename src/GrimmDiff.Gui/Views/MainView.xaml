@@ -451,129 +451,14 @@
             <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" Foreground="{DynamicResource Secondary}"
                        Margin="0 5 0 0" />
         </Grid>
-            <Grid>
-                <Grid.Style>
-                    <Style TargetType="Grid">
+            <local:SettingsView DataContext="{Binding Settings}">
+                <local:SettingsView.Style>
+                    <Style TargetType="local:SettingsView">
                         <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSettingsOpen}" Value="True">
-                                <Setter Property="Visibility" Value="Visible" />
-                            </DataTrigger>
-                        </Style.Triggers>
+                        <Style.Triggers><DataTrigger Binding="{Binding IsSettingsOpen}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
                     </Style>
-                </Grid.Style>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="44" />
-                    <ColumnDefinition Width="260" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0">
-                    <Button Style="{StaticResource IconButton}" Command="{Binding BackToWorkspaceCommand}"
-                            ToolTip="Zurück" AutomationProperties.Name="Zurück">
-                        <Path Width="16" Height="16" Stretch="Uniform" Data="M15,4 L7,12 L15,20"
-                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                              StrokeThickness="1.5" Fill="Transparent" StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
-                    </Button>
-                </Border>
-                <Border Grid.Column="1" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0" Padding="16">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                        <ItemsControl ItemsSource="{Binding Settings.Groups}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="0,0,0,24">
-                                        <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Secondary}"
-                                                   FontSize="12" Margin="0,0,0,8" />
-                                        <ItemsControl ItemsSource="{Binding Pages}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Button Command="{Binding DataContext.Settings.SelectPageCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}" HorizontalContentAlignment="Left" Padding="8,6">
-                                                        <Button.Style>
-                                                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                                                <Setter Property="Foreground" Value="{DynamicResource Secondary}" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                        <Setter Property="Foreground" Value="{DynamicResource Active}" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Button.Style>
-                                                        <TextBlock Text="{Binding Title}" />
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Border>
-                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <Grid Margin="48">
-                        <StackPanel>
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers><DataTrigger Binding="{Binding Settings.IsAppearanceSelected}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="DARSTELLUNG" FontSize="20" Margin="0,0,0,24" />
-                                <TextBlock Text="SPRACHE" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}" Margin="0,8,0,24" Width="260" HorizontalAlignment="Left" />
-                                <TextBlock Text="THEME" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}" Margin="0,8,0,24" Width="260" HorizontalAlignment="Left" />
-                                <TextBlock Text="SCHRIFT" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <ComboBox ItemsSource="{Binding Fonts}" SelectedItem="{Binding SelectedFont}" Margin="0,8,0,0" Width="260" HorizontalAlignment="Left" />
-                            </StackPanel>
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Settings.IsAiAccountSelected}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="KI-KONTO" FontSize="20" Margin="0,0,0,24" />
-                                <TextBlock Text="STATUS" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <TextBlock Text="{Binding CodexStatusText}" Margin="0,8,0,16" />
-                                <Button Content="Mit ChatGPT anmelden" Command="{Binding LoginToCodexCommand}" HorizontalAlignment="Left" Margin="0,0,0,24" />
-                                <TextBlock Text="WÖCHENTLICHES RESTKONTINGENT" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <TextBlock Text="{Binding WeeklyQuotaText}" ToolTip="{Binding WeeklyQuotaToolTip}" Margin="0,8,0,0" FontSize="20" />
-                            </StackPanel>
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Settings.IsAiPrivacySelected}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="DATENSCHUTZ &amp; FREIGABEN" FontSize="20" Margin="0,0,0,24" />
-                                <TextBlock Text="KI-RISIKOHINWEIS" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <Button Content="Risikohinweis anzeigen" Command="{Binding ShowAiRiskNoticeCommand}" HorizontalAlignment="Left" Margin="0,8,0,24" />
-                                <TextBlock Text="REPOSITORY-FREIGABE" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <TextBlock Text="Die Freigabe gilt nur für das aktuell geöffnete Repository." Foreground="{DynamicResource Secondary}" Margin="0,8,0,8" />
-                                <Button Content="KI-Freigabe widerrufen" Command="{Binding RevokeAiApprovalCommand}" HorizontalAlignment="Left" Foreground="{DynamicResource Critical}" />
-                            </StackPanel>
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Settings.IsTicketLinksSelected}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="TICKET-VERLINKUNG" FontSize="20" Margin="0,0,0,24" />
-                                <TextBlock Text="ANBIETER" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <ComboBox ItemsSource="{Binding TicketLinkProviders}" SelectedItem="{Binding SelectedTicketLinkProvider}" Margin="0,8,0,24" Width="260" HorizontalAlignment="Left" />
-                                <TextBlock Text="BASIS-URL" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <TextBox Text="{Binding TicketLinkBaseUrl, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,8" Width="520" HorizontalAlignment="Left" />
-                                <TextBlock Text="{Binding TicketLinkConfigurationHint}" Foreground="{DynamicResource Secondary}" TextWrapping="Wrap" MaxWidth="520" />
-                            </StackPanel>
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding Settings.IsAboutSelected}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style>
-                                </StackPanel.Style>
-                                <TextBlock Text="UPDATES &amp; INFO" FontSize="20" Margin="0,0,0,24" />
-                                <TextBlock Text="VERSION" Foreground="{DynamicResource Secondary}" FontSize="12" />
-                                <TextBlock Text="{Binding ApplicationVersion, StringFormat=v{0}}" Margin="0,8,0,24" />
-                                <Button Content="Nach Updates suchen" Command="{Binding CheckForUpdatesCommand}" HorizontalAlignment="Left" Margin="0,0,0,16" />
-                                <Button Content="Projekt auf GitHub" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/Nephos-Bit/Bit.GrimmDiff" HorizontalAlignment="Left" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Grid>
-                </ScrollViewer>
-            </Grid>
+                </local:SettingsView.Style>
+            </local:SettingsView>
     </Grid>
     </Grid>
 </Window>

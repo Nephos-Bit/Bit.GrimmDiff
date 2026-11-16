@@ -1,0 +1,12 @@
+<UserControl x:Class="GrimmDiff.Gui.AppearanceSettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="48">
+        <TextBlock Text="DARSTELLUNG" FontSize="20" Margin="0,0,0,24" />
+        <TextBlock Text="SPRACHE" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}" Margin="0,8,0,24" Width="260" HorizontalAlignment="Left" />
+        <TextBlock Text="THEME" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}" Margin="0,8,0,24" Width="260" HorizontalAlignment="Left" />
+        <TextBlock Text="SCHRIFT" Foreground="{DynamicResource Secondary}" FontSize="12" />
+        <ComboBox ItemsSource="{Binding Fonts}" SelectedItem="{Binding SelectedFont}" Margin="0,8,0,0" Width="260" HorizontalAlignment="Left" />
+    </StackPanel>
+</UserControl>
