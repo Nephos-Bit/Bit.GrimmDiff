@@ -92,6 +92,17 @@ Test("ticket links preserve text and reject invalid configuration", () =>
     if (credentialed.Count != 1 || credentialed[0] is not PlainCommitSubjectPartModel)
         throw new Exception("Expected URL credentials to stay plain.");
 });
+Test("ticket links support safe custom patterns", () =>
+{
+    var settings = new TicketLinkSettingsModel(TicketLinkProviderModel.Jira, "https://company.atlassian.net",
+        "(?<id>FEATURE-\\d+)");
+    var linked = TicketLinkResolver.Split("Implements FEATURE-17", settings).OfType<TicketCommitSubjectPartModel>().SingleOrDefault();
+    if (linked?.Url != "https://company.atlassian.net/browse/FEATURE-17")
+        throw new Exception("Expected custom ticket pattern to use its id capture.");
+    var invalid = TicketLinkResolver.Split("Implements FEATURE-17", settings with { Pattern = "FEATURE-\\d+" });
+    if (invalid[0] is not PlainCommitSubjectPartModel || TicketLinkResolver.IsValidPattern("FEATURE-\\d+"))
+        throw new Exception("Expected a custom pattern without id capture to stay plain.");
+});
 Test("settings pages use the shared base type", () =>
 {
     var pageTypes = new[]

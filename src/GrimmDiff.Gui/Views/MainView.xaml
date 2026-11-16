@@ -455,7 +455,7 @@
                 <local:SettingsView.Style>
                     <Style TargetType="local:SettingsView">
                         <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers><DataTrigger Binding="{Binding IsSettingsOpen}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                        <Style.Triggers><DataTrigger Binding="{Binding DataContext.IsSettingsOpen, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
                     </Style>
                 </local:SettingsView.Style>
             </local:SettingsView>

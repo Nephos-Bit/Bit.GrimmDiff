@@ -5,12 +5,23 @@ namespace GrimmDiff.Gui;
 
 public static partial class TicketLinkResolver
 {
+    private static readonly TimeSpan CustomPatternTimeout = TimeSpan.FromMilliseconds(100);
+
     public static IReadOnlyList<CommitSubjectPartModel> Split(string subject, TicketLinkSettingsModel settings)
     {
         if (!TryGetBaseUri(settings, out var baseUri) || settings.Provider == TicketLinkProviderModel.Disabled)
             return [new PlainCommitSubjectPartModel(subject)];
 
-        var matches = Pattern(settings.Provider).Matches(subject);
+        if (!TryGetPattern(settings, out var pattern)) return [new PlainCommitSubjectPartModel(subject)];
+        MatchCollection matches;
+        try
+        {
+            matches = pattern.Matches(subject);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return [new PlainCommitSubjectPartModel(subject)];
+        }
         if (matches.Count == 0) return [new PlainCommitSubjectPartModel(subject)];
 
         var parts = new List<CommitSubjectPartModel>();
@@ -44,29 +55,60 @@ public static partial class TicketLinkResolver
         };
     }
 
+    public static bool IsValidPattern(string? pattern)
+    {
+        if (string.IsNullOrWhiteSpace(pattern)) return true;
+        try
+        {
+            var regex = new Regex(pattern, RegexOptions.CultureInvariant, CustomPatternTimeout);
+            return regex.GetGroupNames().Contains("id", StringComparer.Ordinal);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
     private static string BuildUrl(Uri baseUri, TicketLinkProviderModel provider, Match match)
     {
         var baseUrl = baseUri.AbsoluteUri.TrimEnd('/');
         return provider switch
         {
-            TicketLinkProviderModel.Jira => $"{baseUrl}/browse/{Uri.EscapeDataString(match.Groups["key"].Value)}",
-            TicketLinkProviderModel.GitHub => $"{baseUrl}/issues/{match.Groups["number"].Value}",
-            TicketLinkProviderModel.GitLab => $"{baseUrl}/-/issues/{match.Groups["number"].Value}",
-            TicketLinkProviderModel.AzureDevOps => $"{baseUrl}/_workitems/edit/{match.Groups["number"].Value}",
+            TicketLinkProviderModel.Jira => $"{baseUrl}/browse/{Uri.EscapeDataString(match.Groups["id"].Value)}",
+            TicketLinkProviderModel.GitHub => $"{baseUrl}/issues/{Uri.EscapeDataString(match.Groups["id"].Value)}",
+            TicketLinkProviderModel.GitLab => $"{baseUrl}/-/issues/{Uri.EscapeDataString(match.Groups["id"].Value)}",
+            TicketLinkProviderModel.AzureDevOps => $"{baseUrl}/_workitems/edit/{Uri.EscapeDataString(match.Groups["id"].Value)}",
             _ => throw new InvalidOperationException("A disabled ticket provider cannot create URLs.")
         };
     }
 
-    private static Regex Pattern(TicketLinkProviderModel provider)
+    private static bool TryGetPattern(TicketLinkSettingsModel settings, out Regex pattern)
     {
-        return provider switch
+        if (string.IsNullOrWhiteSpace(settings.Pattern))
         {
-            TicketLinkProviderModel.Jira => JiraPattern(),
-            TicketLinkProviderModel.GitHub or TicketLinkProviderModel.GitLab => NumberPattern(),
-            TicketLinkProviderModel.AzureDevOps => AzureDevOpsPattern(),
-            _ => EmptyPattern()
-        };
+            pattern = DefaultPattern(settings.Provider);
+            return true;
+        }
+
+        try
+        {
+            pattern = new Regex(settings.Pattern, RegexOptions.CultureInvariant, CustomPatternTimeout);
+            return pattern.GetGroupNames().Contains("id", StringComparer.Ordinal);
+        }
+        catch (ArgumentException)
+        {
+            pattern = EmptyPattern();
+            return false;
+        }
     }
+
+    private static Regex DefaultPattern(TicketLinkProviderModel provider) => provider switch
+    {
+        TicketLinkProviderModel.Jira => JiraPattern(),
+        TicketLinkProviderModel.GitHub or TicketLinkProviderModel.GitLab => NumberPattern(),
+        TicketLinkProviderModel.AzureDevOps => AzureDevOpsPattern(),
+        _ => EmptyPattern()
+    };
 
     private static bool TryGetBaseUri(TicketLinkSettingsModel settings, out Uri baseUri)
     {
@@ -76,13 +118,13 @@ public static partial class TicketLinkResolver
         return false;
     }
 
-    [GeneratedRegex("(?<![A-Za-z0-9])(?<key>[A-Za-z][A-Za-z0-9]*-\\d+)(?![A-Za-z0-9])")]
+    [GeneratedRegex("(?<![A-Za-z0-9])(?<id>[A-Za-z][A-Za-z0-9]*-\\d+)(?![A-Za-z0-9])")]
     private static partial Regex JiraPattern();
 
-    [GeneratedRegex("(?<![A-Za-z0-9_#])#(?<number>\\d+)\\b")]
+    [GeneratedRegex("(?<![A-Za-z0-9_#])#(?<id>\\d+)\\b")]
     private static partial Regex NumberPattern();
 
-    [GeneratedRegex("(?<![A-Za-z0-9])AB#(?<number>\\d+)\\b", RegexOptions.IgnoreCase)]
+    [GeneratedRegex("(?<![A-Za-z0-9])AB#(?<id>\\d+)\\b", RegexOptions.IgnoreCase)]
     private static partial Regex AzureDevOpsPattern();
 
     [GeneratedRegex("(?!)")]

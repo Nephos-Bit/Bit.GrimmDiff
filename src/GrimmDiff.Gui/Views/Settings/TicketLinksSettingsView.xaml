@@ -6,6 +6,10 @@
         <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}" Margin="0,8,0,24" Width="260" HorizontalAlignment="Left" />
         <TextBlock Text="BASIS-URL" Foreground="{DynamicResource Secondary}" FontSize="12" />
         <TextBox Text="{Binding BaseUrl, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,8" Width="520" HorizontalAlignment="Left" />
+        <TextBlock Text="ERKENNUNGSMUSTER" Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,16,0,0" />
+        <TextBox Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,8" Width="520" HorizontalAlignment="Left" />
+        <TextBlock Text="Optional. Leere Eingabe nutzt das Standardmuster; ein eigenes Muster benötigt die Gruppe (?&lt;id&gt;...)."
+                   Foreground="{DynamicResource Secondary}" TextWrapping="Wrap" MaxWidth="520" />
         <TextBlock Text="{Binding ConfigurationHint}" Foreground="{DynamicResource Secondary}" TextWrapping="Wrap" MaxWidth="520" />
     </StackPanel>
 </UserControl>

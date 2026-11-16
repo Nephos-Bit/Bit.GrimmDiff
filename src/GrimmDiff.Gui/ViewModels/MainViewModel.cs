@@ -295,8 +295,26 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public string TicketLinkPattern
+    {
+        get => _ticketLinkSettings.Pattern ?? string.Empty;
+        set
+        {
+            var normalized = value.Trim();
+            if (string.Equals(_ticketLinkSettings.Pattern, normalized, StringComparison.Ordinal)) return;
+            _ticketLinkSettings = _ticketLinkSettings with { Pattern = string.IsNullOrWhiteSpace(normalized) ? null : normalized };
+            OnPropertyChanged(nameof(TicketLinkPattern));
+            OnPropertyChanged(nameof(TicketLinkConfigurationHint));
+            OnPropertyChanged(nameof(HasValidTicketLinkPattern));
+            RefreshHistoryTicketLinks();
+            SavePreferences();
+        }
+    }
+
     public string TicketLinkConfigurationHint => !HasValidTicketLinkBaseUrl
         ? "Nur offizielle Anbieter-Hosts ohne Zugangsdaten, Port, Parameter oder Fragment sind zulässig."
+        : !HasValidTicketLinkPattern
+            ? "Das Muster muss eine benannte Gruppe (?<id>...) enthalten und ein gültiger regulärer Ausdruck sein."
         : SelectedTicketLinkProvider switch
         {
             TicketLinkProviderModel.Disabled => "Ticket-Verlinkung ist deaktiviert.",
@@ -309,6 +327,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public bool HasValidTicketLinkBaseUrl => SelectedTicketLinkProvider == TicketLinkProviderModel.Disabled ||
                                              TicketLinkResolver.IsValidBaseUrl(SelectedTicketLinkProvider, TicketLinkBaseUrl);
+
+    public bool HasValidTicketLinkPattern => TicketLinkResolver.IsValidPattern(TicketLinkPattern);
 
     public bool IsAnalyzing
     {
@@ -575,6 +595,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(SelectedFont));
         OnPropertyChanged(nameof(SelectedTicketLinkProvider));
         OnPropertyChanged(nameof(TicketLinkBaseUrl));
+        OnPropertyChanged(nameof(TicketLinkPattern));
         OnPropertyChanged(nameof(TicketLinkConfigurationHint));
         if (!_aiRiskNoticeAccepted && !await ShowAiRiskNoticeAsync())
         {

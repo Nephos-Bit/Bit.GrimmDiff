@@ -8,6 +8,12 @@ public sealed class TicketLinksSettingsViewModel(MainViewModel main) :
     public IReadOnlyList<TicketLinkProviderModel> Providers => Main.TicketLinkProviders;
     public string ConfigurationHint => Main.TicketLinkConfigurationHint;
 
+    public string Pattern
+    {
+        get => Main.TicketLinkPattern;
+        set => Main.TicketLinkPattern = value;
+    }
+
     public TicketLinkProviderModel SelectedProvider
     {
         get => Main.SelectedTicketLinkProvider;
