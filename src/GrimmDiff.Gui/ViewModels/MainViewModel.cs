@@ -38,6 +38,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private string? _lastShownReleaseNotesVersion;
     private bool _loading, _isAnalyzing, _isAnalysisStale, _isRepositoryOperation;
     private bool _isBranchMenuOpen;
+    private bool _isSettingsOpen;
     private bool _isRepositoryPanelExpanded = true;
     private GridLength _repositoryPanelColumnWidth = new(300);
     private GridLength _repositoryPanelExpandedWidth = new(300);
@@ -53,6 +54,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private AnalysisFileViewModel? _selectedFile;
     private string? _selectedRecent;
     private int? _weeklyRemainingPercent;
+    private TicketLinkSettingsModel _ticketLinkSettings = TicketLinkSettingsModel.Disabled;
 
     public MainViewModel(RepositoryWorkspaceService workspace, DiffAnalysisService analysis, CodexSessionService codex,
         PreferencesService preferences, IUserDialogService dialogs, IExternalNavigationService navigation,
@@ -87,12 +89,19 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         CheckForUpdatesCommand = new AsyncCommand(CheckForUpdatesManuallyAsync);
         OpenBranchMenuCommand = new DelegateCommand<object>(_ => IsBranchMenuOpen = true);
         ToggleRepositoryPanelCommand = new DelegateCommand<object>(_ => IsRepositoryPanelExpanded = !IsRepositoryPanelExpanded);
+        OpenSettingsCommand = new DelegateCommand<object>(_ =>
+        {
+            Settings.OpenDefault();
+            IsSettingsOpen = true;
+        });
+        BackToWorkspaceCommand = new DelegateCommand<object>(_ => IsSettingsOpen = false);
     }
 
     public BulkObservableCollectionModel<RecentRepositoryItemModel> RecentRepositories { get; } = [];
     public BulkObservableCollectionModel<CommitHistoryItemModel> History { get; } = [];
     public BulkObservableCollectionModel<AnalysisGroupViewModel> Groups { get; } = [];
     public BulkObservableCollectionModel<BranchInfoModel> Branches { get; } = [];
+    public SettingsViewModel Settings { get; } = new();
     public string ApplicationVersion => typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
     public DiffRenderDocumentModel? DisplayedDiff
@@ -113,6 +122,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public IReadOnlyList<string> Languages { get; } = ["English", "Deutsch"];
     public IReadOnlyList<string> Themes { get; } = ["System", "Dark", "Light"];
     public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Inter", "Verdana"];
+    public IReadOnlyList<TicketLinkProviderModel> TicketLinkProviders { get; } = Enum.GetValues<TicketLinkProviderModel>();
     public LocalizedTextService Text { get; }
 
     public AsyncCommand OpenRepositoryCommand { get; }
@@ -129,8 +139,22 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public AsyncCommand CheckForUpdatesCommand { get; }
     public DelegateCommand<object> OpenBranchMenuCommand { get; }
     public DelegateCommand<object> ToggleRepositoryPanelCommand { get; }
+    public DelegateCommand<object> OpenSettingsCommand { get; }
+    public DelegateCommand<object> BackToWorkspaceCommand { get; }
     public DelegateCommand<AnalysisFileViewModel> SelectFileCommand { get; }
     public DelegateCommand<string> OpenUrlCommand { get; }
+
+    public bool IsSettingsOpen
+    {
+        get => _isSettingsOpen;
+        private set
+        {
+            if (!Set(ref _isSettingsOpen, value)) return;
+            OnPropertyChanged(nameof(IsWorkspaceOpen));
+        }
+    }
+
+    public bool IsWorkspaceOpen => !IsSettingsOpen;
 
     public string RepositoryPath
     {
@@ -238,6 +262,52 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         : SelectedLanguage == "Deutsch"
             ? "Wöchentliches Restkontingent nicht verfügbar"
             : "Weekly remaining quota unavailable";
+
+    public TicketLinkProviderModel SelectedTicketLinkProvider
+    {
+        get => _ticketLinkSettings.Provider;
+        set
+        {
+            if (_ticketLinkSettings.Provider == value) return;
+            _ticketLinkSettings = _ticketLinkSettings with { Provider = value };
+            OnPropertyChanged(nameof(SelectedTicketLinkProvider));
+            OnPropertyChanged(nameof(TicketLinkConfigurationHint));
+            OnPropertyChanged(nameof(HasValidTicketLinkBaseUrl));
+            RefreshHistoryTicketLinks();
+            SavePreferences();
+        }
+    }
+
+    public string TicketLinkBaseUrl
+    {
+        get => _ticketLinkSettings.BaseUrl ?? string.Empty;
+        set
+        {
+            var normalized = value.Trim();
+            if (string.Equals(_ticketLinkSettings.BaseUrl, normalized, StringComparison.Ordinal)) return;
+            _ticketLinkSettings = _ticketLinkSettings with { BaseUrl = string.IsNullOrWhiteSpace(normalized) ? null : normalized };
+            OnPropertyChanged(nameof(TicketLinkBaseUrl));
+            OnPropertyChanged(nameof(TicketLinkConfigurationHint));
+            OnPropertyChanged(nameof(HasValidTicketLinkBaseUrl));
+            RefreshHistoryTicketLinks();
+            SavePreferences();
+        }
+    }
+
+    public string TicketLinkConfigurationHint => !HasValidTicketLinkBaseUrl
+        ? "Nur offizielle Anbieter-Hosts ohne Zugangsdaten, Port, Parameter oder Fragment sind zulässig."
+        : SelectedTicketLinkProvider switch
+        {
+            TicketLinkProviderModel.Disabled => "Ticket-Verlinkung ist deaktiviert.",
+            TicketLinkProviderModel.Jira => "Basis-URL der Jira-Instanz, z. B. https://firma.atlassian.net",
+            TicketLinkProviderModel.GitHub => "Basis-URL des GitHub-Projekts, z. B. https://github.com/org/repository",
+            TicketLinkProviderModel.GitLab => "Basis-URL des GitLab-Projekts, z. B. https://gitlab.com/gruppe/projekt",
+            TicketLinkProviderModel.AzureDevOps => "Basis-URL des Azure-DevOps-Projekts, z. B. https://dev.azure.com/organisation/projekt",
+            _ => string.Empty
+        };
+
+    public bool HasValidTicketLinkBaseUrl => SelectedTicketLinkProvider == TicketLinkProviderModel.Disabled ||
+                                             TicketLinkResolver.IsValidBaseUrl(SelectedTicketLinkProvider, TicketLinkBaseUrl);
 
     public bool IsAnalyzing
     {
@@ -495,12 +565,16 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _aiRepositoryApprovals = saved.Approvals.ToList();
         _aiRiskNoticeAccepted = saved.AiRiskNoticeAccepted;
         _lastShownReleaseNotesVersion = saved.LastShownReleaseNotesVersion;
+        _ticketLinkSettings = saved.TicketLinkConfiguration;
         ThemeService.Apply(_selectedTheme);
         ApplyFont(_selectedFont);
         RecentRepositories.ReplaceAll(saved.RecentRepositories.Select(item => new RecentRepositoryItemModel(item)));
         OnPropertyChanged(nameof(SelectedLanguage));
         OnPropertyChanged(nameof(SelectedTheme));
         OnPropertyChanged(nameof(SelectedFont));
+        OnPropertyChanged(nameof(SelectedTicketLinkProvider));
+        OnPropertyChanged(nameof(TicketLinkBaseUrl));
+        OnPropertyChanged(nameof(TicketLinkConfigurationHint));
         if (!_aiRiskNoticeAccepted && !await ShowAiRiskNoticeAsync())
         {
             System.Windows.Application.Current.Shutdown();
@@ -633,7 +707,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             var repositoryPath = RepositoryPath;
             var snapshot = await _workspace.OpenAsync(repositoryPath);
-            History.ReplaceAll(snapshot.History.Select(commit => new CommitHistoryItemModel(commit)));
+            History.ReplaceAll(snapshot.History.Select(commit => new CommitHistoryItemModel(commit, _ticketLinkSettings)));
             Branches.ReplaceAll(snapshot.Branches);
             CurrentBranch = snapshot.Branch;
             SwitchBranchCommand.RaiseCanExecuteChanged();
@@ -1091,7 +1165,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         return new AppPreferencesModel(RecentRepositories.Select(item => item.Path).ToList(),
             SelectedTheme, SelectedLanguage, SelectedFont, _aiRepositoryApprovals, _aiRiskNoticeAccepted,
-            _lastShownReleaseNotesVersion);
+            _lastShownReleaseNotesVersion, _ticketLinkSettings);
+    }
+
+    private void RefreshHistoryTicketLinks()
+    {
+        if (History.Count == 0) return;
+        var selectedId = _selectedCommit?.Commit.Id;
+        History.ReplaceAll(History.Select(item => new CommitHistoryItemModel(item.Commit, _ticketLinkSettings)));
+        _selectedCommit = selectedId is null ? null : History.FirstOrDefault(item => item.Commit.Id == selectedId);
+        OnPropertyChanged(nameof(SelectedCommit));
+        OnPropertyChanged(nameof(ViewTitle));
     }
 
     private static string RepositoryIdentity(string repositoryPath)

@@ -13,11 +13,12 @@ public sealed class DelegateCommand<T>(Action<T> execute) : ICommand
 
     public bool CanExecute(object? parameter)
     {
-        return parameter is T;
+        return parameter is T || (parameter is null && default(T) is null);
     }
 
     public void Execute(object? parameter)
     {
         if (parameter is T value) execute(value);
+        else if (parameter is null && default(T) is null) execute((T)parameter!);
     }
 }

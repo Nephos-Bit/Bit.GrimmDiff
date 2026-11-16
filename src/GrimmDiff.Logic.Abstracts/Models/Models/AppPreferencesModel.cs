@@ -7,8 +7,10 @@ public sealed record AppPreferencesModel(
     string Font = "Cascadia Code",
     IReadOnlyList<AiRepositoryApprovalModel>? AiRepositoryApprovals = null,
     bool AiRiskNoticeAccepted = false,
-    string? LastShownReleaseNotesVersion = null)
+    string? LastShownReleaseNotesVersion = null,
+    TicketLinkSettingsModel? TicketLinks = null)
 {
     public IReadOnlyList<AiRepositoryApprovalModel> Approvals => AiRepositoryApprovals ?? [];
+    public TicketLinkSettingsModel TicketLinkConfiguration => TicketLinks ?? TicketLinkSettingsModel.Disabled;
     public static AppPreferencesModel Empty { get; } = new([]);
 }

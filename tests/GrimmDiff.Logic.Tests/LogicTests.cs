@@ -58,6 +58,55 @@ Test("release notes reject malformed content", () =>
                          """;
     if (ReleaseNotesReaderService.Parse(notes) is not null) throw new Exception("Expected malformed notes to be ignored.");
 });
+Test("ticket links resolve all supported providers", () =>
+{
+    var cases = new[]
+    {
+        (TicketLinkProviderModel.Jira, "https://company.atlassian.net", "Fix PROJ-42 now", "https://company.atlassian.net/browse/PROJ-42"),
+        (TicketLinkProviderModel.GitHub, "https://github.com/org/repo", "Fixes #42", "https://github.com/org/repo/issues/42"),
+        (TicketLinkProviderModel.GitLab, "https://gitlab.com/group/project", "Fixes #42", "https://gitlab.com/group/project/-/issues/42"),
+        (TicketLinkProviderModel.AzureDevOps, "https://dev.azure.com/org/project", "Fix AB#42", "https://dev.azure.com/org/project/_workitems/edit/42")
+    };
+    foreach (var item in cases)
+    {
+        var parts = TicketLinkResolver.Split(item.Item3, new TicketLinkSettingsModel(item.Item1, item.Item2));
+        var link = parts.OfType<TicketCommitSubjectPartModel>().SingleOrDefault();
+        if (link?.Url != item.Item4) throw new Exception($"Unexpected {item.Item1} URL.");
+    }
+});
+Test("ticket links preserve text and reject invalid configuration", () =>
+{
+    var links = TicketLinkResolver.Split("PROJ-1 and PROJ-2", new TicketLinkSettingsModel(TicketLinkProviderModel.Jira,
+        "https://company.atlassian.net/"));
+    if (links.OfType<TicketCommitSubjectPartModel>().Count() != 2 || links[0].Text != "PROJ-1" ||
+        links[^1].Text != "PROJ-2") throw new Exception("Expected every matching ticket to become a link.");
+    var plain = TicketLinkResolver.Split("Fixes #42", new TicketLinkSettingsModel(TicketLinkProviderModel.GitHub,
+        "http://github.com/org/repo"));
+    if (plain.Count != 1 || plain[0] is not PlainCommitSubjectPartModel) throw new Exception("Expected invalid URL to stay plain.");
+    var untrusted = TicketLinkResolver.Split("Fixes #42", new TicketLinkSettingsModel(TicketLinkProviderModel.GitHub,
+        "https://github-login.example/org/repo"));
+    if (untrusted.Count != 1 || untrusted[0] is not PlainCommitSubjectPartModel)
+        throw new Exception("Expected untrusted host to stay plain.");
+    var credentialed = TicketLinkResolver.Split("Fixes #42", new TicketLinkSettingsModel(TicketLinkProviderModel.GitHub,
+        "https://token@github.com/org/repo"));
+    if (credentialed.Count != 1 || credentialed[0] is not PlainCommitSubjectPartModel)
+        throw new Exception("Expected URL credentials to stay plain.");
+});
+Test("settings registry has the planned pages", () =>
+{
+    var settings = new SettingsViewModel();
+    if (settings.Groups.Count != 4 || !settings.Groups.SelectMany(group => group.Pages).Any(page => page.Id == "ticket-links"))
+        throw new Exception("Expected extensible settings page registry.");
+    var account = settings.Groups.SelectMany(group => group.Pages).Single(page => page.Id == "ai-account");
+    settings.SelectedPage = account;
+    if (!settings.IsAiAccountSelected || !account.IsSelected) throw new Exception("Expected settings navigation to select pages.");
+});
+Test("legacy preferences disable ticket links", () =>
+{
+    var preferences = new AppPreferencesModel([]);
+    if (preferences.TicketLinkConfiguration.Provider != TicketLinkProviderModel.Disabled)
+        throw new Exception("Expected missing ticket-link preferences to remain disabled.");
+});
 
 const string diff =
     "diff --git a/src/Foo.cs b/src/Foo.cs\nindex 123..456 100644\n--- a/src/Foo.cs\n+++ b/src/Foo.cs\n@@ -4,2 +4,3 @@ class Foo\n-  void Run() {}\n+  // SharedProcessor process data\n+  void ProcessData() {}\ndiff --git a/src/Bar.cs b/src/Bar.cs\nindex 123..456 100644\n--- a/src/Bar.cs\n+++ b/src/Bar.cs\n@@ -1 +1 @@\n-// old\n+// SharedProcessor process data\n";
