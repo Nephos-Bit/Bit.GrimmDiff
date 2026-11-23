@@ -54,6 +54,7 @@
                     <ColumnDefinition Width="300" MinWidth="0" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="440" MinWidth="280" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" MinWidth="320" />
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0">
@@ -224,7 +225,7 @@
                         </Style>
                     </GridSplitter.Style>
                 </GridSplitter>
-                <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,1,0" Padding="16">
+                <Border Grid.Column="3" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
@@ -374,7 +375,10 @@
                         </Grid>
                     </Grid>
                 </Border>
-                <Border Grid.Column="4" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
+                <GridSplitter Grid.Column="4" Width="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                              ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                              Background="{DynamicResource Border}" ShowsPreview="True" Cursor="SizeWE" />
+                <Border Grid.Column="5" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" />
