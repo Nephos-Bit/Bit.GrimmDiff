@@ -93,6 +93,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         Settings = new SettingsViewModel(this);
         OpenSettingsCommand = new DelegateCommand<object>(_ =>
         {
+            if (IsSettingsOpen)
+            {
+                IsSettingsOpen = false;
+                return;
+            }
+
             Settings.OpenDefault();
             IsSettingsOpen = true;
         });
