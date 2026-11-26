@@ -98,7 +98,7 @@ public sealed class ReviewMascotControl : FrameworkElement
 
         if (option.Id != MascotCatalog.DefaultId)
         {
-            DrawVariant(context, option.Id, outline, body, accent, highlight);
+            DrawVariant(context, option.Id, outline, body, accent, highlight, option.Detail);
             return;
         }
 
@@ -156,7 +156,7 @@ public sealed class ReviewMascotControl : FrameworkElement
             new FrameworkPropertyMetadata(defaultBrush, FrameworkPropertyMetadataOptions.AffectsRender));
     }
 
-    private void DrawVariant(DrawingContext context, string variantId, Brush o, Brush b, Brush a, Brush h)
+    private void DrawVariant(DrawingContext context, string variantId, Brush o, Brush b, Brush a, Brush h, Brush? detail)
     {
         var animated = CanAnimate;
         var bob = animated && (IsAnalyzing ? _frame % 4 >= 2 : _frame % 6 >= 3) ? 1 : 0;
@@ -199,6 +199,26 @@ public sealed class ReviewMascotControl : FrameworkElement
                 P(a, 2, 9, 2, 2); P(a, 14, 9, 2, 2); P(o, 5, 14, 9, 1);
                 P(b, 6, 14, 7, 2); P(a, 8, 16, 4, 1); P(h, 5, 7, 2, 1);
                 Eyes(6, 8, 11, 8);
+                break;
+            case "sgt-schnabel": // Yellow rubber duck in profile with an orange bill.
+                P(o, 5, 2, 7, 1); P(o, 4, 3, 9, 1); P(o, 3, 4, 10, 6);
+                P(b, 4, 4, 8, 6); P(h, 5, 4, 5, 1);
+                P(o, 1, 9, 4, 4); P(o, 2, 10, 12, 5); P(b, 2, 10, 2, 2);
+                P(b, 3, 10, 10, 4); P(h, 5, 11, 6, 2); P(o, 4, 15, 9, 1);
+                P(o, 12, 7, 5, 3); P(a, 13, 7, 3, 1); P(a, 12, 8, 5, 1);
+                if (blinking) P(o, 9, 6, 2, 1);
+                else { P(h, 9, 5, 2, 2); P(o, 9 + _gazeX, 5 + _gazeY, 1, 1); }
+                break;
+            case "berta": // White hen with a red comb and an orange beak.
+                P(o, 7, 1, 2, 4); P(o, 10, 1, 2, 4); P(o, 5, 2, 2, 4);
+                P(a, 6, 3, 5, 3); P(a, 8, 2, 3, 2);
+                P(o, 4, 5, 10, 9); P(b, 5, 6, 8, 7);
+                P(o, 2, 10, 3, 4); P(o, 13, 10, 3, 4);
+                P(b, 3, 11, 2, 2); P(b, 13, 11, 2, 2);
+                P(o, 5, 13, 8, 3); P(b, 6, 13, 6, 2);
+                P(o, 5, 16, 3, 1); P(o, 10, 16, 3, 1);
+                if (detail is not null) { P(detail, 8, 10, 2, 1); P(detail, 9, 11, 1, 1); }
+                Eyes(6, 7, 11, 7);
                 break;
         }
 

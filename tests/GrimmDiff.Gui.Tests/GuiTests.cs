@@ -20,11 +20,13 @@ Console.WriteLine("PASS Gui project structure");
 Console.WriteLine("PASS settings text switches language");
 
 var mascots = MascotCatalog.Options;
-if (mascots.Count != 6 || mascots.Select(mascot => mascot.Id).Distinct().Count() != 6 ||
-    mascots.Select(mascot => mascot.Name).Distinct().Count() != 6 ||
+if (mascots.Count != 8 || mascots.Select(mascot => mascot.Id).Distinct().Count() != 8 ||
+    mascots.Select(mascot => mascot.Name).Distinct().Count() != 8 ||
     mascots.Any(mascot => mascot.Outline is null || mascot.Body is null || mascot.Accent is null || mascot.Highlight is null) ||
+    MascotCatalog.Find("sgt-schnabel").Name != "Sgt. Schnabel" ||
+    MascotCatalog.Find("berta").Name != "Berta" ||
     MascotCatalog.Find("missing").Id != MascotCatalog.DefaultId)
-    throw new Exception("Expected six named, selectable mascots and a safe fallback.");
+    throw new Exception("Expected eight named, selectable mascots and a safe fallback.");
 
 Console.WriteLine("PASS mascot options");
 
@@ -50,6 +52,18 @@ var renderThread = new Thread(() =>
             return pixels;
         }
 
+        bool ContainsColor(byte[] pixels, string hex)
+        {
+            var color = (Color)ColorConverter.ConvertFromString(hex);
+            for (var index = 0; index < pixels.Length; index += 4)
+            {
+                if (pixels[index] == color.B && pixels[index + 1] == color.G &&
+                    pixels[index + 2] == color.R && pixels[index + 3] == color.A)
+                    return true;
+            }
+            return false;
+        }
+
         void FlushRender()
         {
             var frame = new DispatcherFrame();
@@ -65,6 +79,12 @@ var renderThread = new Thread(() =>
             var changed = Snapshot();
             if (snapshots.Any(previous => previous.SequenceEqual(changed)))
                 throw new Exception($"Mascot {option.Name} did not produce a distinct rendered preview.");
+            if (option.Id == "sgt-schnabel" &&
+                (!ContainsColor(changed, "#F4CA3D") || !ContainsColor(changed, "#E98226")))
+                throw new Exception("Sgt. Schnabel must render a yellow body and orange bill.");
+            if (option.Id == "berta" &&
+                (!ContainsColor(changed, "#FFFDF3") || !ContainsColor(changed, "#D93B2A")))
+                throw new Exception("Berta must render a white body and red comb.");
             snapshots.Add(changed);
         }
 

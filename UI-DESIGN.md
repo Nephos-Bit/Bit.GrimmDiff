@@ -132,6 +132,8 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
 
 `--color-active` kennzeichnet ausschließlich aktive Navigation und Auswahl. Der sichtbare Produktname bleibt neutral. `--color-route` kennzeichnet Bewegungsverläufe und `--color-location` den eigenen Standort, Zielmarker sowie kritische Daten. Warnung, Erfolg und Fehler behalten ausschließlich ihre Statusbedeutung.
 
+Die Maskottchen sind eine dokumentierte Pixelgrafik-Komponente mit eigener, fester Farbpalette. Sgt. Schnabel verwendet Kontur `#69471F`, gelben Körper `#F4CA3D`, orangefarbenen Schnabel `#E98226` und Lichtfläche `#FFF0A3`. Berta verwendet Kontur `#493B32`, weißen Körper `#FFFDF3`, roten Kamm `#D93B2A`, weiße Augen `#FFFFFF` und orangefarbenen Schnabel `#ECA348`. Diese Figurenfarben haben keine Statusbedeutung und gelten in Dark und Light unverändert.
+
 ## Typografie
 
 Cascadia Code ist die primäre Schriftfamilie für die Benutzeroberfläche. Zahlen verwenden tabellarische Ziffern. Die typografische Wirkung ist technisch, leicht und luftig; große Werte werden nicht durch starke Schriftschnitte, sondern durch Größe und freien Raum hervorgehoben.
