@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using GrimmDiff.Logic.Abstracts;
 
 namespace GrimmDiff.Data;
@@ -32,8 +33,8 @@ public sealed class GitCliRepositoryService
     {
         var arguments = scope == DiffScopeModel.Staged
             ? new List<string>
-                { "-c", "core.fsmonitor=false", "diff", "--cached", "--no-ext-diff", "--no-textconv", "--unified=3" }
-            : ["-c", "core.fsmonitor=false", "diff", "--no-ext-diff", "--no-textconv", "--unified=3"];
+                { "-c", "core.fsmonitor=false", "-c", "core.quotePath=false", "diff", "--cached", "--no-ext-diff", "--no-textconv", "--unified=3" }
+            : ["-c", "core.fsmonitor=false", "-c", "core.quotePath=false", "diff", "--no-ext-diff", "--no-textconv", "--unified=3"];
         if (!string.IsNullOrWhiteSpace(path))
         {
             arguments.Add("--");
@@ -51,7 +52,7 @@ public sealed class GitCliRepositoryService
     {
         var arguments = new List<string>
         {
-            "-c", "core.fsmonitor=false", "show", "--format=", "--no-ext-diff", "--no-textconv", "--unified=3", commitId
+            "-c", "core.fsmonitor=false", "-c", "core.quotePath=false", "show", "--format=", "--no-ext-diff", "--no-textconv", "--unified=3", commitId
         };
         if (!string.IsNullOrWhiteSpace(path))
         {
@@ -135,7 +136,7 @@ public sealed class GitCliRepositoryService
         {
             // git diff returns exit code 1 when --no-index finds a difference; its output is the desired patch.
             var diff = await RunAsync(repositoryPath,
-                ["diff", "--no-index", "--no-ext-diff", "--unified=3", "--", "/dev/null", file], cancellationToken);
+                ["-c", "core.quotePath=false", "diff", "--no-index", "--no-ext-diff", "--unified=3", "--", "/dev/null", file], cancellationToken);
             if (!string.IsNullOrWhiteSpace(diff.StandardOutput)) diffs.Add(diff.StandardOutput);
         }
 
@@ -197,7 +198,9 @@ public sealed class GitCliRepositoryService
             var start = new ProcessStartInfo(ResolveGitExecutable())
             {
                 RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
             };
             if (!string.IsNullOrWhiteSpace(workingDirectory)) start.WorkingDirectory = workingDirectory;
             foreach (var arg in hardened) start.ArgumentList.Add(arg);
