@@ -19,7 +19,7 @@ GitHub landing page; use this file and the relevant source files instead.
 - `src/GrimmDiff.Gui`: WPF-Anwendung mit MVVM, DI-Start in `App.xaml.cs`, Controls, Renderern, Services, ViewModels und Views.
 - `tests/GrimmDiff.Logic.Tests`, `tests/GrimmDiff.Data.Tests`, `tests/GrimmDiff.Gui.Tests`: ausführbare, paketfreie Tests der jeweiligen Schicht.
 - `scripts`: Auslieferungs- und lokale Wartungsskripte.
-- `docs/compliance` und `docs/security`: versionierte CRA-Nachweise, Threat Model, sichere Nutzungs- und Incident-Response-Verfahren.
+- `docs/technical.md`: Build-, Test- und Release-Anleitung. `docs/compliance` und `docs/security`: versionierte CRA-Nachweise, Threat Model, sichere Nutzungs- und Incident-Response-Verfahren.
 - `.github/workflows`: CI-Sicherheitsprüfungen für Tests, Dependency-Scan und SBOM-Erzeugung.
 
 
