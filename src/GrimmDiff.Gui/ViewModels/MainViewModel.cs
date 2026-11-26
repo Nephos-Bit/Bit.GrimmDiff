@@ -55,6 +55,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private string? _selectedRecent;
     private int? _weeklyRemainingPercent;
     private TicketLinkSettingsModel _ticketLinkSettings = TicketLinkSettingsModel.Disabled;
+    private bool _mascotsEnabled = true;
+    private string _selectedMascotId = MascotCatalog.DefaultId;
 
     public MainViewModel(RepositoryWorkspaceService workspace, DiffAnalysisService analysis, CodexSessionService codex,
         PreferencesService preferences, IUserDialogService dialogs, IExternalNavigationService navigation,
@@ -131,6 +133,29 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Inter", "Verdana"];
     public IReadOnlyList<TicketLinkProviderModel> TicketLinkProviders { get; } = Enum.GetValues<TicketLinkProviderModel>();
     public LocalizedTextService Text { get; }
+
+    public bool MascotsEnabled
+    {
+        get => _mascotsEnabled;
+        set
+        {
+            if (!Set(ref _mascotsEnabled, value)) return;
+            OnPropertyChanged(nameof(MascotVisibility));
+            SavePreferences();
+        }
+    }
+
+    public Visibility MascotVisibility => MascotsEnabled ? Visibility.Visible : Visibility.Collapsed;
+
+    public string SelectedMascotId
+    {
+        get => _selectedMascotId;
+        set
+        {
+            var id = MascotCatalog.Find(value).Id;
+            if (Set(ref _selectedMascotId, id)) SavePreferences();
+        }
+    }
 
     public AsyncCommand OpenRepositoryCommand { get; }
     public AsyncCommand CloneCommand { get; }
@@ -603,12 +628,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _aiRiskNoticeAccepted = saved.AiRiskNoticeAccepted;
         _lastShownReleaseNotesVersion = saved.LastShownReleaseNotesVersion;
         _ticketLinkSettings = saved.TicketLinkConfiguration;
+        _mascotsEnabled = saved.MascotsEnabled;
+        _selectedMascotId = MascotCatalog.Find(saved.MascotId).Id;
         ThemeService.Apply(_selectedTheme);
         ApplyFont(_selectedFont);
         RecentRepositories.ReplaceAll(saved.RecentRepositories.Select(item => new RecentRepositoryItemModel(item)));
         OnPropertyChanged(nameof(SelectedLanguage));
         OnPropertyChanged(nameof(SelectedTheme));
         OnPropertyChanged(nameof(SelectedFont));
+        OnPropertyChanged(nameof(MascotsEnabled));
+        OnPropertyChanged(nameof(MascotVisibility));
+        OnPropertyChanged(nameof(SelectedMascotId));
         OnPropertyChanged(nameof(SelectedTicketLinkProvider));
         OnPropertyChanged(nameof(TicketLinkBaseUrl));
         OnPropertyChanged(nameof(TicketLinkPattern));
@@ -1203,7 +1233,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         return new AppPreferencesModel(RecentRepositories.Select(item => item.Path).ToList(),
             SelectedTheme, SelectedLanguage, SelectedFont, _aiRepositoryApprovals, _aiRiskNoticeAccepted,
-            _lastShownReleaseNotesVersion, _ticketLinkSettings);
+            _lastShownReleaseNotesVersion, _ticketLinkSettings, MascotsEnabled, SelectedMascotId);
     }
 
     private void RefreshHistoryTicketLinks()

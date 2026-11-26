@@ -11,6 +11,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         var pages = new ISettingsPageViewModel[]
         {
             new AppearanceSettingsViewModel(main),
+            new MascotSettingsViewModel(main),
             new AiAccountSettingsViewModel(main),
             new AiPrivacySettingsViewModel(main),
             new AiPromptSettingsViewModel(main),

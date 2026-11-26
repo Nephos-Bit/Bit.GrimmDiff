@@ -3,6 +3,7 @@
              xmlns:local="clr-namespace:GrimmDiff.Gui">
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type local:AppearanceSettingsViewModel}"><local:AppearanceSettingsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type local:MascotSettingsViewModel}"><local:MascotSettingsView /></DataTemplate>
         <DataTemplate DataType="{x:Type local:AiAccountSettingsViewModel}"><local:AiAccountSettingsView /></DataTemplate>
         <DataTemplate DataType="{x:Type local:AiPrivacySettingsViewModel}"><local:AiPrivacySettingsView /></DataTemplate>
         <DataTemplate DataType="{x:Type local:AiPromptSettingsViewModel}"><local:AiPromptSettingsView /></DataTemplate>

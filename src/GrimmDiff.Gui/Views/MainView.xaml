@@ -248,6 +248,7 @@
                             </StackPanel>
                             <local:ReviewMascotControl DockPanel.Dock="Left" Margin="0,0,8,0"
                                                        VerticalAlignment="Center" IsAnalyzing="{Binding IsAnalyzing}"
+                                                       Visibility="{Binding MascotVisibility}" Variant="{Binding SelectedMascotId}"
                                                        OutlineBrush="{DynamicResource MascotOutline}"
                                                        BodyBrush="{DynamicResource MascotBody}"
                                                        AccentBrush="{DynamicResource MascotAccent}"

@@ -8,7 +8,9 @@ public sealed record AppPreferencesModel(
     IReadOnlyList<AiRepositoryApprovalModel>? AiRepositoryApprovals = null,
     bool AiRiskNoticeAccepted = false,
     string? LastShownReleaseNotesVersion = null,
-    TicketLinkSettingsModel? TicketLinks = null)
+    TicketLinkSettingsModel? TicketLinks = null,
+    bool MascotsEnabled = true,
+    string MascotId = "moss")
 {
     public IReadOnlyList<AiRepositoryApprovalModel> Approvals => AiRepositoryApprovals ?? [];
     public TicketLinkSettingsModel TicketLinkConfiguration => TicketLinks ?? TicketLinkSettingsModel.Disabled;

@@ -1,0 +1,46 @@
+<UserControl x:Class="GrimmDiff.Gui.MascotSettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:GrimmDiff.Gui">
+    <StackPanel Margin="48">
+        <TextBlock Text="{Binding Text[Mascots]}" FontSize="20" Margin="0,0,0,24" />
+        <CheckBox Content="{Binding Text[ShowMascots]}" IsChecked="{Binding MascotsEnabled}"
+                  Foreground="{DynamicResource Primary}" Margin="0,0,0,24" />
+        <TextBlock Text="{Binding Text[ChooseMascot]}" Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,0,0,8" />
+        <ListBox ItemsSource="{Binding Mascots}" SelectedItem="{Binding SelectedMascot}" Width="280"
+                 HorizontalAlignment="Left" BorderBrush="{DynamicResource Border}" Background="{DynamicResource Surface}">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="8,2" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="ItemBorder" Background="Transparent" BorderBrush="Transparent"
+                                        BorderThickness="2,0,0,0" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SurfaceRaised}" />
+                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{DynamicResource Active}" />
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource SurfaceRaised}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="4,3">
+                        <local:ReviewMascotControl Variant="{Binding Id}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="12,0,0,0"
+                                   Foreground="{DynamicResource Primary}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
+</UserControl>

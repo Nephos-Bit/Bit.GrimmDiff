@@ -124,7 +124,7 @@ Test("settings pages use the shared base type", () =>
 {
     var pageTypes = new[]
     {
-        typeof(AppearanceSettingsViewModel), typeof(AiAccountSettingsViewModel), typeof(AiPrivacySettingsViewModel), typeof(AiPromptSettingsViewModel),
+        typeof(AppearanceSettingsViewModel), typeof(MascotSettingsViewModel), typeof(AiAccountSettingsViewModel), typeof(AiPrivacySettingsViewModel), typeof(AiPromptSettingsViewModel),
         typeof(TicketLinksSettingsViewModel), typeof(AboutSettingsViewModel)
     };
     if (pageTypes.Any(type => !type.IsSubclassOf(typeof(SettingsPageViewModelBase))))
@@ -135,6 +135,9 @@ Test("legacy preferences disable ticket links", () =>
     var preferences = new AppPreferencesModel([]);
     if (preferences.TicketLinkConfiguration.Provider != TicketLinkProviderModel.Disabled)
         throw new Exception("Expected missing ticket-link preferences to remain disabled.");
+    var legacy = JsonSerializer.Deserialize<AppPreferencesModel>("{\"RecentRepositories\":[]}");
+    if (legacy is null || !legacy.MascotsEnabled || legacy.MascotId != "moss")
+        throw new Exception("Expected old preferences to keep the original mascot enabled.");
 });
 
 const string diff =
