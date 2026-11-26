@@ -1,0 +1,31 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='420' viewBox='0 0 1280 420'><style>text{font-family:'Cascadia Code','Cascadia Mono',Consolas,'SF Mono',Menlo,monospace}</style><rect width='1280' height='420' fill='#1D1D1D'/><rect x='60.5' y='40.5' width='319' height='189' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='60' y='40' width='320' height='4' fill='#00B83A'/>
+<text x='84' y='80' font-size='12' fill='#00B83A' letter-spacing='2.5'>STEP 1  /  INSTANT</text>
+<text x='84' y='116' font-size='18' fill='#ECECEC' font-weight='600'>Local preview</text>
+<text x='84' y='152' font-size='14' fill='#A0A0A0' >Heuristic grouping right on</text><text x='84' y='174' font-size='14' fill='#A0A0A0' >your machine. No account,</text><text x='84' y='196' font-size='14' fill='#A0A0A0' >no network, no waiting.</text>
+<rect x='480.5' y='40.5' width='319' height='189' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='480' y='40' width='320' height='4' fill='#D7A84A'/>
+<text x='504' y='80' font-size='12' fill='#D7A84A' letter-spacing='2.5'>STEP 2  /  YOUR CALL</text>
+<text x='504' y='116' font-size='18' fill='#ECECEC' font-weight='600'>Repository approval</text>
+<text x='504' y='152' font-size='14' fill='#A0A0A0' >AI only runs after you type</text><text x='504' y='174' font-size='14' fill='#A0A0A0' >ALLOW for this repository.</text><text x='504' y='196' font-size='14' fill='#A0A0A0' >Policy changes reset it.</text>
+<rect x='900.5' y='40.5' width='319' height='189' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='900' y='40' width='320' height='4' fill='#72B7E8'/>
+<text x='924' y='80' font-size='12' fill='#72B7E8' letter-spacing='2.5'>STEP 3  /  OPTIONAL</text>
+<text x='924' y='116' font-size='18' fill='#ECECEC' font-weight='600'>AI work steps</text>
+<text x='924' y='152' font-size='14' fill='#A0A0A0' >The Codex CLI and your own</text><text x='924' y='174' font-size='14' fill='#A0A0A0' >ChatGPT sign-in name and</text><text x='924' y='196' font-size='14' fill='#A0A0A0' >describe every work step.</text>
+<path d='M392 135 H458' stroke='#A0A0A0' stroke-width='2'/><path d='M456 128 L468 135 L456 142 Z' fill='#A0A0A0'/>
+<path d='M812 135 H878' stroke='#A0A0A0' stroke-width='2'/><path d='M876 128 L888 135 L876 142 Z' fill='#A0A0A0'/>
+<rect x='60.5' y='262.5' width='1159' height='117' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='84' y='298' font-size='13' fill='#ECECEC' letter-spacing='2.5'>ALWAYS STAYS LOCAL</text>
+<rect x='84.5' y='320.5' width='244.6' height='35' fill='#1D1D1D' stroke='#303030' stroke-width='1'/>
+<rect x='96' y='334' width='8' height='8' fill='#FF3B0A'/>
+<text x='112' y='343' font-size='14' fill='#ECECEC' >.env, keys, certificates</text>
+<rect x='346.1' y='320.5' width='253' height='35' fill='#1D1D1D' stroke='#303030' stroke-width='1'/>
+<rect x='357.6' y='334' width='8' height='8' fill='#FF3B0A'/>
+<text x='373.6' y='343' font-size='14' fill='#ECECEC' >.ssh, .aws, .azure, .kube</text>
+<rect x='616.1' y='320.5' width='143.8' height='35' fill='#1D1D1D' stroke='#303030' stroke-width='1'/>
+<rect x='627.6' y='334' width='8' height='8' fill='#FF3B0A'/>
+<text x='643.6' y='343' font-size='14' fill='#ECECEC' >binary files</text>
+<rect x='776.9' y='320.5' width='261.4' height='35' fill='#1D1D1D' stroke='#303030' stroke-width='1'/>
+<rect x='788.4' y='334' width='8' height='8' fill='#FF3B0A'/>
+<text x='804.4' y='343' font-size='14' fill='#ECECEC' >sections over 64,000 chars</text></svg>

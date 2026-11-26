@@ -1,0 +1,47 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='444' viewBox='0 0 1280 444'><style>text{font-family:'Cascadia Code','Cascadia Mono',Consolas,'SF Mono',Menlo,monospace}</style><rect width='1280' height='444' fill='#1D1D1D'/><text x='60' y='52' font-size='13' fill='#A0A0A0' letter-spacing='2.5'>8 CHANGED SECTIONS</text>
+<text x='780' y='52' font-size='13' fill='#A0A0A0' letter-spacing='2.5'>2 WORK STEPS</text>
+<rect x='60.5' y='72.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='93' font-size='14' fill='#ECECEC' >appsettings.json</text>
+<text x='466' y='93' font-size='14' fill='#FF3B0A' text-anchor='end'>-2</text>
+<text x='434' y='93' font-size='14' fill='#75C68A' text-anchor='end'>+3</text>
+<path d='M480 88 H600 V170 H780' stroke='#72B7E8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='60.5' y='112.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='133' font-size='14' fill='#ECECEC' >src/Orders/IOrderService.cs</text>
+<text x='466' y='133' font-size='14' fill='#75C68A' text-anchor='end'>+2</text>
+<path d='M480 128 H600 V170 H780' stroke='#72B7E8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='60.5' y='152.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='173' font-size='14' fill='#ECECEC' >src/Orders/OrderService.cs</text>
+<text x='466' y='173' font-size='14' fill='#75C68A' text-anchor='end'>+13</text>
+<path d='M480 168 H600 V170 H780' stroke='#72B7E8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='60.5' y='192.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='213' font-size='14' fill='#ECECEC' >src/Payments/PaymentGateway.cs</text>
+<text x='466' y='213' font-size='14' fill='#75C68A' text-anchor='end'>+9</text>
+<path d='M480 208 H600 V170 H780' stroke='#72B7E8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='60.5' y='232.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='253' font-size='14' fill='#ECECEC' >src/Payments/RefundPolicy.cs</text>
+<text x='466' y='253' font-size='14' fill='#75C68A' text-anchor='end'>+18</text>
+<path d='M480 248 H600 V170 H780' stroke='#72B7E8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='60.5' y='272.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='293' font-size='14' fill='#ECECEC' >tests/Orders/OrderServiceTests.cs</text>
+<text x='466' y='293' font-size='14' fill='#75C68A' text-anchor='end'>+24</text>
+<path d='M480 288 H600 V170 H780' stroke='#72B7E8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='60.5' y='312.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='333' font-size='14' fill='#ECECEC' >src/Catalog/ProductSearch.cs</text>
+<text x='466' y='333' font-size='14' fill='#75C68A' text-anchor='end'>+31</text>
+<path d='M480 328 H624 V350 H780' stroke='#C99BE8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='60.5' y='352.5' width='419' height='31' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='76' y='373' font-size='14' fill='#ECECEC' >src/Catalog/ProductSearchOptions.cs</text>
+<text x='466' y='373' font-size='14' fill='#75C68A' text-anchor='end'>+9</text>
+<path d='M480 368 H624 V350 H780' stroke='#C99BE8' stroke-width='1.5' fill='none' opacity='0.75'/>
+<rect x='780.5' y='72.5' width='439' height='195' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='780' y='72' width='4' height='196' fill='#72B7E8'/>
+<rect x='804' y='96' width='10' height='10' fill='#FF3B0A'/>
+<text x='826' y='106' font-size='16' fill='#ECECEC' font-weight='600'>Add order cancellation with refunds</text>
+<text x='804' y='140' font-size='14' fill='#A0A0A0' >Expose cancellation on the order service,</text><text x='804' y='162' font-size='14' fill='#A0A0A0' >reject missing or shipped orders, apply the</text><text x='804' y='184' font-size='14' fill='#A0A0A0' >refund policy through the payment gateway</text><text x='804' y='206' font-size='14' fill='#A0A0A0' >and cover the flow with tests.</text>
+<text x='804' y='246' font-size='12' fill='#FF3B0A' letter-spacing='2.5'>6 FILES  /  REVIEW: WARNING</text>
+<rect x='780.5' y='284.5' width='439' height='131' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='780' y='284' width='4' height='132' fill='#C99BE8'/>
+<rect x='804' y='308' width='10' height='10' fill='#16B83D'/>
+<text x='826' y='318' font-size='16' fill='#ECECEC' font-weight='600'>Add configurable product search</text>
+<text x='804' y='350' font-size='14' fill='#A0A0A0' >Search active products by query terms and</text><text x='804' y='372' font-size='14' fill='#A0A0A0' >limit the number of results.</text>
+<text x='804' y='396' font-size='12' fill='#16B83D' letter-spacing='2.5'>2 FILES  /  REVIEW: GOOD</text></svg>

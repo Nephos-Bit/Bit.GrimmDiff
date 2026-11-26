@@ -1,0 +1,18 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='248' viewBox='0 0 1280 248'><style>text{font-family:'Cascadia Code','Cascadia Mono',Consolas,'SF Mono',Menlo,monospace}</style><rect width='1280' height='248' fill='#1D1D1D'/><rect x='60.5' y='40.5' width='365' height='167' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='60' y='40' width='366' height='4' fill='#16B83D'/>
+<rect x='84' y='68' width='10' height='10' fill='#16B83D'/>
+<text x='104' y='78' font-size='13' fill='#16B83D' letter-spacing='2.5'>REVIEW: GOOD</text>
+<text x='84' y='116' font-size='15' fill='#ECECEC' font-weight='600'>Add configurable product search</text>
+<text x='84' y='152' font-size='14' fill='#A0A0A0' >Options are validated and the new</text><text x='84' y='174' font-size='14' fill='#A0A0A0' >ranking is covered by tests.</text>
+<rect x='457.5' y='40.5' width='365' height='167' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='457' y='40' width='366' height='4' fill='#C99526'/>
+<rect x='481' y='68' width='10' height='10' fill='#C99526'/>
+<text x='501' y='78' font-size='13' fill='#C99526' letter-spacing='2.5'>REVIEW: OK</text>
+<text x='481' y='116' font-size='15' fill='#ECECEC' font-weight='600'>Move payments to gateway v2</text>
+<text x='481' y='152' font-size='14' fill='#A0A0A0' >Works, but the timeout value now</text><text x='481' y='174' font-size='14' fill='#A0A0A0' >lives in two places.</text>
+<rect x='854.5' y='40.5' width='365' height='167' fill='#101010' stroke='#303030' stroke-width='1'/>
+<rect x='854' y='40' width='366' height='4' fill='#FF3B0A'/>
+<rect x='878' y='68' width='10' height='10' fill='#FF3B0A'/>
+<text x='898' y='78' font-size='13' fill='#FF3B0A' letter-spacing='2.5'>REVIEW: WARNING</text>
+<text x='878' y='116' font-size='15' fill='#ECECEC' font-weight='600'>Add order cancellation</text>
+<text x='878' y='152' font-size='14' fill='#A0A0A0' >A refund failure after order.Cancel</text><text x='878' y='174' font-size='14' fill='#A0A0A0' >may issue duplicate refunds; make</text><text x='878' y='196' font-size='14' fill='#A0A0A0' >it idempotent.</text></svg>

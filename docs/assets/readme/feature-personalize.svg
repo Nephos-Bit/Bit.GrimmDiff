@@ -1,0 +1,28 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='280' viewBox='0 0 1280 280'><style>text{font-family:'Cascadia Code','Cascadia Mono',Consolas,'SF Mono',Menlo,monospace}</style><rect width='1280' height='280' fill='#1D1D1D'/><rect x='60.5' y='40.5' width='274' height='199' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='84' y='78' font-size='12' fill='#A0A0A0' letter-spacing='2.5'>THEME</text>
+<rect x='355.5' y='40.5' width='274' height='199' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='379' y='78' font-size='12' fill='#A0A0A0' letter-spacing='2.5'>LANGUAGE</text>
+<rect x='650.5' y='40.5' width='274' height='199' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='674' y='78' font-size='12' fill='#A0A0A0' letter-spacing='2.5'>FONT</text>
+<rect x='945.5' y='40.5' width='274' height='199' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='969' y='78' font-size='12' fill='#A0A0A0' letter-spacing='2.5'>UPDATES</text>
+<rect x='84.5' y='100.5' width='63' height='63' fill='#1D1D1D' stroke='#5A5A5A' stroke-width='1'/>
+<rect x='96' y='114' width='40' height='4' fill='#ECECEC'/><rect x='96' y='126' width='28' height='4' fill='#A0A0A0'/>
+<rect x='160.5' y='100.5' width='63' height='63' fill='#F6F6F6' stroke='#5A5A5A' stroke-width='1'/>
+<rect x='172' y='114' width='40' height='4' fill='#171717'/><rect x='172' y='126' width='28' height='4' fill='#6A6A6A'/>
+<rect x='236.5' y='100.5' width='63' height='63' fill='#F6F6F6' stroke='#5A5A5A'/><path d='M237 164 L299 101 V163.5 H237 Z' fill='#1D1D1D'/>
+<text x='116' y='190' font-size='13' fill='#ECECEC' text-anchor='middle'>Dark</text>
+<text x='192' y='190' font-size='13' fill='#ECECEC' text-anchor='middle'>Light</text>
+<text x='268' y='190' font-size='13' fill='#ECECEC' text-anchor='middle'>System</text>
+<text x='84' y='220' font-size='13' fill='#A0A0A0' >follows Windows</text>
+<text x='379' y='126' font-size='22' fill='#ECECEC' font-weight='600'>English</text>
+<text x='379' y='166' font-size='22' fill='#ECECEC' font-weight='600'>Deutsch</text>
+<text x='379' y='220' font-size='13' fill='#A0A0A0' >UI and AI texts</text>
+<text x='674' y='116' font-size='18' fill='#ECECEC' style="font-family:'Cascadia Code',Consolas,monospace">Cascadia Code</text>
+<text x='674' y='150' font-size='18' fill='#ECECEC' style="font-family:Inter,'Segoe UI',sans-serif">Inter</text>
+<text x='674' y='184' font-size='18' fill='#ECECEC' style="font-family:Verdana,sans-serif">Verdana</text>
+<text x='674' y='220' font-size='13' fill='#A0A0A0' >for the whole UI</text>
+<text x='969' y='126' font-size='18' fill='#ECECEC' font-weight='600'>v1.0.1 ready</text>
+<rect x='969.5' y='144.5' width='226' height='31' fill='#00B83A'/>
+<text x='1082' y='166' font-size='13' fill='#101010' text-anchor='middle' letter-spacing='2.5' font-weight='600'>UPDATE NOW</text>
+<text x='969' y='220' font-size='13' fill='#A0A0A0' >with release notes</text></svg>

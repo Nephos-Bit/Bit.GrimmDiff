@@ -1,0 +1,27 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='440' viewBox='0 0 1280 440'><style>text{font-family:'Cascadia Code','Cascadia Mono',Consolas,'SF Mono',Menlo,monospace}</style><rect width='1280' height='440' fill='#1D1D1D'/><rect x='24.5' y='24.5' width='1231' height='391' fill='#1D1D1D' stroke='#303030' stroke-width='1'/>
+<text x='80' y='108' font-size='14' fill='#A0A0A0' letter-spacing='2.5'>GIT CLIENT  /  DIFF STORYTELLER</text>
+<text x='76' y='200' font-size='84' fill='#ECECEC' font-weight='600' letter-spacing='20'>grimmdiff</text>
+<text x='80' y='254' font-size='28' fill='#ECECEC' >See the work behind the diff.</text>
+<text x='80' y='296' font-size='17' fill='#A0A0A0' >A Git client for Windows that sorts every diff</text><text x='80' y='322' font-size='17' fill='#A0A0A0' >into work steps, each with a one-sentence story.</text>
+<rect x='80' y='358' width='10' height='10' fill='#00B83A'/>
+<text x='98' y='368' font-size='13' fill='#ECECEC' letter-spacing='2.5'>LOCAL FIRST</text>
+<rect x='250' y='358' width='10' height='10' fill='#D7A84A'/>
+<text x='268' y='368' font-size='13' fill='#ECECEC' letter-spacing='2.5'>OPTIONAL AI</text>
+<rect x='420' y='358' width='10' height='10' fill='#72B7E8'/>
+<text x='438' y='368' font-size='13' fill='#ECECEC' letter-spacing='2.5'>FULL GIT</text>
+<rect x='740.5' y='84.5' width='479' height='275' fill='#101010' stroke='#303030' stroke-width='1'/>
+<text x='764' y='120' font-size='12' fill='#A0A0A0' letter-spacing='2.5'>CURRENT CHANGES</text>
+<rect x='764' y='134' width='432' height='2' fill='#303030'/><rect x='764' y='134' width='432' height='2' fill='#00B83A'/>
+<rect x='764' y='172' width='8' height='8' fill='#FF3B0A'/>
+<text x='786' y='181' font-size='15' fill='#ECECEC' >Add order cancellation with refunds</text>
+<text x='786' y='202' font-size='12' fill='#A0A0A0' >Rejects shipped orders and refunds via the gateway.</text>
+<rect x='764' y='218' width='432' height='1' fill='#303030'/>
+<rect x='764' y='240' width='8' height='8' fill='#16B83D'/>
+<text x='786' y='249' font-size='15' fill='#ECECEC' >Add configurable product search</text>
+<text x='786' y='270' font-size='12' fill='#A0A0A0' >Ranks active products by matching query terms.</text>
+<rect x='764' y='286' width='432' height='1' fill='#303030'/>
+<rect x='764' y='308' width='8' height='8' fill='#C99526'/>
+<text x='786' y='317' font-size='15' fill='#ECECEC' >Move payments to gateway v2</text>
+<text x='786' y='338' font-size='12' fill='#A0A0A0' >Points to the v2 endpoint and lowers the timeout.</text>
+<rect x='764' y='354' width='432' height='1' fill='#303030'/>
+<g transform='translate(1088 14)' shape-rendering='crispEdges'><rect x='56' y='7' width='14' height='14' fill='#0E1711'/><rect x='56' y='7' width='14' height='7' fill='#739C7D'/><rect x='28' y='14' width='70' height='7' fill='#0E1711'/><rect x='21' y='21' width='84' height='84' fill='#0E1711'/><rect x='14' y='42' width='98' height='42' fill='#0E1711'/><rect x='28' y='28' width='70' height='70' fill='#27372C'/><rect x='28' y='28' width='70' height='7' fill='#739C7D'/><rect x='14' y='49' width='7' height='28' fill='#739C7D'/><rect x='105' y='49' width='7' height='28' fill='#739C7D'/><rect x='28' y='42' width='70' height='42' fill='#0E1711'/><rect x='35' y='49' width='56' height='28' fill='#27372C'/><rect x='35' y='84' width='7' height='7' fill='#B2CEB8'/><rect x='84' y='84' width='7' height='7' fill='#B2CEB8'/><rect x='49' y='105' width='28' height='7' fill='#0E1711'/><rect x='56' y='112' width='14' height='7' fill='#739C7D'/><rect x='35' y='49' width='21' height='21' fill='#B2CEB8'/><rect x='70' y='49' width='21' height='21' fill='#B2CEB8'/><rect x='35' y='63' width='7' height='7' fill='#0E1711'/><rect x='70' y='63' width='7' height='7' fill='#0E1711'/></g></svg>
