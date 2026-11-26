@@ -246,10 +246,33 @@
                                           StrokeStartLineCap="Square" StrokeEndLineCap="Square" />
                                 </Button>
                             </StackPanel>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding ViewTitle}" TextTrimming="CharacterEllipsis" FontSize="20" />
-                                <TextBlock Text="{Binding AnalysisProgressText}"
-                                           Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,4,0,0">
+                            <local:ReviewMascotControl DockPanel.Dock="Left" Margin="0,0,8,0"
+                                                       VerticalAlignment="Center" IsAnalyzing="{Binding IsAnalyzing}"
+                                                       OutlineBrush="{DynamicResource MascotOutline}"
+                                                       BodyBrush="{DynamicResource MascotBody}"
+                                                       AccentBrush="{DynamicResource MascotAccent}"
+                                                       HighlightBrush="{DynamicResource MascotHighlight}" />
+                            <Grid MinWidth="0" ClipToBounds="True" VerticalAlignment="Center">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="{Binding ViewTitle}" TextTrimming="CharacterEllipsis" FontSize="20">
+                                    <TextBlock.ToolTip>
+                                        <ToolTip MaxWidth="440"
+                                                 DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                            <TextBlock Text="{Binding ViewTitle}" TextWrapping="Wrap" />
+                                        </ToolTip>
+                                    </TextBlock.ToolTip>
+                                </TextBlock>
+                                <TextBlock Grid.Row="1" Text="{Binding AnalysisProgressText}"
+                                           Foreground="{DynamicResource Secondary}" FontSize="12" Margin="0,4,0,0"
+                                           TextTrimming="CharacterEllipsis">
+                                    <TextBlock.ToolTip>
+                                        <ToolTip MaxWidth="440"
+                                                 DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                            <TextBlock Text="{Binding AnalysisProgressText}" TextWrapping="Wrap" />
+                                        </ToolTip>
+                                    </TextBlock.ToolTip>
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -261,7 +284,7 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                            </StackPanel>
+                            </Grid>
                         </DockPanel>
                         <ProgressBar Grid.Row="1" Height="2" IsIndeterminate="True"
                                      Foreground="{DynamicResource Active}" Background="{DynamicResource Border}"
@@ -386,6 +409,7 @@
                         <TextBlock Text="CODE" Foreground="{DynamicResource Secondary}" FontSize="12" />
                         <local:DiffViewerControl Grid.Row="1" RenderDocument="{Binding DisplayedDiff, Mode=OneWay}"
                                           BorderThickness="0" Background="Transparent"
+                                          Foreground="{DynamicResource Primary}"
                                           FontFamily="{DynamicResource AppFontFamily}" FontSize="13" Margin="0,16,0,0" />
                         <Border Grid.Row="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0"
                                 Margin="0,16,0,0" Padding="0,16,0,0">

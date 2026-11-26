@@ -26,6 +26,10 @@ public static class ThemeService
         Set("Positive", light ? "#087A29" : "#16B83D");
         Set("Warning", light ? "#8A6400" : "#C99526");
         Set("Critical", light ? "#B72C08" : "#FF3B0A");
+        Set("MascotOutline", "#0E1711");
+        Set("MascotBody", "#27372C");
+        Set("MascotAccent", "#739C7D");
+        Set("MascotHighlight", "#B2CEB8");
         Set("DiffAdded", light ? "#087A29" : "#65E879");
         Set("DiffRemoved", light ? "#B72C08" : "#FF7957");
         Set("DiffHunkModel", light ? "#006EA8" : "#46B7FF");

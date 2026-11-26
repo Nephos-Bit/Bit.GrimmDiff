@@ -36,6 +36,11 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
   --color-code-string: #75C68A;
   --color-code-comment: #6F6F6F;
 
+  --color-mascot-outline: #0E1711;
+  --color-mascot-body: #27372C;
+  --color-mascot-accent: #739C7D;
+  --color-mascot-highlight: #B2CEB8;
+
   --color-critical: #FF3B0A;
   --color-critical-surface: rgba(255, 59, 10, 0.20);
   --color-warning: #C99526;
@@ -67,6 +72,11 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
   --color-code-member: #734A92;
   --color-code-string: #087A29;
   --color-code-comment: #707070;
+
+  --color-mascot-outline: #0E1711;
+  --color-mascot-body: #27372C;
+  --color-mascot-accent: #739C7D;
+  --color-mascot-highlight: #B2CEB8;
 
   --color-critical: #B72C08;
   --color-critical-surface: rgba(183, 44, 8, 0.16);
@@ -205,6 +215,7 @@ Cascadia Code ist die primäre Schriftfamilie für die Benutzeroberfläche. Zahl
 - Bei `prefers-reduced-motion` sind Transitionen deaktiviert.
 - Kontinuierlich aktualisierte Werte werden nur zwischen gültigen Zeitstempeln zeitbasiert interpoliert. Zustandswechsel und Warnungen werden nie interpoliert.
 - Automatisch aktualisierte Inhalte und Interpolation laufen nur auf sichtbaren, aktiven Flächen.
+- Ausnahme: Die kleine Pixel-Figur im Analyse-Kopf schwebt und blinzelt ruhig. Während einer KI-Analyse zeigt sie einen schnelleren, dezenten Scanrhythmus; ihre Augen folgen der Maus in festen Pixelpositionen. Ihre Bewegung pausiert auf unsichtbaren Flächen und entfällt bei deaktivierten Windows-Animationen.
 - Lade-, Verbindungs-, Fehler- und Aktualisierungszustände sind sichtbar und textlich eindeutig.
 
 ## Prüfung und Governance

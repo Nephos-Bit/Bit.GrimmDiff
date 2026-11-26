@@ -11,6 +11,10 @@
         <SolidColorBrush x:Key="Active" Color="#00B83A" /><SolidColorBrush x:Key="Positive" Color="#16B83D" />
         <SolidColorBrush x:Key="Warning" Color="#C99526" />
         <SolidColorBrush x:Key="Critical" Color="#FF3B0A" /><SolidColorBrush x:Key="DiffAdded" Color="#65E879" />
+        <SolidColorBrush x:Key="MascotOutline" Color="#0E1711" />
+        <SolidColorBrush x:Key="MascotBody" Color="#27372C" />
+        <SolidColorBrush x:Key="MascotAccent" Color="#739C7D" />
+        <SolidColorBrush x:Key="MascotHighlight" Color="#B2CEB8" />
         <SolidColorBrush x:Key="DiffAddedBackground" Color="#4D65E879" />
         <SolidColorBrush x:Key="DiffRemoved" Color="#FF7957" />
         <SolidColorBrush x:Key="DiffRemovedBackground" Color="#4DFF7957" />
