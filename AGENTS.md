@@ -16,16 +16,16 @@ GitHub landing page; use this file and the relevant source files instead.
 - `src/GrimmDiff.Data.Abstracts`: öffentliche Codex-Prozessmodelle und -Ports.
 - `src/GrimmDiff.Data`: Git-, Codex- und Präferenzadapter.
 - `src/GrimmDiff.Gui.Abstracts`: UI-Models und UI-Serviceverträge.
-- `src/GrimmDiff.Gui`: WPF-Anwendung mit MVVM, DI-Start in `App.xaml.cs`, Controls, Renderern, Services, ViewModels und Views.
+- `src/GrimmDiff.Gui`: WPF-Anwendung mit MVVM, DI-Start in `Composition/App.xaml.cs`, Controls, Renderern, Services sowie bereichseigenen ViewModels und Views.
 - `tests/GrimmDiff.Logic.Tests`, `tests/GrimmDiff.Data.Tests`, `tests/GrimmDiff.Gui.Tests`: ausführbare, paketfreie Tests der jeweiligen Schicht.
 - `scripts`: Auslieferungs- und lokale Wartungsskripte.
 - `docs/technical.md`: Build-, Test- und Release-Anleitung. `docs/assets/readme`: Screenshots und SVG-Grafiken für die README-Landingpage. `docs/compliance` und `docs/security`: versionierte CRA-Nachweise, Threat Model, sichere Nutzungs- und Incident-Response-Verfahren.
-- `.github/workflows`: CI-Sicherheitsprüfungen für Tests, Dependency-Scan und SBOM-Erzeugung.
+- `.github/workflows`: CI-Prüfungen für Tests, Dependency-Scan und SBOM-Erzeugung sowie der Release-Workflow.
 
 
 ### UI-Styling
 
-Use the in the projectfolde containing UI-DESIGN.md
+Für das UI-Styling gilt `UI-DESIGN.md` im Projektstamm.
 
 ### Repo Map Maintenance
 
