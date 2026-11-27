@@ -13,6 +13,8 @@ namespace GrimmDiff.Data.Adapters.Codex;
 
 public sealed class CodexCliDiffAnalysisAdapter : IDiffAnalysisProviderPort
 {
+    public const int DefaultChunkCharacterLimit = 120_000;
+    public const int DefaultMaxChunks = 20;
     private const int PromptVersion = 3;
     private static readonly TimeSpan InvocationTimeout = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan TotalTimeout = TimeSpan.FromMinutes(10);
@@ -28,8 +30,8 @@ public sealed class CodexCliDiffAnalysisAdapter : IDiffAnalysisProviderPort
         ICodexStructuredRunnerPort client,
         ICodexSessionClientPort session,
         IDiffAnalysisProviderPort fallback,
-        int chunkCharacterLimit = 120_000,
-        int maxChunks = 20)
+        int chunkCharacterLimit = DefaultChunkCharacterLimit,
+        int maxChunks = DefaultMaxChunks)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkCharacterLimit);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxChunks);

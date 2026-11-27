@@ -167,6 +167,14 @@ var compositionThread = new Thread(() =>
             return null;
         }
 
+        IEnumerable<T> FindAll<T>(DependencyObject parent) where T : DependencyObject
+        {
+            if (parent is T match) yield return match;
+            for (var index = 0; index < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); index++)
+            foreach (var child in FindAll<T>(System.Windows.Media.VisualTreeHelper.GetChild(parent, index)))
+                yield return child;
+        }
+
         string? ContextPath(FrameworkElement? element) => element is null ? null :
             BindingOperations.GetBindingExpression(element, FrameworkElement.DataContextProperty)?.ParentBinding.Path?.Path;
         var content = (DependencyObject)view.Content;
@@ -189,6 +197,29 @@ var compositionThread = new Thread(() =>
         if (!main.IsSettingsOpen || Find<SettingsView>(content)?.Visibility != Visibility.Visible ||
             Find<WorkspaceView>(content)?.Visibility != Visibility.Collapsed)
             throw new Exception("Settings navigation must show the settings view.");
+        var promptPage = main.Settings.Groups.SelectMany(group => group.Pages)
+            .OfType<AiPromptSettingsViewModel>().Single();
+        main.Settings.SelectedPage = promptPage;
+        view.UpdateLayout();
+        var promptView = Find<AiPromptSettingsView>(content);
+        if (promptView is null || Find<System.Windows.Controls.Expander>(promptView) is not null)
+            throw new Exception("AI explanations must be visible without expandable controls.");
+        var responseBox = Find<System.Windows.Controls.TextBox>(promptView);
+        var responseBinding = responseBox is null ? null :
+            BindingOperations.GetBindingExpression(responseBox, System.Windows.Controls.TextBox.TextProperty);
+        if (responseBinding?.ParentBinding.Mode != BindingMode.OneWay ||
+            responseBox?.Text != promptPage.ResponseExample || responseBinding?.HasError != false)
+            throw new Exception("AI response example must render with a valid one-way binding.");
+        var wikiText = FindAll<System.Windows.Controls.TextBlock>(promptView).ToList();
+        var stepNumber = wikiText.Single(block => block.Text == "01");
+        var stepLabel = wikiText.Single(block => block.Text == promptPage.Text["AiWikiInputTitle"]);
+        var formatTitle = wikiText.Single(block => block.Text == promptPage.Text["AiWikiFormatTitle"]);
+        var formatLead = wikiText.Single(block => block.Text == promptPage.Text["AiWikiFormatSummary"]);
+        var formatBody = wikiText.Single(block => block.Text == promptPage.Text["AiWikiFormat"]);
+        if (Math.Abs(stepNumber.TranslatePoint(new Point(), promptView).Y -
+                     stepLabel.TranslatePoint(new Point(), promptView).Y) > 1 ||
+            formatTitle.FontSize <= formatLead.FontSize || formatLead.FontSize <= formatBody.FontSize)
+            throw new Exception("AI wiki step labels and section text must have a clear visual hierarchy.");
         main.Settings.BackToWorkspaceCommand.Execute(null);
         view.UpdateLayout();
         if (main.IsSettingsOpen || Find<SettingsView>(content)?.Visibility != Visibility.Collapsed ||
