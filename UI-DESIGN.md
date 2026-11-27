@@ -127,6 +127,7 @@ Alle Oberflächen unterstützen Dark, Light und Automatik. Automatik folgt der S
 --size-icon: 24px;
 --size-target-min: 44px;
 --stroke-emphasis: 6px;
+--selection-indicator-width: 2px;
 }
 ```
 
@@ -187,6 +188,7 @@ Cascadia Code ist die primäre Schriftfamilie für die Benutzeroberfläche. Zahl
 - Auf wechselndem oder kontrastarmem Hintergrund erhalten Icon-Buttons eine neutrale, kontrastierende Fläche und bei Bedarf eine dezente Border. Auf ruhigen, einfarbigen oder klar abgegrenzten Flächen bleiben sie flach.
 - Jede Icon-only-Aktion besitzt einen zugänglichen Namen. Alle interaktiven Ziele erhalten einen sichtbaren Fokus über `--color-active` und `--border-width`.
 - Hover nutzt `--color-surface-raised`; Pressed nutzt `--color-border`; Selected nutzt `--color-active`. Deaktivierte Aktionen sind nicht ausführbar und nennen den Grund unmittelbar an der Aktion.
+- Aktive Einträge in Listen und Auswahlfeldern erhalten einen `--selection-indicator-width` breiten Streifen in `--color-active`.
 
 ### Status und Visualisierungen
 

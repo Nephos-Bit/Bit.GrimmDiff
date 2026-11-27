@@ -1,9 +1,10 @@
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Gui.Abstracts.Models;
+using GrimmDiff.Gui.Abstracts.Services;
 using Velopack;
 using Velopack.Exceptions;
 using Velopack.Sources;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Services;
 
 public sealed class VelopackUpdateService : IApplicationUpdateService
 {

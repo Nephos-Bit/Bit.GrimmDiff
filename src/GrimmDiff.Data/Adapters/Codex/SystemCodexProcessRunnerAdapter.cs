@@ -1,9 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
-using GrimmDiff.Data.Abstracts;
+using GrimmDiff.Data.Abstracts.Models;
+using GrimmDiff.Data.Abstracts.Ports;
 
-namespace GrimmDiff.Data;
+namespace GrimmDiff.Data.Adapters.Codex;
 
 public sealed class SystemCodexProcessRunnerAdapter : ICodexProcessRunnerPort
 {

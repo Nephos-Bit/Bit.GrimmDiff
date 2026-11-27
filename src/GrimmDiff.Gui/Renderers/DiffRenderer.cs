@@ -1,9 +1,10 @@
 using System.Text;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Gui.Models.Rendering;
+using GrimmDiff.Logic.Abstracts.Models;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Renderers;
 
 public static class DiffRenderer
 {

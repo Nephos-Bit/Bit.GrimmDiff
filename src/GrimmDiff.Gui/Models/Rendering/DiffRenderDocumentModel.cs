@@ -1,5 +1,4 @@
-using GrimmDiff.Logic.Abstracts;
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Models.Rendering;
 
 public sealed class DiffRenderDocumentModel(string text, IReadOnlyList<DiffTextMarkerModel> markers,
     IReadOnlyList<DiffLineNumbersModel> lineNumbers, DiffPageCursorModel? nextPage)

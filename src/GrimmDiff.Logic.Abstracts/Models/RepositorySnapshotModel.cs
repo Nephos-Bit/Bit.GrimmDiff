@@ -1,4 +1,4 @@
-namespace GrimmDiff.Logic.Abstracts;
+namespace GrimmDiff.Logic.Abstracts.Models;
 
 public sealed record RepositorySnapshotModel(
     string Path,

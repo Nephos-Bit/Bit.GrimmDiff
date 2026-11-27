@@ -1,6 +1,7 @@
-namespace GrimmDiff.Gui;
+using GrimmDiff.Gui.Services;
+namespace GrimmDiff.Gui.ViewModels;
 
-public sealed class AiPromptSettingsViewModel(MainViewModel main) :
-    SettingsPageViewModelBase(main, "ai-prompt", "Ai", "AiPrompt", 2)
+public sealed class AiPromptSettingsViewModel(PreferencesStateService preferences) :
+    SettingsPageViewModelBase(preferences, "ai-prompt", "Ai", "AiPrompt", 2)
 {
 }

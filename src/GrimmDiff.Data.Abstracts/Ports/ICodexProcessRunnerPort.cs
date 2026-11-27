@@ -1,6 +1,6 @@
-using GrimmDiff.Data.Abstracts;
+using GrimmDiff.Data.Abstracts.Models;
 
-namespace GrimmDiff.Data.Abstracts;
+namespace GrimmDiff.Data.Abstracts.Ports;
 
 public interface ICodexProcessRunnerPort
 {

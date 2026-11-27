@@ -1,27 +1,38 @@
-namespace GrimmDiff.Gui;
+using GrimmDiff.Gui.Services;
+namespace GrimmDiff.Gui.ViewModels;
 
-public sealed class AppearanceSettingsViewModel(MainViewModel main) :
-    SettingsPageViewModelBase(main, "appearance", "General", "Appearance", 0)
+public sealed class AppearanceSettingsViewModel :
+    SettingsPageViewModelBase
 {
-    public IReadOnlyList<string> Languages => Main.Languages;
-    public IReadOnlyList<string> Themes => Main.Themes;
-    public IReadOnlyList<string> Fonts => Main.Fonts;
+    public AppearanceSettingsViewModel(PreferencesStateService preferences) :
+        base(preferences, "appearance", "General", "Appearance", 0)
+    {
+        preferences.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName is nameof(PreferencesStateService.Language) or "") OnPropertyChanged(nameof(SelectedLanguage));
+            if (args.PropertyName is nameof(PreferencesStateService.Theme) or "") OnPropertyChanged(nameof(SelectedTheme));
+            if (args.PropertyName is nameof(PreferencesStateService.Font) or "") OnPropertyChanged(nameof(SelectedFont));
+        };
+    }
+    public IReadOnlyList<string> Languages { get; } = ["English", "Deutsch"];
+    public IReadOnlyList<string> Themes { get; } = ["System", "Dark", "Light"];
+    public IReadOnlyList<string> Fonts { get; } = ["Cascadia Code", "Inter", "Verdana"];
 
     public string SelectedLanguage
     {
-        get => Main.SelectedLanguage;
-        set => Main.SelectedLanguage = value;
+        get => Preferences.Language;
+        set => Preferences.SetLanguage(value);
     }
 
     public string SelectedTheme
     {
-        get => Main.SelectedTheme;
-        set => Main.SelectedTheme = value;
+        get => Preferences.Theme;
+        set => Preferences.SetTheme(value);
     }
 
     public string SelectedFont
     {
-        get => Main.SelectedFont;
-        set => Main.SelectedFont = value;
+        get => Preferences.Font;
+        set => Preferences.SetFont(value);
     }
 }

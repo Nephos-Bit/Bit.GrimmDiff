@@ -1,20 +1,12 @@
-using GrimmDiff.Logic.Abstracts;
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Services;
 
 public sealed class LocalizedTextService(Func<string> language)
 {
     private static readonly IReadOnlyDictionary<string, (string En, string De)> Values =
         new Dictionary<string, (string, string)>
         {
-            ["Open"] = ("Open repository", "Repository öffnen"), ["Clone"] = ("Clone", "Klonen"),
-            ["Fetch"] = ("Fetch", "Abrufen"), ["Pull"] = ("Pull", "Holen"), ["Push"] = ("Push", "Senden"),
-            ["Repository"] = ("REPOSITORY", "REPOSITORY"), ["Branches"] = ("BRANCHES", "BRANCHES"),
+            ["Pull"] = ("Pull", "Holen"),
             ["Branch"] = ("Branch", "Branch"), ["NoBranch"] = ("No branch selected", "Kein Branch ausgewählt"),
-            ["Recent"] = ("RECENT", "ZULETZT"), ["NewBranch"] = ("New branch", "Neuer Branch"),
-            ["Changes"] = ("CHANGES", "ÄNDERUNGEN"), ["Working"] = ("Working tree", "Arbeitsbaum"),
-            ["Staged"] = ("Staged", "Gestaged"), ["CommitMessage"] = ("COMMIT MESSAGE", "COMMIT-NACHRICHT"),
-            ["Stage"] = ("Stage", "Stagen"), ["Unstage"] = ("Unstage", "Unstagen"),
-            ["Commit"] = ("Commit", "Committen"), ["WorkSteps"] = ("WORK STEPS", "ARBEITSSCHRITTE"),
             ["General"] = ("General", "Allgemein"), ["Appearance"] = ("Appearance", "Darstellung"),
             ["Mascots"] = ("Mascots", "Maskottchen"),
             ["ShowMascots"] = ("Show mascot during AI review", "Maskottchen beim KI-Review anzeigen"),

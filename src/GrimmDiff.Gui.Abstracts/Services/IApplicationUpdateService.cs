@@ -1,4 +1,6 @@
-namespace GrimmDiff.Gui.Abstracts;
+using GrimmDiff.Gui.Abstracts.Models;
+
+namespace GrimmDiff.Gui.Abstracts.Services;
 
 public interface IApplicationUpdateService
 {

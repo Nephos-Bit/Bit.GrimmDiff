@@ -1,6 +1,7 @@
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Gui.Models.Rendering;
+using GrimmDiff.Logic.Abstracts.Models;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.ViewModels;
 
 public sealed class AnalysisFileViewModel(
     string path,

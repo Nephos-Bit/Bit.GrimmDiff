@@ -1,25 +1,32 @@
-using System.ComponentModel;
+using GrimmDiff.Gui.Services;
+namespace GrimmDiff.Gui.ViewModels;
 
-namespace GrimmDiff.Gui;
-
-public abstract class SettingsPageViewModelBase : ISettingsPageViewModel, INotifyPropertyChanged
+public abstract class SettingsPageViewModelBase : ObservableViewModel, ISettingsPageViewModel
 {
     private bool _isSelected;
     private readonly string _groupKey;
     private readonly string _titleKey;
 
-    protected SettingsPageViewModelBase(MainViewModel main, string id, string groupKey, string titleKey, int order)
+    protected SettingsPageViewModelBase(PreferencesStateService preferences, string id, string groupKey, string titleKey, int order)
     {
-        Main = main;
+        Preferences = preferences;
         Id = id;
         _groupKey = groupKey;
         _titleKey = titleKey;
         Order = order;
-        Main.PropertyChanged += (_, _) => RefreshBindings();
+        Preferences.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName is nameof(PreferencesStateService.Language) or "")
+            {
+                OnPropertyChanged(nameof(Group));
+                OnPropertyChanged(nameof(Title));
+                OnPropertyChanged(nameof(Text));
+            }
+        };
     }
 
-    protected MainViewModel Main { get; }
-    public LocalizedTextService Text => Main.Text;
+    protected PreferencesStateService Preferences { get; }
+    public LocalizedTextService Text => Preferences.Text;
     public string Id { get; }
     public string Group => Text[_groupKey];
     public string Title => Text[_titleKey];
@@ -36,15 +43,4 @@ public abstract class SettingsPageViewModelBase : ISettingsPageViewModel, INotif
         }
     }
 
-    protected void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected void RefreshBindings()
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 }

@@ -1,6 +1,6 @@
 using System.Windows.Media;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Models;
 
 public static class MascotCatalog
 {

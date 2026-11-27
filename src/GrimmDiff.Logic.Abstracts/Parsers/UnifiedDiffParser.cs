@@ -1,7 +1,7 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Text.RegularExpressions;
+using GrimmDiff.Logic.Abstracts.Models;
 
-namespace GrimmDiff.Logic.Abstracts;
+namespace GrimmDiff.Logic.Abstracts.Parsers;
 
 public static partial class UnifiedDiffParser
 {

@@ -1,6 +1,7 @@
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Ports;
 
-namespace GrimmDiff.Logic;
+namespace GrimmDiff.Logic.UseCases;
 
 public sealed class RepositoryWorkspaceService(
     IRepositoryAvailabilityPort availability,

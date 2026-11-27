@@ -1,19 +1,20 @@
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Policies;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Ports;
 
-namespace GrimmDiff.Logic;
+namespace GrimmDiff.Logic.UseCases;
 
 public sealed class DiffAnalysisService(
     IRepositoryDiffReaderPort diffs,
     IDiffAnalysisProviderPort aiProvider,
     IDiffAnalysisProviderPort heuristicProvider)
 {
-    public async Task<DiffAnalysisViewModel> AnalyzeAsync(DiffAnalysisQueryModel query,
+    public async Task<DiffAnalysisResultModel> AnalyzeAsync(DiffAnalysisQueryModel query,
         CancellationToken cancellationToken = default)
     {
         var (diff, scope) = await ReadDiffAsync(query, cancellationToken);
         var request = new DiffAnalysisRequestModel(query.RepositoryPath, scope, diff, query.Language);
-        return new DiffAnalysisViewModel(
-            await (query.UseAi ? aiProvider : heuristicProvider).AnalyzeAsync(request, cancellationToken), query.UseAi);
+        return await (query.UseAi ? aiProvider : heuristicProvider).AnalyzeAsync(request, cancellationToken);
     }
 
     public async Task<AiAnalysisPreviewModel> PreviewAiAsync(DiffAnalysisQueryModel query,

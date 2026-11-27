@@ -5,6 +5,19 @@ using GrimmDiff.Gui;
 using GrimmDiff.Logic;
 using GrimmDiff.Logic.Abstracts;
 using GrimmDiff.Data;
+using GrimmDiff.Data.Abstracts.Models;
+using GrimmDiff.Data.Adapters.Codex;
+using GrimmDiff.Gui.Models;
+using GrimmDiff.Gui.Models.Rendering;
+using GrimmDiff.Gui.Renderers;
+using GrimmDiff.Gui.Services;
+using GrimmDiff.Gui.ViewModels;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Parsers;
+using GrimmDiff.Logic.Abstracts.Policies;
+using GrimmDiff.Logic.Processors.DiffAnalysis;
+using GrimmDiff.Logic.Tests;
+using GrimmDiff.Logic.UseCases;
 
 var failures = new List<string>();
 
@@ -184,7 +197,7 @@ Test("Codex provider maps every hunk", () =>
     var client = new FakeCodexCliClient([
         """{"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["H0001","H0002"],"confidence":0.9,"reviewStatus":"good","reviewHint":null}]}"""
     ]);
-    var result = new CodexCliDiffAnalysisAdapter(client, new LocalHeuristicDiffAnalysisService())
+    var result = new CodexCliDiffAnalysisAdapter(client, client, new LocalHeuristicDiffAnalysisService())
         .AnalyzeAsync(new DiffAnalysisRequestModel(".", DiffScopeModel.WorkingTree, diff, "en")).GetAwaiter().GetResult();
     if (result.Source != DiffAnalysisSourceModel.Codex || result.Groups.Count != 1 || result.Groups[0].Hunks.Count != 2 ||
         !client.Schemas[0].Contains("\"enum\"") ||
@@ -199,7 +212,7 @@ Test("Codex provider extracts JSON and normalizes hunk ids", () =>
         {"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["h1","2"],"confidence":0.9,"reviewStatus":"ok","reviewHint":"Add a boundary test for null input."}]}
         """
     ]);
-    var result = new CodexCliDiffAnalysisAdapter(client, new LocalHeuristicDiffAnalysisService())
+    var result = new CodexCliDiffAnalysisAdapter(client, client, new LocalHeuristicDiffAnalysisService())
         .AnalyzeAsync(new DiffAnalysisRequestModel(".", DiffScopeModel.WorkingTree, diff, "en")).GetAwaiter().GetResult();
     if (result.Source != DiffAnalysisSourceModel.Codex || result.Groups[0].Hunks.Count != 2 ||
         result.Groups[0].Review?.Hint != "Add a boundary test for null input.")
@@ -210,7 +223,7 @@ Test("invalid Codex assignment uses heuristic fallback", () =>
     var client = new FakeCodexCliClient([
         """{"groups":[{"title":"Invalid","description":"Duplicates a hunk.","hunkIds":["H0001","H0001"],"confidence":0.8,"reviewStatus":"good","reviewHint":null}]}"""
     ]);
-    var result = new CodexCliDiffAnalysisAdapter(client, new LocalHeuristicDiffAnalysisService())
+    var result = new CodexCliDiffAnalysisAdapter(client, client, new LocalHeuristicDiffAnalysisService())
         .AnalyzeAsync(new DiffAnalysisRequestModel(".", DiffScopeModel.WorkingTree, diff, "en")).GetAwaiter().GetResult();
     if (result.Source != DiffAnalysisSourceModel.Heuristic || string.IsNullOrWhiteSpace(result.Diagnostic))
         throw new Exception("Expected visible heuristic fallback.");
@@ -222,7 +235,7 @@ Test("large Codex analysis merges chunk groups", () =>
         """{"groups":[{"title":"Second","description":"Updates the second part.","hunkIds":["H0002"],"confidence":0.8,"reviewStatus":"ok","reviewHint":"Add a regression test."}]}""",
         """{"groups":[{"title":"Processor","description":"Updates the shared processor.","groupIds":["G0001","G0002"],"confidence":0.9,"reviewStatus":"warning","reviewHint":"Validate processor input before use."}]}"""
     ]);
-    var result = new CodexCliDiffAnalysisAdapter(client, new LocalHeuristicDiffAnalysisService(), 250)
+    var result = new CodexCliDiffAnalysisAdapter(client, client, new LocalHeuristicDiffAnalysisService(), 250)
         .AnalyzeAsync(new DiffAnalysisRequestModel(".", DiffScopeModel.WorkingTree, diff, "en")).GetAwaiter().GetResult();
     if (result.Source != DiffAnalysisSourceModel.Codex || result.Groups.Count != 1 || result.Groups[0].Hunks.Count != 2 ||
         client.Prompts.Count != 3 || result.Groups[0].Review?.Status != DiffGroupReviewStatusModel.Warning ||
@@ -234,7 +247,7 @@ Test("Codex provider rejects review status without required hint", () =>
     var client = new FakeCodexCliClient([
         """{"groups":[{"title":"Processor","description":"Updates the shared processor.","hunkIds":["H0001","H0002"],"confidence":0.9,"reviewStatus":"warning","reviewHint":null}]}"""
     ]);
-    var result = new CodexCliDiffAnalysisAdapter(client, new LocalHeuristicDiffAnalysisService())
+    var result = new CodexCliDiffAnalysisAdapter(client, client, new LocalHeuristicDiffAnalysisService())
         .AnalyzeAsync(new DiffAnalysisRequestModel(".", DiffScopeModel.WorkingTree, diff, "en")).GetAwaiter().GetResult();
     if (result.Source != DiffAnalysisSourceModel.Heuristic || result.Groups.Any(group => group.Review is not null))
         throw new Exception("Expected invalid review to use the unreviewed heuristic fallback.");
@@ -242,7 +255,7 @@ Test("Codex provider rejects review status without required hint", () =>
 Test("Codex client enforces Luna and safe execution", () =>
 {
     var runner = new RecordingProcessRunner(new CodexProcessResultModel(0, "{}", string.Empty));
-    var client = new CodexCliClientAdapter(runner);
+    var client = new CodexCliStructuredRunnerAdapter(runner);
     _ = client.RunStructuredAsync("prompt", "{}", TimeSpan.FromSeconds(1)).GetAwaiter().GetResult();
     var request = runner.LastRequest ?? throw new Exception("Expected process request.");
     if (!request.Arguments.Contains("gpt-6-luna") || !request.Arguments.Contains("read-only") ||
@@ -268,7 +281,7 @@ Test("protected diff files stay local", () =>
     var client = new FakeCodexCliClient([
         """{"groups":[{"title":"App","description":"Adds the app.","hunkIds":["H0001"],"confidence":0.9,"reviewStatus":"good","reviewHint":null}]}"""
     ]);
-    var result = new CodexCliDiffAnalysisAdapter(client, new LocalHeuristicDiffAnalysisService())
+    var result = new CodexCliDiffAnalysisAdapter(client, client, new LocalHeuristicDiffAnalysisService())
         .AnalyzeAsync(new DiffAnalysisRequestModel("repo", DiffScopeModel.WorkingTree, mixed, "en")).GetAwaiter().GetResult();
     if (client.Prompts.Single().Contains("PASSWORD=secret") || result.Hunks.Count != 2 || result.Groups.Count < 2)
         throw new Exception("Protected files must remain in the local result only.");
@@ -305,7 +318,7 @@ Test("analysis use case combines staged and working diffs", () =>
     var provider = new RecordingAnalysisProvider();
     var result = new DiffAnalysisService(diffs, provider, provider)
         .AnalyzeAsync(new DiffAnalysisQueryModel("repo", null, "en", true)).GetAwaiter().GetResult();
-    if (!result.IsAiRequested || provider.Requests.Single().Diff != "stagedworking")
+    if (result.Source != DiffAnalysisSourceModel.Heuristic || provider.Requests.Single().Diff != "stagedworking")
         throw new Exception("Expected combined current diff.");
 });
 Test("analysis use case loads historical diff only", () =>
@@ -389,93 +402,3 @@ Test("render document preserves marker offsets when appending a page", () =>
         throw new Exception("Expected appended render document.");
 });
 Environment.ExitCode = failures.Count == 0 ? 0 : 1;
-
-internal sealed class FakeDiffReader(string staged, string working, string historical) : IRepositoryDiffReaderPort
-{
-    public Task<string> GetDiffAsync(string repositoryPath, DiffScopeModel scope, string? path = null,
-        CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(scope == DiffScopeModel.Staged ? staged : working);
-    }
-
-    public Task<string> GetCommitDiffAsync(string repositoryPath, string commitId, string? path = null,
-        CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(historical);
-    }
-}
-
-internal sealed class RecordingAnalysisProvider : IDiffAnalysisProviderPort
-{
-    public List<DiffAnalysisRequestModel> Requests { get; } = [];
-
-    public Task<DiffAnalysisResultModel> AnalyzeAsync(DiffAnalysisRequestModel request,
-        CancellationToken cancellationToken = default)
-    {
-        Requests.Add(request);
-        return Task.FromResult(new DiffAnalysisResultModel([], [], DiffAnalysisSourceModel.Heuristic));
-    }
-}
-
-internal sealed class FakeCodexCliClient(IEnumerable<string> responses) : ICodexSessionClientPort, ICodexStructuredRunnerPort
-{
-    private readonly Queue<string> _responses = new(responses);
-    public List<string> Prompts { get; } = [];
-    public List<string> Schemas { get; } = [];
-
-    public Task<CodexCliStatusModel> GetStatusAsync(CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(new CodexCliStatusModel(CodexCliStatusKindModel.Ready, "Ready"));
-    }
-
-    public Task<CodexCliStatusModel> LoginAsync(CancellationToken cancellationToken = default)
-    {
-        return GetStatusAsync(cancellationToken);
-    }
-
-    public Task<string> RunStructuredAsync(string prompt, string schema, TimeSpan timeout,
-        CancellationToken cancellationToken = default)
-    {
-        Prompts.Add(prompt);
-        Schemas.Add(schema);
-        return Task.FromResult(_responses.Dequeue());
-    }
-}
-
-internal sealed class RecordingProcessRunner(CodexProcessResultModel result) : ICodexProcessRunnerPort
-{
-    public CodexProcessRequestModel? LastRequest { get; private set; }
-    public bool SchemaExistedDuringRun { get; private set; }
-    public bool SchemaWasValidJsonDuringRun { get; private set; }
-    public bool SchemaHadUtf8BomDuringRun { get; private set; }
-
-    public Task<CodexProcessResultModel> RunAsync(CodexProcessRequestModel request, CancellationToken cancellationToken = default)
-    {
-        LastRequest = request;
-        var schemaIndex = -1;
-        for (var index = 0; index < request.Arguments.Count; index++)
-            if (request.Arguments[index] == "--output-schema")
-            {
-                schemaIndex = index;
-                break;
-            }
-
-        SchemaExistedDuringRun = schemaIndex >= 0 && schemaIndex + 1 < request.Arguments.Count &&
-                                 File.Exists(request.Arguments[schemaIndex + 1]);
-        if (SchemaExistedDuringRun)
-        {
-            var bytes = File.ReadAllBytes(request.Arguments[schemaIndex + 1]);
-            SchemaHadUtf8BomDuringRun = bytes.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF });
-            try
-            {
-                using var document = JsonDocument.Parse(bytes);
-                SchemaWasValidJsonDuringRun = document.RootElement.ValueKind == JsonValueKind.Object;
-            }
-            catch (JsonException)
-            {
-            }
-        }
-
-        return Task.FromResult(result);
-    }
-}

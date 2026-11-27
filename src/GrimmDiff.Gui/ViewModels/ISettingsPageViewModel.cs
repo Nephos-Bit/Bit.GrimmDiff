@@ -1,4 +1,4 @@
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.ViewModels;
 
 public interface ISettingsPageViewModel
 {

@@ -1,4 +1,4 @@
-namespace GrimmDiff.Data;
+namespace GrimmDiff.Data.Adapters.Codex;
 
 public static class CodexCliPromptInstructions
 {

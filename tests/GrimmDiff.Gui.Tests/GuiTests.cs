@@ -1,9 +1,25 @@
 using GrimmDiff.Gui;
 using System.Threading;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
+using System.Windows.Data;
+using GrimmDiff.Gui.Composition;
+using GrimmDiff.Gui.Controls;
+using GrimmDiff.Gui.Models;
+using GrimmDiff.Gui.Services;
+using GrimmDiff.Gui.Tests;
+using GrimmDiff.Gui.ViewModels;
+using GrimmDiff.Gui.Views;
+using GrimmDiff.Gui.Views.Settings;
+using GrimmDiff.Logic;
+using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.UseCases;
 
 var language = "English";
 var text = new LocalizedTextService(() => language);
@@ -117,3 +133,121 @@ renderThread.Join();
 if (renderingError is not null) throw renderingError;
 
 Console.WriteLine("PASS mascot preview redraws after variant changes");
+
+Exception? compositionError = null;
+var compositionThread = new Thread(() =>
+{
+    try
+    {
+        var app = new App();
+        app.InitializeComponent();
+        var services = new ServiceCollection();
+        var configure = typeof(App).GetMethod("ConfigureServices", BindingFlags.Static | BindingFlags.NonPublic)
+                        ?? throw new Exception("Application service composition was not found.");
+        configure.Invoke(null, [services]);
+        using var provider = services.BuildServiceProvider();
+        var view = provider.GetRequiredService<MainView>();
+        var main = provider.GetRequiredService<MainViewModel>();
+        view.ShowActivated = false;
+        view.ShowInTaskbar = false;
+        view.Opacity = 0;
+        view.Show();
+        view.Measure(new Size(1440, 900));
+        view.Arrange(new Rect(0, 0, 1440, 900));
+        view.UpdateLayout();
+
+        T? Find<T>(DependencyObject parent) where T : DependencyObject
+        {
+            if (parent is T match) return match;
+            for (var index = 0; index < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); index++)
+            {
+                var found = Find<T>(System.Windows.Media.VisualTreeHelper.GetChild(parent, index));
+                if (found is not null) return found;
+            }
+            return null;
+        }
+
+        string? ContextPath(FrameworkElement? element) => element is null ? null :
+            BindingOperations.GetBindingExpression(element, FrameworkElement.DataContextProperty)?.ParentBinding.Path?.Path;
+        var content = (DependencyObject)view.Content;
+        if (view.DataContext != main ||
+            ContextPath(Find<WorkspaceView>(content)) != nameof(MainViewModel.Workspace) ||
+            ContextPath(Find<RepositoryView>(content)) != nameof(WorkspaceViewModel.Repository) ||
+            ContextPath(Find<AnalysisView>(content)) != nameof(WorkspaceViewModel.Analysis) ||
+            ContextPath(Find<DiffDocumentView>(content)) != nameof(WorkspaceViewModel.Diff) ||
+            ContextPath(Find<CodexAccountView>(content)) != nameof(MainViewModel.Account) ||
+            ContextPath(Find<SettingsView>(content)) != nameof(MainViewModel.Settings) ||
+            Find<WorkspaceView>(content)?.DataContext != main.Workspace ||
+            Find<RepositoryView>(content)?.DataContext != main.Workspace.Repository ||
+            Find<AnalysisView>(content)?.DataContext != main.Workspace.Analysis ||
+            Find<DiffDocumentView>(content)?.DataContext != main.Workspace.Diff ||
+            Find<CodexAccountView>(content)?.DataContext != main.Account ||
+            Find<SettingsView>(content)?.DataContext != main.Settings)
+            throw new Exception("Each view must bind to its own view model.");
+        main.OpenSettingsCommand.Execute(null);
+        view.UpdateLayout();
+        if (!main.IsSettingsOpen || Find<SettingsView>(content)?.Visibility != Visibility.Visible ||
+            Find<WorkspaceView>(content)?.Visibility != Visibility.Collapsed)
+            throw new Exception("Settings navigation must show the settings view.");
+        main.Settings.BackToWorkspaceCommand.Execute(null);
+        view.UpdateLayout();
+        if (main.IsSettingsOpen || Find<SettingsView>(content)?.Visibility != Visibility.Collapsed ||
+            Find<WorkspaceView>(content)?.Visibility != Visibility.Visible)
+            throw new Exception("Back navigation must restore the workspace view.");
+        var pendingAnalysis = new TaskCompletionSource();
+        main.Workspace.Repository.ContextChanged += () => pendingAnalysis.Task;
+        var currentChanges = main.Workspace.Repository.ShowCurrentCommand;
+        currentChanges.Execute(null);
+        if (currentChanges.CanExecute(null))
+            throw new Exception("Current changes must be disabled while its analysis is loading.");
+        pendingAnalysis.SetResult();
+        var completionFrame = new DispatcherFrame();
+        view.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => completionFrame.Continue = false));
+        Dispatcher.PushFrame(completionFrame);
+        if (!currentChanges.CanExecute(null))
+            throw new Exception("Current changes must be enabled after its analysis finishes.");
+        view.Close();
+        app.Shutdown();
+    }
+    catch (Exception exception)
+    {
+        compositionError = exception;
+    }
+});
+compositionThread.SetApartmentState(ApartmentState.STA);
+compositionThread.Start();
+compositionThread.Join();
+if (compositionError is not null) throw compositionError;
+Console.WriteLine("PASS workspace views bind to their own view models");
+
+var preferenceStore = new InMemoryPreferencesStore(new AppPreferencesModel([], Font: "Unknown"));
+var preferences = new PreferencesStateService(new PreferencesService(preferenceStore));
+await preferences.LoadAsync();
+if (preferences.Font != "Cascadia Code") throw new Exception("Legacy font values must use the supported default.");
+preferences.SetLanguage("Deutsch");
+preferences.SetTheme("Dark");
+preferences.AddRecent("repository-a");
+await preferences.FlushAsync();
+if (preferenceStore.Writes.Count != 3 || preferenceStore.Current.Language != "Deutsch" ||
+    preferenceStore.Current.Theme != "Dark" || preferenceStore.Current.RecentRepositories.Single() != "repository-a" ||
+    preferences.Text["Appearance"] != "Darstellung")
+    throw new Exception("Preference changes must be saved in order and reflected in localized settings.");
+Console.WriteLine("PASS preferences load legacy values and serialize updates");
+
+var dialogs = new RecordingDialogService();
+dialogs.Answers.Enqueue("ALLOW");
+dialogs.Answers.Enqueue("ALLOW");
+var consent = new AiConsentService(preferences, dialogs, new WorkspaceStatusViewModel());
+var repositoryRoot = Path.Combine(Path.GetTempPath(), "GrimmDiff-consent-" + Guid.NewGuid().ToString("N"));
+var firstRepository = Path.Combine(repositoryRoot, "repo");
+var siblingRepository = Path.Combine(repositoryRoot, "repo-other");
+var preview = new AiAnalysisPreviewModel(2, 1, 1, 40);
+if (!consent.Approve(firstRepository, preview) || !consent.Approve(firstRepository, preview) ||
+    !consent.Approve(siblingRepository, preview) || dialogs.Questions != 2)
+    throw new Exception("Repository approval must be reused only for the same repository and policy.");
+consent.Revoke(firstRepository);
+await preferences.FlushAsync();
+if (preferences.Approvals.Count != 1 || !preferences.Approvals[0].RepositoryId.StartsWith(siblingRepository,
+        StringComparison.OrdinalIgnoreCase))
+    throw new Exception("Revoking a repository must preserve approvals for sibling paths.");
+Console.WriteLine("PASS AI approval reuse and repository-scoped revocation");

@@ -1,8 +1,8 @@
-using System.Text.RegularExpressions;
 using System.Net;
-using GrimmDiff.Logic.Abstracts;
+using System.Text.RegularExpressions;
+using GrimmDiff.Logic.Abstracts.Models;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Models;
 
 public static partial class TicketLinkResolver
 {

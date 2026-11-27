@@ -1,5 +1,6 @@
-using GrimmDiff.Logic.Abstracts;
-namespace GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Models;
+
+namespace GrimmDiff.Logic.Abstracts.Policies;
 
 public static class AiDiffSafetyPolicy
 {
@@ -23,7 +24,7 @@ public static class AiDiffSafetyPolicy
         var transferable = new List<DiffHunkModel>();
         var excluded = new List<DiffHunkModel>();
         var transferredCharacters = 0;
-        foreach (var hunk in UnifiedDiffParser.Parse(diff, scope))
+        foreach (var hunk in Parsers.UnifiedDiffParser.Parse(diff, scope))
         {
             var characterCount = hunk.Header.Length + hunk.Content.Length;
             if (IsProtected(hunk) || characterCount > MaximumRemoteHunkCharacters ||

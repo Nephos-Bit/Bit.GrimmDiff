@@ -1,6 +1,6 @@
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Models;
 
-namespace GrimmDiff.Logic.Abstracts;
+namespace GrimmDiff.Logic.Abstracts.Ports;
 
 public interface IRepositoryReaderPort
 {

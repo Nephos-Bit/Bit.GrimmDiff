@@ -1,9 +1,9 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Windows.Media;
+using GrimmDiff.Gui.Models.Rendering;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Rendering;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Renderers;
 
 internal sealed class DiffLineBackgroundRenderer : IBackgroundRenderer
 {

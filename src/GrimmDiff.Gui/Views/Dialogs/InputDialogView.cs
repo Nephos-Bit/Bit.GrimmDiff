@@ -1,9 +1,8 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Views.Dialogs;
 
 public static class InputDialogView
 {

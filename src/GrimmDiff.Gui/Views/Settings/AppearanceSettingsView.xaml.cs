@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Views.Settings;
 
 public partial class AppearanceSettingsView : UserControl
 {

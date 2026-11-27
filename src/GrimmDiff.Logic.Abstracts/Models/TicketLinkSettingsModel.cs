@@ -1,4 +1,4 @@
-namespace GrimmDiff.Logic.Abstracts;
+namespace GrimmDiff.Logic.Abstracts.Models;
 
 public sealed record TicketLinkSettingsModel(TicketLinkProviderModel Provider, string? BaseUrl, string? Pattern = null)
 {

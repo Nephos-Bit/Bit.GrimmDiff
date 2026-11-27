@@ -1,10 +1,11 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Windows;
 using System.Windows.Controls;
+using GrimmDiff.Gui.Models.Rendering;
+using GrimmDiff.Gui.Renderers;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Controls.Diff;
 
 public sealed class DiffViewerControl : TextEditor
 {

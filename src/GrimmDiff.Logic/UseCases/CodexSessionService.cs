@@ -1,5 +1,7 @@
-using GrimmDiff.Logic.Abstracts;
-namespace GrimmDiff.Logic;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Ports;
+
+namespace GrimmDiff.Logic.UseCases;
 
 public sealed class CodexSessionService(ICodexSessionClientPort client)
 {

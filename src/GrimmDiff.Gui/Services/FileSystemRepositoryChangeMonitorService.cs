@@ -1,7 +1,7 @@
-using GrimmDiff.Logic.Abstracts;
 using System.IO;
+using GrimmDiff.Gui.Abstracts.Services;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Services;
 
 public sealed class FileSystemRepositoryChangeMonitorService : IRepositoryChangeMonitorService
 {

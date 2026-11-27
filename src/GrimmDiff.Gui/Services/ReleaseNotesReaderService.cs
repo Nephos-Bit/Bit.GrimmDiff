@@ -1,8 +1,8 @@
-using GrimmDiff.Logic.Abstracts;
 using System.IO;
 using System.Text.RegularExpressions;
+using GrimmDiff.Gui.Abstracts.Models;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Services;
 
 public static partial class ReleaseNotesReaderService
 {

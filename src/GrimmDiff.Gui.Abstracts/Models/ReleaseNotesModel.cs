@@ -1,4 +1,4 @@
-namespace GrimmDiff.Gui.Abstracts;
+namespace GrimmDiff.Gui.Abstracts.Models;
 
 public sealed record ReleaseNotesModel(string Version, string German, string English)
 {

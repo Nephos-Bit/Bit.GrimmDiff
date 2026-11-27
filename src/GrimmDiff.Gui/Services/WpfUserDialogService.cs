@@ -1,8 +1,9 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Windows;
+using GrimmDiff.Gui.Abstracts.Services;
+using GrimmDiff.Gui.Views.Dialogs;
 using Microsoft.Win32;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Services;
 
 public sealed class WpfUserDialogService : IUserDialogService
 {

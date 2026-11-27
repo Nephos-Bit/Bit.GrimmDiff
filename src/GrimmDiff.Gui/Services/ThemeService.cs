@@ -1,8 +1,7 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Windows.Media;
 using Microsoft.Win32;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Services;
 
 public static class ThemeService
 {

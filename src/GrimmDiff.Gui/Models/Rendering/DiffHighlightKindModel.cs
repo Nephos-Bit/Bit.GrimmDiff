@@ -1,5 +1,4 @@
-using GrimmDiff.Logic.Abstracts;
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Models.Rendering;
 
 public enum DiffHighlightKindModel
 {

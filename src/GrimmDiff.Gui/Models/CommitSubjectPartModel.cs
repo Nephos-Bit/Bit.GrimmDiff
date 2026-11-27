@@ -1,4 +1,3 @@
-using GrimmDiff.Logic.Abstracts;
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Models;
 
 public abstract record CommitSubjectPartModel(string Text);

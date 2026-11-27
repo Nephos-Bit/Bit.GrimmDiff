@@ -1,4 +1,6 @@
-namespace GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Models;
+
+namespace GrimmDiff.Logic.Abstracts.Ports;
 
 public interface IPreferencesStorePort
 {

@@ -1,4 +1,4 @@
-namespace GrimmDiff.Gui.Abstracts;
+namespace GrimmDiff.Gui.Abstracts.Services;
 
 public interface IUserDialogService
 {

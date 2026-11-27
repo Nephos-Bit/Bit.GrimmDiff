@@ -1,18 +1,12 @@
-using System.Text.RegularExpressions;
-using GrimmDiff.Logic;
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Parsers;
+using GrimmDiff.Logic.Abstracts.Ports;
+using static GrimmDiff.Logic.Processors.DiffAnalysis.HeuristicFeatureExtractor;
 
-namespace GrimmDiff.Data;
+namespace GrimmDiff.Logic.Processors.DiffAnalysis;
 
-public sealed partial class LocalHeuristicDiffAnalysisService : IDiffAnalysisProviderPort
+public sealed class LocalHeuristicDiffAnalysisService : IDiffAnalysisProviderPort
 {
-    private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "public", "private", "protected", "internal", "static", "class", "interface", "struct", "enum", "record",
-        "string", "void", "return", "using", "namespace", "this", "with", "from", "that", "function", "async",
-        "await", "const", "readonly", "null", "true", "false", "new", "get", "set", "list", "task", "var"
-    };
-
     public Task<DiffAnalysisResultModel> AnalyzeAsync(DiffAnalysisRequestModel request,
         CancellationToken cancellationToken = default)
     {
@@ -34,39 +28,6 @@ public sealed partial class LocalHeuristicDiffAnalysisService : IDiffAnalysisPro
     }
 
     #region Private
-
-    [GeneratedRegex("\\b(?<kind>class|interface|struct|enum|record)\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)",
-        RegexOptions.IgnoreCase)]
-    private static partial Regex DeclarationPattern();
-
-    [GeneratedRegex("[A-Za-z_][A-Za-z0-9_]{2,}")]
-    private static partial Regex TokenPattern();
-
-    [GeneratedRegex(
-        "\\b(?:public|private|protected|internal)\\s+(?:async\\s+)?[A-Za-z_][A-Za-z0-9_<>,.\\[\\]?]*\\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)\\s*\\(",
-        RegexOptions.IgnoreCase)]
-    private static partial Regex MethodPattern();
-
-    private static Features CreateFeatures(DiffHunkModel hunk)
-    {
-        var declarations = DeclarationPattern().Matches(hunk.Content)
-            .Select(match => new Declaration(match.Groups["kind"].Value, match.Groups["name"].Value))
-            .ToList();
-        var identifiers = Identifiers(hunk.Content);
-        var fileSubject = Path.GetFileNameWithoutExtension(hunk.FilePath);
-        var concepts = declarations.Select(x => NormaliseConcept(x.Name))
-            .Append(NormaliseConcept(fileSubject))
-            .Where(x => !string.IsNullOrEmpty(x))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var methods = MethodPattern().Matches(hunk.Content).Select(x => x.Groups["name"].Value)
-            .Where(x => !StopWords.Contains(x)).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var lines = hunk.Content.Split('\n');
-        var hasAdditions = lines.Any(x => x.StartsWith('+') && !x.StartsWith("+++", StringComparison.Ordinal));
-        var hasRemovals = lines.Any(x => x.StartsWith('-') && !x.StartsWith("---", StringComparison.Ordinal));
-        return new Features(hunk, Tokens(hunk), declarations, identifiers, concepts, methods, hasAdditions, hasRemovals,
-            Directory(hunk.FilePath));
-    }
 
     private static List<List<Features>> BuildClusters(List<Features> features, CancellationToken cancellationToken)
     {
@@ -179,27 +140,6 @@ public sealed partial class LocalHeuristicDiffAnalysisService : IDiffAnalysisPro
         return methods.Count == 0 ? string.Empty : $" ({string.Join(", ", methods)})";
     }
 
-    private static HashSet<string> Tokens(DiffHunkModel hunk)
-    {
-        return Identifiers(hunk.Content);
-    }
-
-    private static HashSet<string> Identifiers(string content)
-    {
-        return TokenPattern().Matches(content).Select(m => m.Value).Where(x => !StopWords.Contains(x))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string NormaliseConcept(string value)
-    {
-        return value.Length > 2 && value[0] == 'I' && char.IsUpper(value[1]) ? value[1..] : value;
-    }
-
-    private static string Directory(string path)
-    {
-        return Path.GetDirectoryName(path)?.Replace('\\', '/') ?? string.Empty;
-    }
-
     private static double Jaccard(HashSet<string> a, HashSet<string> b)
     {
         return a.Count == 0 || b.Count == 0
@@ -207,19 +147,6 @@ public sealed partial class LocalHeuristicDiffAnalysisService : IDiffAnalysisPro
             : (double)a.Intersect(b, StringComparer.OrdinalIgnoreCase).Count() /
               a.Union(b, StringComparer.OrdinalIgnoreCase).Count();
     }
-
-    private sealed record Declaration(string Kind, string Name);
-
-    private sealed record Features(
-        DiffHunkModel Hunk,
-        HashSet<string> Tokens,
-        List<Declaration> Declarations,
-        HashSet<string> Identifiers,
-        HashSet<string> Concepts,
-        HashSet<string> Methods,
-        bool HasAdditions,
-        bool HasRemovals,
-        string Directory);
 
     #endregion
 }

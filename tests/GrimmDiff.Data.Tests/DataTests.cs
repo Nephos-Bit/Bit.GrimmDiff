@@ -1,3 +1,6 @@
+using GrimmDiff.Data.Adapters.Git;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Parsers;
 using System.Diagnostics;
 using System.Text;
 using GrimmDiff.Data;
@@ -19,7 +22,7 @@ try
     RunGit("commit", "-q", "-m", "Initial");
 
     await File.WriteAllTextAsync(filePath, umlauts + "\n", new UTF8Encoding(false));
-    var service = new GitCliRepositoryService();
+    var service = new GitCliDiffReaderAdapter();
     AssertDiff(await service.GetDiffAsync(repositoryPath, DiffScopeModel.WorkingTree), fileName, umlauts);
     RunGit("add", "--", fileName);
     AssertDiff(await service.GetDiffAsync(repositoryPath, DiffScopeModel.Staged), fileName, umlauts);

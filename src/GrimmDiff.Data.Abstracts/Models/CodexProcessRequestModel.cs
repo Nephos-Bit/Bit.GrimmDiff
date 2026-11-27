@@ -1,4 +1,4 @@
-namespace GrimmDiff.Data.Abstracts;
+namespace GrimmDiff.Data.Abstracts.Models;
 
 public sealed record CodexProcessRequestModel(
     string Executable,

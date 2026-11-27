@@ -1,6 +1,6 @@
-using GrimmDiff.Logic.Abstracts;
+using GrimmDiff.Logic.Abstracts.Models;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Models;
 
 public sealed class CommitHistoryItemModel
 {

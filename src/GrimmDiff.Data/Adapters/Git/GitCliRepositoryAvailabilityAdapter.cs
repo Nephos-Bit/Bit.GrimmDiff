@@ -1,12 +1,14 @@
-using GrimmDiff.Logic.Abstracts;
-using GrimmDiff.Logic;
+using GrimmDiff.Data.Services;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Ports;
 
-namespace GrimmDiff.Data;
 
-public sealed class GitCliRepositoryAvailabilityAdapter(GitCliRepositoryService service) : IRepositoryAvailabilityPort
+namespace GrimmDiff.Data.Adapters.Git;
+
+public sealed class GitCliRepositoryAvailabilityAdapter : IRepositoryAvailabilityPort
 {
-    public Task<bool> IsGitAvailableAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> IsGitAvailableAsync(CancellationToken cancellationToken = default)
     {
-        return service.IsGitAvailableAsync(cancellationToken);
+        return (await GitCliProcessRunner.RunAsync(null, ["--version"], cancellationToken)).IsSuccess;
     }
 }

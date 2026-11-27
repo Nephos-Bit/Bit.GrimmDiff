@@ -1,12 +1,12 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using GrimmDiff.Gui.Models.Rendering;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Rendering;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Controls.Diff;
 
 internal sealed class DiffLineNumberMarginControl : AbstractMargin
 {

@@ -1,9 +1,8 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Models;
 
 public sealed class BulkObservableCollectionModel<T> : ObservableCollection<T>
 {

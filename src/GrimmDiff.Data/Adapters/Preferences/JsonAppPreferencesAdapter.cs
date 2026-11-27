@@ -1,9 +1,8 @@
-using GrimmDiff.Logic.Abstracts;
-using System.IO;
 using System.Text.Json;
-using GrimmDiff.Logic;
+using GrimmDiff.Logic.Abstracts.Models;
+using GrimmDiff.Logic.Abstracts.Ports;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Data.Adapters.Preferences;
 
 public sealed class JsonAppPreferencesAdapter : IPreferencesStorePort
 {

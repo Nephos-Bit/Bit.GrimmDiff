@@ -1,7 +1,6 @@
-using GrimmDiff.Logic.Abstracts;
 using System.Windows.Input;
 
-namespace GrimmDiff.Gui;
+namespace GrimmDiff.Gui.Commands;
 
 public sealed class AsyncCommandOfT<T>(Func<T, Task> execute, Func<T, bool>? canExecute = null) : ICommand
 {

@@ -1,8 +1,4 @@
-using System.ComponentModel;
-using System.Diagnostics;
-using GrimmDiff.Data.Abstracts;
-
-namespace GrimmDiff.Data;
+namespace GrimmDiff.Data.Exceptions;
 
 public sealed class CodexCliInvocationException(string message, string diagnostic) : Exception(message)
 {
